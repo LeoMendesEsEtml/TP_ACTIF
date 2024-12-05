@@ -59,6 +59,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include "Mc32DriverLcd.h"
  
 // *****************************************************************************
 // *****************************************************************************
@@ -146,7 +147,19 @@ void APP_Tasks ( void )
         /* Application's initial state. */
         case APP_STATE_INIT:
         {
-            bool appInitialized = true;
+            lcd_init(); // Initialisation de l'écran LCD
+            lcd_bl_on(); // Allume le rétroéclairage du LCD
+            
+            lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
+            printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
+            lcd_gotoxy(1,2); 
+            printf_lcd("Mendes Leo"); 
+            lcd_gotoxy(1,3);
+            printf_lcd("Vitor Coelho");           
+            
+            //BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
+            
+            
             DRV_TMR0_Start();
             DRV_TMR1_Start();
             DRV_TMR2_Start();
@@ -154,20 +167,15 @@ void APP_Tasks ( void )
             DRV_OC0_Start();
             DRV_OC1_Start();
             
-            if (appInitialized)
-            {
-            
-                appData.state = APP_STATE_SERVICE_TASKS;
-            }
-            break;
+
+            appData.state = APP_STATE_SERVICE_TASKS;
         }
 
-        case APP_STATE_SERVICE_TASKS:
+        case APP_STATE_WAIT :
         {
-        
             break;
         }
-
+        
         /* TODO: implement your application state machine.*/
         
 
