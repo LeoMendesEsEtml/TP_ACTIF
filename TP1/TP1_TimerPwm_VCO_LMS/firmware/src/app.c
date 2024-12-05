@@ -54,7 +54,12 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
-
+#include "bsp.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+ 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -142,8 +147,13 @@ void APP_Tasks ( void )
         case APP_STATE_INIT:
         {
             bool appInitialized = true;
-       
-        
+            DRV_TMR0_Start();
+            DRV_TMR1_Start();
+            DRV_TMR2_Start();
+            DRV_TMR3_Start();
+            DRV_OC0_Start();
+            DRV_OC1_Start();
+            
             if (appInitialized)
             {
             
@@ -170,7 +180,26 @@ void APP_Tasks ( void )
     }
 }
 
- 
+ void APP_UpdateState (APP_STATES Newstate)
+{
+    appData.state = Newstate; // Met à jour l'état de l'application
+}
+
+
+void App_Timer1Callback()
+{
+    static uint8_t test = 1;
+    if(test == 1)
+    {
+        BSP_LEDOff(BSP_LED_0);
+        test = 0; 
+    }
+    else
+    {
+        BSP_LEDOn(BSP_LED_0);
+        test = 1;
+    }
+}
 
 /*******************************************************************************
  End of File
