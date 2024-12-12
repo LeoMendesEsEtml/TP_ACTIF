@@ -153,22 +153,16 @@ void APP_Tasks ( void )
             lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
             printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
             lcd_gotoxy(1,2); 
-            printf_lcd("Mendes Leo"); 
+            printf_lcd("Leo Mendes"); 
             lcd_gotoxy(1,3);
             printf_lcd("Vitor Coelho");           
             
+            GPWM_Initialize();
+
             //BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
             
-            
-            DRV_TMR0_Start();
-            DRV_TMR1_Start();
-            DRV_TMR2_Start();
-            DRV_TMR3_Start();
-            DRV_OC0_Start();
-            DRV_OC1_Start();
-            
-
-            appData.state = APP_STATE_SERVICE_TASKS;
+            APP_UpdateState(APP_STATE_SERVICE_TASKS);
+            break; 
         }
 
         case APP_STATE_WAIT :
@@ -177,7 +171,13 @@ void APP_Tasks ( void )
         }
         
         /* TODO: implement your application state machine.*/
-        
+        case APP_STATE_SERVICE_TASKS :
+        {
+            DRV_OC0_PulseWidthSet(8000);
+            DRV_OC1_PulseWidthSet(174);
+            APP_UpdateState(APP_STATE_WAIT);
+            break; 
+        }
 
         /* The default state should never be executed. */
         default:
@@ -208,7 +208,30 @@ void App_Timer1Callback()
         test = 1;
     }
 }
-
+void App_Timer4Callback()
+{
+    static uint8_t test = 1;
+    if(test == 1)
+    {
+        BSP_LEDOff(BSP_LED_2);
+        test = 0; 
+    }
+    else
+    {
+        BSP_LEDOn(BSP_LED_2);
+        test = 1;
+    }
+}
+void GPWM_Initialize()
+{
+    DRV_TMR0_Start();
+    DRV_TMR1_Start();
+    DRV_TMR2_Start();
+    DRV_TMR3_Start();
+    DRV_OC0_Start();
+    DRV_OC1_Start();
+    BSP_EnableHbrige();     
+}
 /*******************************************************************************
  End of File
  */

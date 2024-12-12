@@ -166,8 +166,9 @@ typedef struct
 
 void APP_Initialize ( void );
 void APP_UpdateState ( APP_STATES NewState );
-void App_Timer1Callback();
-
+void App_Timer1Callback( void );
+void App_Timer4Callback(void);
+void GPWM_Initialize( void );
 /*******************************************************************************
   Function:
     void APP_Tasks ( void )
