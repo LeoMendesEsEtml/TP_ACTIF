@@ -512,6 +512,8 @@
         <property key="memories.programmemory.ranges" value="1d000000-1d003fff"/>
         <property key="memories.programmemory.start" value="0x1d000000"/>
         <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmerToGoFilePath"
+                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/TP1_TimerPwm_VCO_LMS.X/debug/default/TP1_TimerPwm_VCO_LMS_ptg"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
@@ -534,7 +536,7 @@
         <property key="voltagevalue" value="3.25"/>
       </Tool>
       <snap>
-        <property key="memories.programmemory.ranges" value="1d000000-1d07ffff"/>
+        <property key="memories.programmemory.ranges" value="1d000000-1d003fff"/>
         <property key="programmerToGoFilePath"
                   value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/TP1_TimerPwm_VCO_LMS.X/debug/default/TP1_TimerPwm_VCO_LMS_ptg"/>
       </snap>
