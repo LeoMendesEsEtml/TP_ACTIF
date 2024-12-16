@@ -160,7 +160,8 @@ void APP_Tasks ( void )
             GPWM_Initialize();
 
             //BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
-            
+            DRV_OC0_PulseWidthSet(70);
+            DRV_OC1_PulseWidthSet(1000);
             APP_UpdateState(APP_STATE_SERVICE_TASKS);
             break; 
         }
@@ -173,8 +174,7 @@ void APP_Tasks ( void )
         /* TODO: implement your application state machine.*/
         case APP_STATE_SERVICE_TASKS :
         {
-            DRV_OC0_PulseWidthSet(8000);
-            DRV_OC1_PulseWidthSet(174);
+            GPWM_Getsettings();
             APP_UpdateState(APP_STATE_WAIT);
             break; 
         }
@@ -197,6 +197,7 @@ void APP_Tasks ( void )
 void App_Timer1Callback()
 {
     static uint8_t test = 1;
+     APP_UpdateState(APP_STATE_SERVICE_TASKS);
     if(test == 1)
     {
         BSP_LEDOff(BSP_LED_0);
@@ -210,6 +211,7 @@ void App_Timer1Callback()
 }
 void App_Timer4Callback()
 {
+    // ToBeRemove
     static uint8_t test = 1;
     if(test == 1)
     {
@@ -231,6 +233,78 @@ void GPWM_Initialize()
     DRV_OC0_Start();
     DRV_OC1_Start();
     BSP_EnableHbrige();     
+}
+
+// Obtention de vitesse et angles
+void GPWM_Getsettings()
+{
+    // Lecture ADC
+    ADC1_Conversion();
+
+}
+
+// Affichage
+void GPWM_DISPSettings()
+{
+    
+}
+
+// Execution PWM et gestion Moteur
+void GPWM_ExecPWM()
+{
+    
+}
+
+void ADC1_Conversion()
+{
+    // Lecture ADC 
+    #define NUM_SAMPLES 10   // Taille de la moyenne glissante
+    #define ADC_MAX 1024     // Valeur maximale de l'ADC (10 bits)
+
+    static uint8_t adcValues[NUM_SAMPLES] = {0};  // Tableau pour la moyenne glissante
+    static uint16_t adcValue = 500; 
+    static uint8_t currentIndex = 0;              // Index pour l'insertion dans le tableau
+    static uint32_t adcSum = 0;                   // Somme des 10 dernières valeurs pour la moyenne
+    
+    static uint8_t avgAdcValue = 0;
+    static uint8_t mappedValue = 0;
+    static int8_t speed = 0;
+    static uint8_t absSpeed = 0; 
+    static int8_t pwmValue = 0;
+    
+    // Soustraire la vieille valeur et ajouter la nouvelle
+    adcSum -= adcValues[currentIndex];
+    adcValues[currentIndex] = adcValue;
+    adcSum += adcValue;
+
+    // Passer à l'index suivant
+    currentIndex = (currentIndex + 1) % NUM_SAMPLES;
+
+    // Calcul de la moyenne de l'ADC
+    avgAdcValue = adcSum / NUM_SAMPLES;
+
+    // Conversion de la valeur ADC en une plage de 0 à 198
+    mappedValue = (avgAdcValue * 198) / ADC_MAX;  // Plage 0-198
+
+    // Calcul de la vitesse signée (speed), allant de -99 à 99
+    speed = mappedValue - 99;  // Plage -99 à +99
+
+    // Calcul de la vitesse absolue (absSpeed), allant de 0 à 99
+    if (speed < 0) 
+    {
+        absSpeed = -speed;  // Si speed est négatif, absSpeed devient la valeur positive
+    } 
+    else 
+    {
+        absSpeed = speed;   // Si speed est positif ou nul, absSpeed reste la même
+    }
+
+
+    // Calcul du taux PWM, allant de -99 à 99
+    pwmValue = (speed * 62) / 99;  // Plage de PWM allant de -62 à +62
+
+    // Décalage de 62 pour obtenir une plage de 0 à 124 (si nécessaire)
+    pwmValue = pwmValue + 62;    
 }
 /*******************************************************************************
  End of File
