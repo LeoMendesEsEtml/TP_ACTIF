@@ -88,6 +88,7 @@ typedef enum
 {
 	/* Application's state machine's initial state. */
 	APP_STATE_INIT=0,
+    APP_STATE_WAIT,
 	APP_STATE_SERVICE_TASKS,
 
 	/* TODO: Define states used by the application state machine. */
@@ -165,8 +166,9 @@ typedef struct
 
 void APP_Initialize ( void );
 void APP_UpdateState ( APP_STATES NewState );
-void App_Timer1Callback();
-
+void App_Timer1Callback( void );
+void App_Timer4Callback(void);
+void GPWM_Initialize( void );
 /*******************************************************************************
   Function:
     void APP_Tasks ( void )
