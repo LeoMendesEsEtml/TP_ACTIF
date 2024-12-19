@@ -168,11 +168,7 @@ void APP_Initialize ( void );
 void APP_UpdateState ( APP_STATES NewState );
 void App_Timer1Callback( void );
 void App_Timer4Callback(void);
-void GPWM_Initialize( void );
-void GPWM_Getsettings( void );
-void GPWM_DISPSettings( void );
-void GPWM_ExecPWM( void );
-void ADC1_Conversion( void );
+
 /*******************************************************************************
   Function:
     void APP_Tasks ( void )
