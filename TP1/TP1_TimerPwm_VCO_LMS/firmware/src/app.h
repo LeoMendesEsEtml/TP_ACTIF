@@ -113,7 +113,10 @@ typedef struct
 {
     /* The application's current state */
     APP_STATES state;
-
+    struct {
+        uint16_t Chan0;
+        uint16_t Chan1;
+    } AdcRes;
     /* TODO: Define any additional data used by the application. */
 
 } APP_DATA;

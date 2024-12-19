@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include "Mc32DriverLcd.h"
 #include "GestPWM.h"
+#include "app.h"
 
 S_pwmSettings PWMData;  // pour les settings
 
@@ -45,9 +46,40 @@ void GPWM_Initialize(S_pwmSettings *pData)
 // Obtention vitesse et angle (mise à jour des 4 champs de la structure)
 void GPWM_GetSettings(S_pwmSettings *pData)    
 {
-    // Exemple de lecture des ADC et mise à jour de la structure
-    // pData->SpeedSetting = ReadADC1();
-    // pData->AngleSetting = ReadADC2();
+    // Lecture du convertisseur AD
+    static uint32_t valeur_ADC1[TAILLE_MOYENNE_ADC] = {0};
+    static uint32_t valeur_ADC2[TAILLE_MOYENNE_ADC] = {0};
+    static uint32_t i = 0;
+    
+    i++;
+    if (i > 9)
+    {
+        i = 0;
+    }
+    
+    //Variables statiques pour ADC1
+    static uint16_t adc1Values[ADC1_NUM_SAMPLES] = {0};  // Tableau circulaire
+    static uint32_t adc1Sum = 0;                         // Somme pour la moyenne
+    static uint8_t adcIndex = 0;                        // Index actuel
+    
+     // Mise à jour de la moyenne glissante
+    adc1Sum -= valeur_ADC1[adcIndex];
+    adc1Values[adc1Index] = adc1RawValue;
+    adc1Sum += adc1RawValue;
+    adc1Index = (adc1Index + 1) % ADC1_NUM_SAMPLES;
+     
+    
+    // Calcul de la moyenne de l'ADC
+    uint16_t avgAdc1Value = adc1Sum / ADC1_NUM_SAMPLES;
+     
+    // Lire les valeurs du convertisseur analogique-numérique
+    appData.AdcRes = BSP_ReadAllADC();
+    valeur_ADC1[adcIndex] = appData.AdcRes.Chan0;
+    valeur_ADC2[adcIndex] = appData.AdcRes.Chan1;
+    
+    // Conversion
+    ADC1_Conversion(valeur_ADC1);
+    ADC2_Conversion(valeur_ADC2);     
 }
 
 // Affichage des informations en exploitant la structure
@@ -66,12 +98,12 @@ void GPWM_DispSettings(S_pwmSettings *pData)
 // Execution PWM et gestion moteur à partir des informations dans la structure
 void GPWM_ExecPWM(S_pwmSettings *pData)
 {
-    // Lecture ADC
-    ADC1_Conversion();
-    ADC2_Conversion();     
-
     // Mettre à jour les paramètres du moteur à partir de la structure pData
     HBridgeControl(pData->SpeedSetting, pData->absSpeed, pData->absAngle);
+    // OC2
+    PLIB_OC_PulseWidth16BitSet()
+    // OC1 
+    
 }
 
 // Execution PWM software
@@ -97,31 +129,21 @@ void HBridgeControl(int8_t speed, uint8_t absSpeed, uint16_t absAngle) {
 void SetMotorDirection(int8_t speed) {
     if (speed < 0) {
         // Configurer le pont en H pour tourner dans la direction négative
-        STBY_HBRIDGE_BIT
+        //STBY_HBRIDGE_BIT
     } else {
         // Configurer le pont en H pour tourner dans la direction positive
     }
 }
 
-void ADC1_Process(uint16_t adc1RawValue) {
+void ADC1_Conversion(uint16_t *adc1RawValue) {
 
-    // Variables statiques pour ADC1
-    static uint16_t adc1Values[ADC1_NUM_SAMPLES] = {0};  // Tableau circulaire
-    static uint32_t adc1Sum = 0;                         // Somme pour la moyenne
-    static uint8_t adc1Index = 0;                        // Index actuel
+
 
     static uint8_t adc1MappedSpeed = 0;                  // Valeur mappée (0-198)
     static int8_t adc1SignedSpeed = 0;                   // Vitesse signée (-99 à +99)
     static uint8_t adc1AbsSpeed = 0;                     // Vitesse absolue (0 à 99)
-
-    // Mise à jour de la moyenne glissante
-    adc1Sum -= adc1Values[adc1Index];
-    adc1Values[adc1Index] = adc1RawValue;
-    adc1Sum += adc1RawValue;
-    adc1Index = (adc1Index + 1) % ADC1_NUM_SAMPLES;
-
-    // Calcul de la moyenne de l'ADC
-    uint16_t avgAdc1Value = adc1Sum / ADC1_NUM_SAMPLES;
+    
+    
 
     // Conversion de la moyenne en plage de 0 à 198
     adc1MappedSpeed = (avgAdc1Value * ADC1_VALUE_MAX) / ADC1_MAX;
@@ -137,7 +159,7 @@ void ADC1_Process(uint16_t adc1RawValue) {
     PWMData.SpeedSetting = adc1SignedSpeed;
 }
 
-void ADC2_Process(uint16_t adc2RawValue) {
+void ADC2_Conversion(uint16_t *adc2RawValue) {
 
     // Variables statiques pour ADC2
     static uint16_t adc2Values[ADC2_NUM_SAMPLES] = {0};  // Tableau circulaire
