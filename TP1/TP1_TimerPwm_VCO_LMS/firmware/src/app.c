@@ -60,6 +60,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stddef.h>
 #include <stdlib.h>
 #include "Mc32DriverLcd.h"
+#include "gestPWM.h"
  
 // *****************************************************************************
 // *****************************************************************************
@@ -160,7 +161,8 @@ void APP_Tasks ( void )
             GPWM_Initialize();
 
             //BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
-            
+            DRV_OC0_PulseWidthSet(70);
+            DRV_OC1_PulseWidthSet(1000);
             APP_UpdateState(APP_STATE_SERVICE_TASKS);
             break; 
         }
@@ -173,9 +175,9 @@ void APP_Tasks ( void )
         /* TODO: implement your application state machine.*/
         case APP_STATE_SERVICE_TASKS :
         {
-            DRV_OC0_PulseWidthSet(8000);
-            DRV_OC1_PulseWidthSet(174);
+            GPWM_Getsettings();
             APP_UpdateState(APP_STATE_WAIT);
+            GPWM_DISPSettings();
             break; 
         }
 
@@ -197,6 +199,7 @@ void APP_Tasks ( void )
 void App_Timer1Callback()
 {
     static uint8_t test = 1;
+     APP_UpdateState(APP_STATE_SERVICE_TASKS);
     if(test == 1)
     {
         BSP_LEDOff(BSP_LED_0);
@@ -210,6 +213,7 @@ void App_Timer1Callback()
 }
 void App_Timer4Callback()
 {
+    // ToBeRemove
     static uint8_t test = 1;
     if(test == 1)
     {
@@ -221,16 +225,6 @@ void App_Timer4Callback()
         BSP_LEDOn(BSP_LED_2);
         test = 1;
     }
-}
-void GPWM_Initialize()
-{
-    DRV_TMR0_Start();
-    DRV_TMR1_Start();
-    DRV_TMR2_Start();
-    DRV_TMR3_Start();
-    DRV_OC0_Start();
-    DRV_OC1_Start();
-    BSP_EnableHbrige();     
 }
 /*******************************************************************************
  End of File

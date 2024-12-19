@@ -5,6 +5,7 @@
         <group>
             <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/src/system_config/default/system_interrupt.c</file>
             <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/src/app.h</file>
+            <file>file:/C:/microchip/harmony/v2_06/bsp/pic32mx_skes/bsp.c</file>
             <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/TP1_TimerPwm_VCO_LMS.X/nbproject/Makefile-default.mk</file>
             <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/src/app.c</file>
             <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/src/system_config/default/framework/driver/oc/src/drv_oc_static.c</file>
