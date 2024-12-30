@@ -1,4 +1,4 @@
-build/default/debug/_ext/1360937237/app.o: ../src/app.c ../src/app.h \
+build/default/production/_ext/1360937237/app.o: ../src/app.c ../src/app.h \
  ../src/system_config/default/system_config.h \
  ../../../../../../bsp/pic32mx_skes/bsp.h \
  ../../../../../../framework/peripheral/ports/plib_ports.h \

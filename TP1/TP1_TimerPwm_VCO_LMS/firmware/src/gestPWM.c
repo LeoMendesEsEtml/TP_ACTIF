@@ -20,6 +20,8 @@
 #include "Mc32DriverLcd.h"
 #include "GestPWM.h"
 #include "app.h"
+#include "Mc32DriverAdc.h"
+
 
 S_pwmSettings PWMData;  // pour les settings
 
@@ -46,40 +48,46 @@ void GPWM_Initialize(S_pwmSettings *pData)
 // Obtention vitesse et angle (mise à jour des 4 champs de la structure)
 void GPWM_GetSettings(S_pwmSettings *pData)    
 {
+    #define TAILLE_MOYENNE_ADC 10
     // Lecture du convertisseur AD
-    static uint32_t valeur_ADC1[TAILLE_MOYENNE_ADC] = {0};
-    static uint32_t valeur_ADC2[TAILLE_MOYENNE_ADC] = {0};
-    static uint32_t i = 0;
-    
-    i++;
-    if (i > 9)
-    {
-        i = 0;
-    }
-    
+    static uint8_t adcIndex = 0;
+   
     //Variables statiques pour ADC1
     static uint16_t adc1Values[ADC1_NUM_SAMPLES] = {0};  // Tableau circulaire
-    static uint32_t adc1Sum = 0;                         // Somme pour la moyenne
-    static uint8_t adcIndex = 0;                        // Index actuel
+    static uint32_t adc1Sum = 0; 
+    static uint32_t averageAdc1 = 0;
     
-     // Mise à jour de la moyenne glissante
-    adc1Sum -= valeur_ADC1[adcIndex];
-    adc1Values[adc1Index] = adc1RawValue;
-    adc1Sum += adc1RawValue;
-    adc1Index = (adc1Index + 1) % ADC1_NUM_SAMPLES;
-     
+    // Somme pour la moyenne
+                       // Index actuel
+    //Variables statiques pour ADC1
+    static uint16_t adc2Values[ADC1_NUM_SAMPLES] = {0};  // Tableau circulaire
+    static uint32_t adc2Sum = 0;                         // Somme pour la moyenne
+    static uint32_t averageAdc2 = 0;    
+    APP_DATA appData;
+
     
-    // Calcul de la moyenne de l'ADC
-    uint16_t avgAdc1Value = adc1Sum / ADC1_NUM_SAMPLES;
-     
     // Lire les valeurs du convertisseur analogique-numérique
     appData.AdcRes = BSP_ReadAllADC();
-    valeur_ADC1[adcIndex] = appData.AdcRes.Chan0;
-    valeur_ADC2[adcIndex] = appData.AdcRes.Chan1;
+    adc1Values[adcIndex] = appData.AdcRes.Chan0;
+    adc2Values[adcIndex] = appData.AdcRes.Chan1;    
+   
+    adc1Sum = adc1Sum + adc1Values[adcIndex]; 
+    adc2Sum = adc2Sum + adc2Values[adcIndex]; 
+            
+    adcIndex++;
+    
+    if (adcIndex > 9)
+    {
+        averageAdc1 = adc1Sum / ADC1_NUM_SAMPLES;
+        averageAdc2 = adc2Sum / ADC2_NUM_SAMPLES;
+        adcIndex = 0; 
+        adc1Sum = 0;
+        adc2Sum = 0; 
+    }
     
     // Conversion
-    ADC1_Conversion(valeur_ADC1);
-    ADC2_Conversion(valeur_ADC2);     
+    ADC1_Conversion(averageAdc1, pData);
+    ADC2_Conversion(averageAdc2, pData);     
 }
 
 // Affichage des informations en exploitant la structure
@@ -98,68 +106,89 @@ void GPWM_DispSettings(S_pwmSettings *pData)
 // Execution PWM et gestion moteur à partir des informations dans la structure
 void GPWM_ExecPWM(S_pwmSettings *pData)
 {
-    // Mettre à jour les paramètres du moteur à partir de la structure pData
-    HBridgeControl(pData->SpeedSetting, pData->absSpeed, pData->absAngle);
-    // OC2
-    PLIB_OC_PulseWidth16BitSet()
-    // OC1 
-    
+    static uint16_t PulseWidthOC2;
+    static uint16_t PulseWidthOC3;
+
+    // Contrôle de l'état du pont en H en fonction de la vitesse
+    if (pData->SpeedSetting < 0)
+    {
+        PLIB_PORTS_PinSet(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
+        PLIB_PORTS_PinClear(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
+    }
+    else if (pData->SpeedSetting > 0)
+    {
+        PLIB_PORTS_PinClear(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
+        PLIB_PORTS_PinSet(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
+    }
+    else
+    {
+        PLIB_PORTS_PinClear(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
+        PLIB_PORTS_PinClear(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
+    }
+
+    // Calcul de la largeur d'impulsion (Pulse Width) pour la sortie OC2 en fonction de la vitesse
+    PulseWidthOC2 = (pData->absSpeed * DRV_TMR1_PeriodValueGet()) / 100;
+    DRV_OC0_PulseWidthSet( PulseWidthOC2);
+
+    // Calcul de la largeur d'impulsion (Pulse Width) pour la sortie OC3 en fonction de l'angle
+    PulseWidthOC3 = ((pData->absAngle * 9000) / 180) + 2999;
+    DRV_OC0_PulseWidthSet( PulseWidthOC3); 
 }
 
 // Execution PWM software
 void GPWM_ExecPWMSoft(S_pwmSettings *pData)
 {
-    // Execution PWM software
-    // À ajouter selon la logique du logiciel
-}
+    static uint8_t RPMCnt = 0;
 
-void HBridgeControl(int8_t speed, uint8_t absSpeed, uint16_t absAngle) {
-    // **Étape 1 : Gestion de la direction du pont en H**
-    SetMotorDirection(speed);
+    // Si la valeur absolue de la vitesse est supérieure au compteurRpc, éteindre la LED
+    if (pData->absSpeed > RPMCnt)
+    {
+        BSP_LEDOff(BSP_LED_2);
+    }
+    else
+    {
+        // Sinon, allumer la LED
+        BSP_LEDOn(BSP_LED_2);
+    }
 
-    // **Étape 2 : Configuration pour OC2 (vitesse PWM)**
-    uint16_t oc2PulseWidth = (absSpeed * PWM_MAX) / 99;  // absSpeed varie de 0 à 99
-    PLIB_OC_PulseWidth16BitSet(2, oc2PulseWidth);
+    // Incrémente le compteurRpc
+    RPMCnt++;
 
-    // **Étape 3 : Configuration pour OC3 (angle PWM)**
-    uint16_t oc3PulseWidth = (absAngle * PWM_MAX) / ANGLE_MAX;  // absAngle varie de 0 à 180
-    PLIB_OC_PulseWidth16BitSet(3, oc3PulseWidth);
-}
-
-void SetMotorDirection(int8_t speed) {
-    if (speed < 0) {
-        // Configurer le pont en H pour tourner dans la direction négative
-        //STBY_HBRIDGE_BIT
-    } else {
-        // Configurer le pont en H pour tourner dans la direction positive
+    // Remet à zéro le compteurRpc s'il dépasse la valeur 99
+    if (RPMCnt > 99)
+    {
+        RPMCnt = 0;
     }
 }
 
-void ADC1_Conversion(uint16_t *adc1RawValue) {
-
-
-
+void ADC1_Conversion(uint32_t adc1RawValue,S_pwmSettings *pData) 
+{
     static uint8_t adc1MappedSpeed = 0;                  // Valeur mappée (0-198)
     static int8_t adc1SignedSpeed = 0;                   // Vitesse signée (-99 à +99)
     static uint8_t adc1AbsSpeed = 0;                     // Vitesse absolue (0 à 99)
     
-    
-
     // Conversion de la moyenne en plage de 0 à 198
-    adc1MappedSpeed = (avgAdc1Value * ADC1_VALUE_MAX) / ADC1_MAX;
+    adc1MappedSpeed = (adc1RawValue * ADC1_VALUE_MAX) / ADC1_MAX;
 
     // Calcul de la vitesse signée (-99 à +99)
     adc1SignedSpeed = adc1MappedSpeed - (ADC1_VALUE_MAX / 2);
 
     // Calcul de la vitesse absolue (0 à 99)
-    adc1AbsSpeed = (adc1SignedSpeed < 0) ? -adc1SignedSpeed : adc1SignedSpeed;
+    if (adc1SignedSpeed < 0) {
+        adc1AbsSpeed = -adc1SignedSpeed;
+    } 
+    else 
+    {
+        adc1AbsSpeed = adc1SignedSpeed;
+    }
 
     // Mise à jour de la structure
-    PWMData.absSpeed = adc1AbsSpeed;
-    PWMData.SpeedSetting = adc1SignedSpeed;
+    pData->SpeedSetting = adc1SignedSpeed;
+    pData->absSpeed =  adc1AbsSpeed;
 }
 
-void ADC2_Conversion(uint16_t *adc2RawValue) {
+void ADC2_Conversion(uint32_t adc2RawValue,S_pwmSettings *pData) 
+{
 
     // Variables statiques pour ADC2
     static uint16_t adc2Values[ADC2_NUM_SAMPLES] = {0};  // Tableau circulaire
@@ -170,9 +199,9 @@ void ADC2_Conversion(uint16_t *adc2RawValue) {
     static int8_t adc2SignedAngle = 0;                   // Angle signé (-90 à +90)
 
     // Mise à jour de la moyenne glissante
-    adc2Sum -= adc2Values[adc2Index];
+    adc2Sum = adc2Sum - adc2Values[adc2Index];
     adc2Values[adc2Index] = adc2RawValue;
-    adc2Sum += adc2RawValue;
+    adc2Sum = adc2Sum + adc2RawValue;
     adc2Index = (adc2Index + 1) % ADC2_NUM_SAMPLES;
 
     // Calcul de la moyenne de l'ADC
@@ -185,6 +214,5 @@ void ADC2_Conversion(uint16_t *adc2RawValue) {
     adc2SignedAngle = adc2MappedAngle - ADC2_ANGLE_OFFSET;
 
     // Mise à jour de la structure
-    PWMData.absAngle = adc2MappedAngle;
-    PWMData.AngleSetting = adc2SignedAngle;
+    pData->AngleSetting = adc2SignedAngle;   
 }

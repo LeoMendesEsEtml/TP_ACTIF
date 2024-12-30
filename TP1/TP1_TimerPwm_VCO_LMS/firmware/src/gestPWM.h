@@ -16,6 +16,8 @@
 /*--------------------------------------------------------*/
 
 #include <stdint.h>
+#include<math.h>
+#include "app.h"
 
 // Définitions constantes ADC1
 #define ADC1_NUM_SAMPLES 10   // Taille de la moyenne glissante
@@ -43,6 +45,8 @@ typedef struct {
     int8_t AngleSetting; // consigne angle  -90 à +90
 } S_pwmSettings;
 
+extern S_pwmSettings pData;
+
 
 void GPWM_Initialize(S_pwmSettings *pData);
 
@@ -51,7 +55,7 @@ void GPWM_GetSettings(S_pwmSettings *pData);    // Obtention vitesse et angle
 void GPWM_DispSettings(S_pwmSettings *pData);    // Affichage
 void GPWM_ExecPWM(S_pwmSettings *pData);         // Execution PWM et gestion moteur.
 void GPWM_ExecPWMSoft(S_pwmSettings *pData);     // Execution PWM software.
-void ADC1_Conversion(void);
-void ADC2_Conversion(void);
+void ADC1_Conversion(uint32_t adc1RawValue,S_pwmSettings *pData); 
+void ADC2_Conversion(uint32_t adc2RawValue,S_pwmSettings *pData);
 
 #endif
