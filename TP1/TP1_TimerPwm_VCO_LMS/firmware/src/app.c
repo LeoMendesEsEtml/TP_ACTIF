@@ -142,22 +142,26 @@ void APP_Tasks ( void )
         /* Application's initial state. */
         case APP_STATE_INIT:
         {
-            lcd_init(); // Initialisation de l'écran LCD
-            lcd_bl_on(); // Allume le rétroéclairage du LCD
+            static uint8_t firsInit = 1; 
+            if (firsInit == 1)
+            {
+                firsInit = 0; 
+                lcd_init(); // Initialisation de l'écran LCD
+                lcd_bl_on(); // Allume le rétroéclairage du LCD
             
-            lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
-            printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
-            lcd_gotoxy(1,2); 
-            printf_lcd("Leo Mendes"); 
-            lcd_gotoxy(1,3);
-            printf_lcd("Vitor Coelho");           
+                lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
+                printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
+                lcd_gotoxy(1,2); 
+                printf_lcd("Leo Mendes"); 
+                lcd_gotoxy(1,3);
+                printf_lcd("Vitor Coelho");           
             
-            GPWM_Initialize(&pData);
+                GPWM_Initialize(&pData);
 
-            BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
-            DRV_OC0_PulseWidthSet(70);
-            DRV_OC1_PulseWidthSet(1000);
-            APP_UpdateState(APP_STATE_SERVICE_TASKS);
+                BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
+                DRV_OC0_PulseWidthSet(70);
+                DRV_OC1_PulseWidthSet(1000);             
+            }
             break; 
         }
 
@@ -195,13 +199,13 @@ void App_Timer1Callback()
     // Pendant les 3 premières secondes
     if (compteur3s < 149)
     {
-        APP_UpdateState(APP_STATE_INIT);
         compteur3s++;
     }
     else
     {
         // Après les 3 premières secondes
-
+        APP_UpdateState(APP_STATE_SERVICE_TASKS);
+        
         // Affiche des informations sur l'afficheur LCD
         if (compteurClearLine <= 0)
         {
