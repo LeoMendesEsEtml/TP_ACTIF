@@ -123,7 +123,7 @@ void GPWM_DispSettings(S_pwmSettings *pData) {
     lcd_gotoxy(1, 4); // Texte statique
     printf_lcd("Angle:");
     lcd_gotoxy(14 - 3, 4); // Place le dernier chiffre à la colonne 14
-    printf_lcd("%3d", pData->absAngle); // Affiche la valeur
+    printf_lcd("%3d", pData->absAngle - 90); // Ajuste pour refléter la plage +90 à -90
 }
 
 
@@ -147,22 +147,20 @@ void GPWM_ExecPWM(S_pwmSettings *pData) {
     }
 
     // Calcul de la largeur d'impulsion pour OC2 (moteur DC)
-    PulseWidthOC2 = (pData->absSpeed * 124) / 100;  // Période du Timer 2
+    PulseWidthOC2 = (pData->absSpeed * 125) / 99;  // Inclut 0% et 100% exactement
     DRV_OC0_PulseWidthSet(PulseWidthOC2);
-
-    // Calcul de la largeur d'impulsion pour OC3 (servomoteur)
-    PulseWidthOC3 = ((pData->absAngle * 4374) / 90) + 2999;  // 4374 pour 50% de la plage
+    
+    PulseWidthOC3 = ((pData->absAngle * (2999 - 749)) / 180) + 749;
     DRV_OC1_PulseWidthSet(PulseWidthOC3);
+
 }
 
 
-// Execution PWM software
 void GPWM_ExecPWMSoft(S_pwmSettings *pData)
 {
-    static uint8_t RPMCnt = 0;
+    static uint8_t pwmCounter = 0;
 
-    // Si la valeur absolue de la vitesse est supérieure au compteurRpc, éteindre la LED
-    if (pData->absSpeed > RPMCnt)
+    if (pwmCounter < pData->absSpeed || pData->absSpeed == 99)
     {
         BSP_LEDOff(BSP_LED_2);
     }
@@ -172,13 +170,12 @@ void GPWM_ExecPWMSoft(S_pwmSettings *pData)
         BSP_LEDOn(BSP_LED_2);
     }
 
-    // Incrémente le compteurRpc
-    RPMCnt++;
+    // Incrémenter le compteur
+    pwmCounter = pwmCounter + 1;
 
-    // Remet à zéro le compteurRpc s'il dépasse la valeur 99
-    if (RPMCnt > 99)
+    // Remettre à zéro le compteur lorsqu'il atteint 100 cycles
+    if (pwmCounter >= 100)
     {
-        RPMCnt = 0;
+        pwmCounter = 0;
     }
 }
-

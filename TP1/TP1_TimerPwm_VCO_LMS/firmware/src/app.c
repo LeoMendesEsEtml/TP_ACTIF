@@ -143,6 +143,7 @@ void APP_Tasks ( void )
         case APP_STATE_INIT:
         {
             static uint8_t firsInit = 1; 
+            
             if (firsInit == 1)
             {
                 firsInit = 0; 
@@ -173,6 +174,7 @@ void APP_Tasks ( void )
         /* TODO: implement your application state machine.*/
         case APP_STATE_SERVICE_TASKS :
         {
+            APP_UpdateState(APP_STATE_WAIT);
             break; 
         }
 
