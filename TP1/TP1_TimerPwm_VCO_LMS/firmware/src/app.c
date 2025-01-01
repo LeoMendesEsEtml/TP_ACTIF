@@ -54,14 +54,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
-#include "bsp.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include "Mc32DriverLcd.h"
 #include "gestPWM.h"
- 
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -84,7 +78,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 */
 
 APP_DATA appData;
-
+S_pwmSettings pData;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
@@ -148,22 +142,27 @@ void APP_Tasks ( void )
         /* Application's initial state. */
         case APP_STATE_INIT:
         {
-            lcd_init(); // Initialisation de l'écran LCD
-            lcd_bl_on(); // Allume le rétroéclairage du LCD
+            static uint8_t firsInit = 1; 
             
-            lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
-            printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
-            lcd_gotoxy(1,2); 
-            printf_lcd("Leo Mendes"); 
-            lcd_gotoxy(1,3);
-            printf_lcd("Vitor Coelho");           
+            if (firsInit == 1)
+            {
+                firsInit = 0; 
+                lcd_init(); // Initialisation de l'écran LCD
+                lcd_bl_on(); // Allume le rétroéclairage du LCD
             
-            GPWM_Initialize();
+                lcd_gotoxy(1,1); // Positionne le curseur à la première ligne
+                printf_lcd("TP1 PWM 2024-25"); // Affiche un texte d'introduction
+                lcd_gotoxy(1,2); 
+                printf_lcd("Leo Mendes"); 
+                lcd_gotoxy(1,3);
+                printf_lcd("Vitor Coelho");           
+            
+                GPWM_Initialize(&pData);
 
-            //BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
-            DRV_OC0_PulseWidthSet(70);
-            DRV_OC1_PulseWidthSet(1000);
-            APP_UpdateState(APP_STATE_SERVICE_TASKS);
+                BSP_InitADC10(); // Initialisation des ADC (convertisseurs analogiques-numériques)
+                DRV_OC0_PulseWidthSet(70);
+                DRV_OC1_PulseWidthSet(1000);             
+            }
             break; 
         }
 
@@ -175,9 +174,7 @@ void APP_Tasks ( void )
         /* TODO: implement your application state machine.*/
         case APP_STATE_SERVICE_TASKS :
         {
-            GPWM_Getsettings();
             APP_UpdateState(APP_STATE_WAIT);
-            GPWM_DISPSettings();
             break; 
         }
 
@@ -198,33 +195,49 @@ void APP_Tasks ( void )
 
 void App_Timer1Callback()
 {
-    static uint8_t test = 1;
-     APP_UpdateState(APP_STATE_SERVICE_TASKS);
-    if(test == 1)
+    static uint8_t compteur3s = 0;
+    static uint8_t compteurClearLine = 0;
+
+    // Pendant les 3 premières secondes
+    if (compteur3s < 149)
     {
-        BSP_LEDOff(BSP_LED_0);
-        test = 0; 
+        compteur3s++;
     }
     else
     {
+        // Après les 3 premières secondes
+        APP_UpdateState(APP_STATE_SERVICE_TASKS);
+        
+        // Affiche des informations sur l'afficheur LCD
+        if (compteurClearLine <= 0)
+        {
+            lcd_ClearLine(2);
+            lcd_ClearLine(3);
+            compteurClearLine++;
+        }
+
+        // Allume la LED BSP_LED_0 pendant l'exécution des tâches
         BSP_LEDOn(BSP_LED_0);
-        test = 1;
+
+        // Obtient les paramètres PWM, les affiche et exécute la PWM
+        GPWM_GetSettings(&pData);
+        GPWM_DispSettings(&pData);
+        GPWM_ExecPWM(&pData);
+
+        // Éteint la LED BSP_LED_0 après l'exécution des tâches
+        BSP_LEDOff(BSP_LED_0);
     }
 }
 void App_Timer4Callback()
 {
-    // ToBeRemove
-    static uint8_t test = 1;
-    if(test == 1)
-    {
-        BSP_LEDOff(BSP_LED_2);
-        test = 0; 
-    }
-    else
-    {
-        BSP_LEDOn(BSP_LED_2);
-        test = 1;
-    }
+    // Allume la LED BSP_LED_1 pendant l'exécution de la PWM logiciel
+    BSP_LEDOn(BSP_LED_1);
+
+    // Exécute la PWM logiciel
+    GPWM_ExecPWMSoft(&pData);
+
+    // Éteint la LED BSP_LED_1 après l'exécution de la PWM logiciel
+    BSP_LEDOff(BSP_LED_1);
 }
 /*******************************************************************************
  End of File

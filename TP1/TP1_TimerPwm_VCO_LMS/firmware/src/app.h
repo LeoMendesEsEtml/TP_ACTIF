@@ -58,10 +58,13 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdlib.h>
 #include "system_config.h"
 #include "system_definitions.h"
-
+#include "bsp.h"
+#include "Mc32DriverLcd.h"
+#include "Mc32DriverAdc.h"
+#include "bsp.h"
+ 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
 
 #endif
@@ -113,9 +116,7 @@ typedef struct
 {
     /* The application's current state */
     APP_STATES state;
-
-    /* TODO: Define any additional data used by the application. */
-
+    S_ADCResults AdcRes;
 } APP_DATA;
 
 
