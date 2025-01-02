@@ -147,6 +147,11 @@ build/default/debug/_ext/1688732426/system_exceptions.o: \
  ../../../../../../framework/system/ports/sys_ports.h \
  ../../../../../../framework/system/ports/sys_ports_definitions.h \
  ../src/app.h ../src/system_config/default/system_definitions.h \
+<<<<<<< Updated upstream
+=======
+ ../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h \
+ ../../../../../../bsp/pic32mx_skes/Mc32DriverAdc.h \
+>>>>>>> Stashed changes
  ../../../../../../framework/system/debug/sys_debug.h
 
 ../src/system_config/default/system_config.h:
@@ -445,4 +450,11 @@ build/default/debug/_ext/1688732426/system_exceptions.o: \
 
 ../src/system_config/default/system_definitions.h:
 
+<<<<<<< Updated upstream
+=======
+../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h:
+
+../../../../../../bsp/pic32mx_skes/Mc32DriverAdc.h:
+
+>>>>>>> Stashed changes
 ../../../../../../framework/system/debug/sys_debug.h:
