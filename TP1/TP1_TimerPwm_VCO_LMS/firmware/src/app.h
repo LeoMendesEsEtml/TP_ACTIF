@@ -51,22 +51,28 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
+// --------------- Inclusions standard ---------------
+#include <stdint.h>              // Types entiers (uint8_t, etc.)
+#include <stdbool.h>             // Type booléen (true/false)
+#include <stddef.h>              // Définit size_t, NULL, etc.
+#include <stdlib.h>              // Fonctions utilitaires standard
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include "system_config.h"
-#include "system_definitions.h"
-#include "bsp.h"
-#include "Mc32DriverLcd.h"
-#include "Mc32DriverAdc.h"
-#include "bsp.h"
- 
+// --------------- Inclusions Harmony ---------------
+#include "system_config.h"       // Configuration du système (Harmony)
+#include "system_definitions.h"  // Définitions du système (Harmony)
+#include "bsp.h"                 // Board Support Package Harmony
+
+// --------------- Inclusions supplémentaires ---------------
+// (Écran LCD, ADC, etc.)
+#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
+#include "Mc32DriverAdc.h"       // Pilote pour ADC
+#include "peripheral/ports/plib_ports.h" //Gestion des ports
+#include "gestPWM.h"
+
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-extern "C" {
 
+extern "C" {
 #endif
 // DOM-IGNORE-END 
 
@@ -75,141 +81,115 @@ extern "C" {
 // Section: Type Definitions
 // *****************************************************************************
 // *****************************************************************************
-
-// *****************************************************************************
-/* Application states
-
-  Summary:
-    Application states enumeration
-
-  Description:
-    This enumeration defines the valid application states.  These states
-    determine the behavior of the application at various times.
-*/
-
+// Masques pour les LEDs
+#define LEDS_PORTA_MASK  0b1000011111111111 // RA0-RA7 et RA15
+#define LEDS_PORTB_MASK  0b0000010000000000 // RB10
+/**
+ * @enum APP_STATES
+ * @brief Énumération pour les différents états de l'application.
+ */
 typedef enum
 {
-	/* Application's state machine's initial state. */
-	APP_STATE_INIT=0,
-    APP_STATE_WAIT,
-	APP_STATE_SERVICE_TASKS,
-
-	/* TODO: Define states used by the application state machine. */
-
+    APP_STATE_INIT = 0,      // État initial de l'application
+    APP_STATE_WAIT,          // État d'attente ou de temporisation
+    APP_STATE_SERVICE_TASKS, // État d'exécution des tâches applicatives
 } APP_STATES;
 
-
-// *****************************************************************************
-/* Application Data
-
-  Summary:
-    Holds application data
-
-  Description:
-    This structure holds the application's data.
-
-  Remarks:
-    Application strings and buffers are be defined outside this structure.
+/**
+ * @struct APP_DATA
+ * @brief Structure contenant les données de l'application.
  */
-
 typedef struct
 {
-    /* The application's current state */
-    APP_STATES state;
-    S_ADCResults AdcRes;
+    APP_STATES state;        //État courant de l'application
+    S_ADCResults AdcRes;     // Résultats ADC (structure personnalisée)
 } APP_DATA;
-
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Routines
 // *****************************************************************************
 // *****************************************************************************
-/* These routines are called by drivers when certain events occur.
-*/
-	
+/**
+ * @brief Fonction callback pour le Timer 1.
+ *
+ * Appelée lors de chaque interruption du Timer 1. Gère un compteur pour les premières
+ * secondes et lance l'exécution de tâches après ce délai.
+ */
+void App_Timer1Callback(void);
+
+/**
+ * @brief Fonction callback pour le Timer 4.
+ *
+ * Appelée lors de chaque interruption du Timer 4. Gère l'exécution de la PWM logicielle.
+ */
+void App_Timer4Callback(void);
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
 // *****************************************************************************
 // *****************************************************************************
 
-/*******************************************************************************
-  Function:
-    void APP_Initialize ( void )
-
-  Summary:
-     MPLAB Harmony application initialization routine.
-
-  Description:
-    This function initializes the Harmony application.  It places the 
-    application in its initial state and prepares it to run so that its 
-    APP_Tasks function can be called.
-
-  Precondition:
-    All other system initialization routines should be called before calling
-    this routine (in "SYS_Initialize").
-
-  Parameters:
-    None.
-
-  Returns:
-    None.
-
-  Example:
-    <code>
-    APP_Initialize();
-    </code>
-
-  Remarks:
-    This routine must be called from the SYS_Initialize function.
-*/
-
-void APP_Initialize ( void );
-void APP_UpdateState ( APP_STATES NewState );
-void App_Timer1Callback( void );
-void App_Timer4Callback(void);
-
-/*******************************************************************************
-  Function:
-    void APP_Tasks ( void )
-
-  Summary:
-    MPLAB Harmony Demo application tasks function
-
-  Description:
-    This routine is the Harmony Demo application's tasks function.  It
-    defines the application's state machine and core logic.
-
-  Precondition:
-    The system and application initialization ("SYS_Initialize") should be
-    called before calling this.
-
-  Parameters:
-    None.
-
-  Returns:
-    None.
-
-  Example:
-    <code>
-    APP_Tasks();
-    </code>
-
-  Remarks:
-    This routine must be called from SYS_Tasks() routine.
+/**
+ * @brief Initialise l'application.
+ *
+ * Cette fonction prépare l'application pour qu'elle puisse être exécutée.
+ * Elle doit être appelée depuis la fonction `SYS_Initialize()`.
+ *
+ * @pre Toutes les initialisations du système doivent être terminées avant d?appeler cette fonction.
  */
+void APP_Initialize(void);
 
-void APP_Tasks( void );
+/**
+ * @brief Met à jour l'état courant de l'application.
+ *
+ * @param NewState Le nouvel état à affecter (de type @c APP_STATES).
+ */
+void APP_UpdateState(APP_STATES NewState);
 
+/**
+ * @brief Gère la machine à états principale de l'application.
+ *
+ * Cette fonction définit la logique principale de l'application et est appelée
+ * de manière continue depuis `SYS_Tasks()`. En fonction de l'état courant,
+ * différentes actions sont exécutées.
+ */
+void APP_Tasks(void);
 
-#endif /* _APP_H */
+// *****************************************************************************
+// *****************************************************************************
+// Section: Application specific functions
+// *****************************************************************************
+// *****************************************************************************
+/**
+ * @brief Allume toutes les LEDs actives bas.
+ *
+ * Met à l'état bas toutes les broches associées aux LEDs.
+ */
+void TurnOnAllLEDs(void);
 
-//DOM-IGNORE-BEGIN
+/**
+ * @brief Éteint toutes les LEDs actives bas.
+ *
+ * Met à l'état haut toutes les broches associées aux LEDs.
+ */
+void TurnOffAllLEDs(void);
+
+/**
+ * @brief Efface l'affichage de l'écran LCD.
+ *
+ * Cette fonction nettoie toutes les lignes de l'écran LCD.
+ */
+void ClearLcd(void);
+
+// DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
-//DOM-IGNORE-END
+// DOM-IGNORE-END
+
+#endif /* _APP_H */
 
 /*******************************************************************************
  End of File
