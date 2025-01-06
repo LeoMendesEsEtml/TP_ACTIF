@@ -53,21 +53,23 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // --------------- Inclusions standard ---------------
 #include <stdint.h>              // Types entiers (uint8_t, etc.)
-#include <stdbool.h>             // Type booléen (true/false)
-#include <stddef.h>              // Définit size_t, NULL, etc.
+#include <stdbool.h>             // Type boolÃ©en (true/false)
+#include <stddef.h>              // DÃ©finit size_t, NULL, etc.
 #include <stdlib.h>              // Fonctions utilitaires standard
 
 // --------------- Inclusions Harmony ---------------
-#include "system_config.h"       // Configuration du système (Harmony)
-#include "system_definitions.h"  // Définitions du système (Harmony)
+#include "system_config.h"       // Configuration du systÃ¨me (Harmony)
+#include "system_definitions.h"  // DÃ©finitions du systÃ¨me (Harmony)
 #include "bsp.h"                 // Board Support Package Harmony
 
-// --------------- Inclusions supplémentaires ---------------
-// (Écran LCD, ADC, etc.)
-#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
+// --------------- Inclusions supplÃ©mentaires ---------------
+// (Ã‰cran LCD, ADC, etc.)
+#include "Mc32DriverLcd.h"       // Pilote pour Ã©cran LCD
 #include "Mc32DriverAdc.h"       // Pilote pour ADC
 #include "peripheral/ports/plib_ports.h" //Gestion des ports
+
 #include "gestPWM.h"            // gestion des pwm
+
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -86,23 +88,23 @@ extern "C" {
 #define LEDS_PORTB_MASK  0b0000010000000000 // RB10
 /**
  * @enum APP_STATES
- * @brief Énumération pour les différents états de l'application.
+ * @brief Ã‰numÃ©ration pour les diffÃ©rents Ã©tats de l'application.
  */
 typedef enum
 {
-    APP_STATE_INIT = 0,      // État initial de l'application
-    APP_STATE_WAIT,          // État d'attente ou de temporisation
-    APP_STATE_SERVICE_TASKS, // État d'exécution des tâches applicatives
+    APP_STATE_INIT = 0,      // Ã‰tat initial de l'application
+    APP_STATE_WAIT,          // Ã‰tat d'attente ou de temporisation
+    APP_STATE_SERVICE_TASKS, // Ã‰tat d'exÃ©cution des tÃ¢ches applicatives
 } APP_STATES;
 
 /**
  * @struct APP_DATA
- * @brief Structure contenant les données de l'application.
+ * @brief Structure contenant les donnÃ©es de l'application.
  */
 typedef struct
 {
-    APP_STATES state;        //État courant de l'application
-    S_ADCResults AdcRes;     // Résultats ADC (structure personnalisée)
+    APP_STATES state;        //Ã‰tat courant de l'application
+    S_ADCResults AdcRes;     // RÃ©sultats ADC (structure personnalisÃ©e)
 } APP_DATA;
 
 // *****************************************************************************
@@ -113,15 +115,15 @@ typedef struct
 /**
  * @brief Fonction callback pour le Timer 1.
  *
- * Appelée lors de chaque interruption du Timer 1. Gère un compteur pour les premières
- * secondes et lance l'exécution de tâches après ce délai.
+ * AppelÃ©e lors de chaque interruption du Timer 1. GÃ¨re un compteur pour les premiÃ¨res
+ * secondes et lance l'exÃ©cution de tÃ¢ches aprÃ¨s ce dÃ©lai.
  */
 void App_Timer1Callback(void);
 
 /**
  * @brief Fonction callback pour le Timer 4.
  *
- * Appelée lors de chaque interruption du Timer 4. Gère l'exécution de la PWM logicielle.
+ * AppelÃ©e lors de chaque interruption du Timer 4. GÃ¨re l'exÃ©cution de la PWM logicielle.
  */
 void App_Timer4Callback(void);
 
@@ -134,26 +136,26 @@ void App_Timer4Callback(void);
 /**
  * @brief Initialise l'application.
  *
- * Cette fonction prépare l'application pour qu'elle puisse être exécutée.
- * Elle doit être appelée depuis la fonction `SYS_Initialize()`.
+ * Cette fonction prÃ©pare l'application pour qu'elle puisse Ãªtre exÃ©cutÃ©e.
+ * Elle doit Ãªtre appelÃ©e depuis la fonction `SYS_Initialize()`.
  *
- * @pre Toutes les initialisations du système doivent être terminées avant d?appeler cette fonction.
+ * @pre Toutes les initialisations du systÃ¨me doivent Ãªtre terminÃ©es avant d?appeler cette fonction.
  */
 void APP_Initialize(void);
 
 /**
- * @brief Met à jour l'état courant de l'application.
+ * @brief Met Ã  jour l'Ã©tat courant de l'application.
  *
- * @param NewState Le nouvel état à affecter (de type @c APP_STATES).
+ * @param NewState Le nouvel Ã©tat Ã  affecter (de type @c APP_STATES).
  */
 void APP_UpdateState(APP_STATES NewState);
 
 /**
- * @brief Gère la machine à états principale de l'application.
+ * @brief GÃ¨re la machine Ã  Ã©tats principale de l'application.
  *
- * Cette fonction définit la logique principale de l'application et est appelée
- * de manière continue depuis `SYS_Tasks()`. En fonction de l'état courant,
- * différentes actions sont exécutées.
+ * Cette fonction dÃ©finit la logique principale de l'application et est appelÃ©e
+ * de maniÃ¨re continue depuis `SYS_Tasks()`. En fonction de l'Ã©tat courant,
+ * diffÃ©rentes actions sont exÃ©cutÃ©es.
  */
 void APP_Tasks(void);
 
@@ -165,21 +167,21 @@ void APP_Tasks(void);
 /**
  * @brief Allume toutes les LEDs actives bas.
  *
- * Met à l'état bas toutes les broches associées aux LEDs.
+ * Met Ã  l'Ã©tat bas toutes les broches associÃ©es aux LEDs.
  */
 void TurnOnAllLEDs(void);
 
 /**
- * @brief Éteint toutes les LEDs actives bas.
+ * @brief Ã‰teint toutes les LEDs actives bas.
  *
- * Met à l'état haut toutes les broches associées aux LEDs.
+ * Met Ã  l'Ã©tat haut toutes les broches associÃ©es aux LEDs.
  */
 void TurnOffAllLEDs(void);
 
 /**
- * @brief Efface l'affichage de l'écran LCD.
+ * @brief Efface l'affichage de l'Ã©cran LCD.
  *
- * Cette fonction nettoie toutes les lignes de l'écran LCD.
+ * Cette fonction nettoie toutes les lignes de l'Ã©cran LCD.
  */
 void ClearLcd(void);
 

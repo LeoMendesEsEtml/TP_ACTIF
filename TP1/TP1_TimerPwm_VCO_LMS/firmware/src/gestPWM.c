@@ -14,132 +14,132 @@
 S_pwmSettings PWMData;  // pour les settings
 
 /**
- * @brief Initialise les paramètres et l'état pour le module PWM.
+ * @brief Initialise les paramÃ¨tres et l'Ã©tat pour le module PWM.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @param pData Pointeur vers une structure S_pwmSettings contenant les paramètres PWM à initialiser.
+ * @param pData Pointeur vers une structure S_pwmSettings contenant les paramÃ¨tres PWM Ã  initialiser.
  *
- * @details Cette fonction initialise les données PWM à leurs valeurs par défaut,
- *          active le pont en H et démarre les timers ainsi que les sorties de comparaison (OC).
+ * @details Cette fonction initialise les donnÃ©es PWM Ã  leurs valeurs par dÃ©faut,
+ *          active le pont en H et dÃ©marre les timers ainsi que les sorties de comparaison (OC).
  */
 void GPWM_Initialize(S_pwmSettings *pData)
 {
-    // Initialisation des paramètres PWM
-    pData->absSpeed = 0;        // Vitesse absolue initialisée à 0
-    pData->absAngle = 0;        // Angle absolu initialisé à 0
-    pData->SpeedSetting = 0;    // Réglage de vitesse initialisé à 0
+    // Initialisation des paramÃ¨tres PWM
+    pData->absSpeed = 0;        // Vitesse absolue initialisÃ©e Ã  0
+    pData->absAngle = 0;        // Angle absolu initialisÃ© Ã  0
+    pData->SpeedSetting = 0;    // RÃ©glage de vitesse initialisÃ© Ã  0
 
     // Activation du pont en H pour la commande moteur
     BSP_EnableHbrige();
 
-    // Démarrage des timers nécessaires au fonctionnement du PWM
+    // DÃ©marrage des timers nÃ©cessaires au fonctionnement du PWM
     DRV_TMR0_Start(); // Timer 1
     DRV_TMR1_Start(); // Timer 2
     DRV_TMR2_Start(); // Timer 3
-    // Le timer 4 dois être activé une fois l'initialisation débutée ou les condition de
-    // D'init ne sont pas complète = LED4 CLignotte car PWM Actif
+    // Le timer 4 dois Ãªtre activÃ© une fois l'initialisation dÃ©butÃ©e ou les condition de
+    // D'init ne sont pas complÃ¨te = LED4 CLignotte car PWM Actif
     //DRV_TMR3_Start(); // Timer 4
 
-    // Démarrage des sorties de comparaison pour générer les signaux PWM
-    DRV_OC0_Start(); // Output Compare N°0 = OC2
-    DRV_OC1_Start(); // Output Compare N°1 = OC3
+    // DÃ©marrage des sorties de comparaison pour gÃ©nÃ©rer les signaux PWM
+    DRV_OC0_Start(); // Output Compare NÂ°0 = OC2
+    DRV_OC1_Start(); // Output Compare NÂ°1 = OC3
 }
 
 /**
- * @brief Lit les paramètres PWM à partir des valeurs des ADC (moyennes glissantes).
+ * @brief Lit les paramÃ¨tres PWM Ã  partir des valeurs des ADC (moyennes glissantes).
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @param pData Pointeur vers une structure S_pwmSettings pour stocker les paramètres calculés.
+ * @param pData Pointeur vers une structure S_pwmSettings pour stocker les paramÃ¨tres calculÃ©s.
  *
- * @details Cette fonction lit les résultats bruts des ADC, calcule les moyennes glissantes
- *          pour les canaux spécifiés, et met à jour les réglages de vitesse et d'angle
+ * @details Cette fonction lit les rÃ©sultats bruts des ADC, calcule les moyennes glissantes
+ *          pour les canaux spÃ©cifiÃ©s, et met Ã  jour les rÃ©glages de vitesse et d'angle
  *          dans la structure `pData`.
  */
 void GPWM_GetSettings(S_pwmSettings *pData) {
-    // Buffers circulaires pour les valeurs ADC du canal 1 (statique pour conserver les données entre appels)
-    static uint16_t adc1Values[ADC_SAMPLING_SIZE] = {0}; // Stocke les dernières valeurs ADC du canal 1
+    // Buffers circulaires pour les valeurs ADC du canal 1 (statique pour conserver les donnÃ©es entre appels)
+    static uint16_t adc1Values[ADC_SAMPLING_SIZE] = {0}; // Stocke les derniÃ¨res valeurs ADC du canal 1
     static uint32_t adc1Sum = 0; // Somme des valeurs dans le buffer circulaire du canal 1
-    // Buffers circulaires pour les valeurs ADC du canal 2 (statique pour conserver les données entre appels)
-    static uint16_t adc2Values[ADC_SAMPLING_SIZE] = {0}; // Stocke les dernières valeurs ADC du canal 2
+    // Buffers circulaires pour les valeurs ADC du canal 2 (statique pour conserver les donnÃ©es entre appels)
+    static uint16_t adc2Values[ADC_SAMPLING_SIZE] = {0}; // Stocke les derniÃ¨res valeurs ADC du canal 2
     static uint32_t adc2Sum = 0; // Somme des valeurs dans le buffer circulaire du canal 2
     // Index statique pour suivre la position actuelle dans les buffers circulaires
     static uint8_t index = 0;
 
-    // Variables intermédiaires pour le traitement
+    // Variables intermÃ©diaires pour le traitement
     static uint32_t avgAdc1 = 0; // Moyenne glissante pour le canal 1
     static uint32_t avgAdc2 = 0; // Moyenne glissante pour le canal 2
-    static int16_t speedSigned = 0; // Vitesse signée calculée à partir du canal 1
-    static uint8_t speedAbsolute = 0; // Vitesse absolue calculée à partir de speedSigned
-    static uint8_t angle = 0; // Angle calculé à partir du canal 2
+    static int16_t speedSigned = 0; // Vitesse signÃ©e calculÃ©e Ã  partir du canal 1
+    static uint8_t speedAbsolute = 0; // Vitesse absolue calculÃ©e Ã  partir de speedSigned
+    static uint8_t angle = 0; // Angle calculÃ© Ã  partir du canal 2
 
-    // Lecture des valeurs brutes des ADC à partir du matériel
-    S_ADCResults adcResults = BSP_ReadAllADC(); // Récupère les dernières mesures des canaux ADC
+    // Lecture des valeurs brutes des ADC Ã  partir du matÃ©riel
+    S_ADCResults adcResults = BSP_ReadAllADC(); // RÃ©cupÃ¨re les derniÃ¨res mesures des canaux ADC
 
-    // Mise à jour des buffers circulaires pour le canal 1
+    // Mise Ã  jour des buffers circulaires pour le canal 1
     adc1Sum = adc1Sum - adc1Values[index]; // Retire la plus ancienne valeur de la somme
     adc1Values[index] = adcResults.Chan0; // Ajoute la nouvelle valeur dans le buffer
-    adc1Sum = adc1Sum + adc1Values[index]; // Ajoute la nouvelle valeur à la somme
+    adc1Sum = adc1Sum + adc1Values[index]; // Ajoute la nouvelle valeur Ã  la somme
 
-    // Mise à jour des buffers circulaires pour le canal 2
+    // Mise Ã  jour des buffers circulaires pour le canal 2
     adc2Sum = adc2Sum - adc2Values[index]; // Retire la plus ancienne valeur de la somme
     adc2Values[index] = adcResults.Chan1; // Ajoute la nouvelle valeur dans le buffer
-    adc2Sum = adc2Sum + adc2Values[index]; // Ajoute la nouvelle valeur à la somme
+    adc2Sum = adc2Sum + adc2Values[index]; // Ajoute la nouvelle valeur Ã  la somme
 
-    // Incrémentation de l'index et gestion du débordement
-    index = (index + 1) % ADC_SAMPLING_SIZE; // Passe à l'emplacement suivant dans le buffer circulaire
+    // IncrÃ©mentation de l'index et gestion du dÃ©bordement
+    index = (index + 1) % ADC_SAMPLING_SIZE; // Passe Ã  l'emplacement suivant dans le buffer circulaire
 
     // Calcul des moyennes glissantes
     avgAdc1 = adc1Sum / ADC_SAMPLING_SIZE; // Moyenne glissante des valeurs ADC pour le canal 1
     avgAdc2 = adc2Sum / ADC_SAMPLING_SIZE; // Moyenne glissante des valeurs ADC pour le canal 2
 
-    // Conversion des données ADC du canal 1 en une vitesse signée
+    // Conversion des donnÃ©es ADC du canal 1 en une vitesse signÃ©e
     speedSigned = ((avgAdc1 * ADC1_VALUE_MAX) / ADC1_MAX) - (ADC1_VALUE_MAX / 2); // Centre les valeurs autour de 0
 
     // Calcul de la vitesse absolue
     if (speedSigned < 0) {
-        speedAbsolute = -speedSigned; // Si la vitesse est négative, on prend la valeur absolue
+        speedAbsolute = -speedSigned; // Si la vitesse est nÃ©gative, on prend la valeur absolue
     } else {
         speedAbsolute = speedSigned; // Sinon, on garde la valeur telle quelle
     }
 
-    // Mise à jour de la structure avec les valeurs calculées pour la vitesse
-    pData->SpeedSetting = speedSigned; // Met à jour la vitesse signée (-99 à +99)
-    pData->absSpeed = speedAbsolute;   // Met à jour la vitesse absolue (0 à 99)
+    // Mise Ã  jour de la structure avec les valeurs calculÃ©es pour la vitesse
+    pData->SpeedSetting = speedSigned; // Met Ã  jour la vitesse signÃ©e (-99 Ã  +99)
+    pData->absSpeed = speedAbsolute;   // Met Ã  jour la vitesse absolue (0 Ã  99)
 
-    // Conversion des données ADC du canal 2 en un angle absolu
-    angle = (avgAdc2 * ADC2_ANGLE_MAX) / ADC2_MAX; // Échelle la valeur entre 0 et 180
-    pData->absAngle = angle; // Met à jour l'angle absolu (0 à 180 degrés)
+    // Conversion des donnÃ©es ADC du canal 2 en un angle absolu
+    angle = (avgAdc2 * ADC2_ANGLE_MAX) / ADC2_MAX; // Ã‰chelle la valeur entre 0 et 180
+    pData->absAngle = angle; // Met Ã  jour l'angle absolu (0 Ã  180 degrÃ©s)
 }
 
 /**
- * @brief Affiche les paramètres PWM sur l'écran LCD.
+ * @brief Affiche les paramÃ¨tres PWM sur l'Ã©cran LCD.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @param pData Pointeur vers une structure S_pwmSettings contenant les paramètres à afficher.
+ * @param pData Pointeur vers une structure S_pwmSettings contenant les paramÃ¨tres Ã  afficher.
  *
- * @details Cette fonction met à jour les lignes de l'écran LCD avec les informations suivantes :
+ * @details Cette fonction met Ã  jour les lignes de l'Ã©cran LCD avec les informations suivantes :
  *          - Ligne 1 : Titre statique.
- *          - Ligne 2 : Vitesse signée (SpeedSetting).
+ *          - Ligne 2 : Vitesse signÃ©e (SpeedSetting).
  *          - Ligne 3 : Vitesse absolue (absSpeed).
- *          - Ligne 4 : Angle ajusté (absAngle).
+ *          - Ligne 4 : Angle ajustÃ© (absAngle).
  */
 void GPWM_DispSettings(S_pwmSettings *pData)
 {
     // Ligne 1 : Message statique
-    lcd_gotoxy(1, 1); // Positionne le curseur en haut à gauche
+    lcd_gotoxy(1, 1); // Positionne le curseur en haut Ã  gauche
     printf_lcd("TP1 PWM 2024-25"); // Affiche le message statique
 
-    // Ligne 2 : Vitesse signée (SpeedSetting)
+    // Ligne 2 : Vitesse signÃ©e (SpeedSetting)
     lcd_gotoxy(1, 2); // Place le curseur pour le texte statique
-    printf_lcd("Speed:"); // Affiche l'étiquette "Speed"
+    printf_lcd("Speed:"); // Affiche l'Ã©tiquette "Speed"
 
-    lcd_gotoxy(11, 2); // Place la valeur à la colonne 11
+    lcd_gotoxy(11, 2); // Place la valeur Ã  la colonne 11
     if (pData->SpeedSetting == 0)
     {
-        // Afficher "0" sans signe, sur 3 caractères pour garder l'alignement
+        // Afficher "0" sans signe, sur 3 caractÃ¨res pour garder l'alignement
         printf_lcd("%3d", pData->SpeedSetting); // Exemple : "  0"
     }
     else if (pData->SpeedSetting > 0)
@@ -158,36 +158,36 @@ void GPWM_DispSettings(S_pwmSettings *pData)
     }
     else
     {
-        // Vitesse négative
+        // Vitesse nÃ©gative
         printf_lcd("%3d", pData->SpeedSetting); // Exemple : "-15"
     }
 
 
     // Ligne 3 : Vitesse absolue (absSpeed)
     lcd_gotoxy(1, 3); // Place le curseur pour le texte statique
-    printf_lcd("AbsSpeed:"); // Affiche l'étiquette "AbsSpeed"
+    printf_lcd("AbsSpeed:"); // Affiche l'Ã©tiquette "AbsSpeed"
 
-    lcd_gotoxy(11, 3); // Place la valeur à la colonne 11
-    printf_lcd("%3d", pData->absSpeed); // Affiche la vitesse absolue sur 3 caractères, exemple : " 99"
+    lcd_gotoxy(11, 3); // Place la valeur Ã  la colonne 11
+    printf_lcd("%3d", pData->absSpeed); // Affiche la vitesse absolue sur 3 caractÃ¨res, exemple : " 99"
 
-    // Ligne 4 : Angle ajusté (absAngle)
+    // Ligne 4 : Angle ajustÃ© (absAngle)
     lcd_gotoxy(1, 4); // Place le curseur pour le texte statique
-    printf_lcd("Angle:"); // Affiche l'étiquette "Angle"
+    printf_lcd("Angle:"); // Affiche l'Ã©tiquette "Angle"
 
-    lcd_gotoxy(11, 4); // Place la valeur à la colonne 11
-    printf_lcd("%3d", pData->absAngle - 90); // Affiche l'angle ajusté (-90 à +90) sur 3 caractères
+    lcd_gotoxy(11, 4); // Place la valeur Ã  la colonne 11
+    printf_lcd("%3d", pData->absAngle - 90); // Affiche l'angle ajustÃ© (-90 Ã  +90) sur 3 caractÃ¨res
 }
 
 /**
- * @brief Exécute la PWM et contrôle le moteur en fonction des paramètres.
+ * @brief ExÃ©cute la PWM et contrÃ´le le moteur en fonction des paramÃ¨tres.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @param pData Pointeur vers une structure S_pwmSettings contenant les paramètres de vitesse et d'angle.
+ * @param pData Pointeur vers une structure S_pwmSettings contenant les paramÃ¨tres de vitesse et d'angle.
  *
- * @details Cette fonction gère le contrôle du pont en H pour la direction du moteur, calcule la largeur
- *          d'impulsion pour les canaux PWM (OC2 et OC3), et met à jour ces largeurs en fonction des
- *          paramètres fournis.
+ * @details Cette fonction gÃ¨re le contrÃ´le du pont en H pour la direction du moteur, calcule la largeur
+ *          d'impulsion pour les canaux PWM (OC2 et OC3), et met Ã  jour ces largeurs en fonction des
+ *          paramÃ¨tres fournis.
  */
 void GPWM_ExecPWM(S_pwmSettings *pData)
 {
@@ -195,67 +195,67 @@ void GPWM_ExecPWM(S_pwmSettings *pData)
     static uint16_t PulseWidthOC2;
     static uint16_t PulseWidthOC3;
 
-    // Contrôle de l'état du pont en H en fonction de la vitesse
+    // ContrÃ´le de l'Ã©tat du pont en H en fonction de la vitesse
     if (pData->SpeedSetting < 0)
     {
-        // Direction négative : active AIN1 et désactive AIN2
+        // Direction nÃ©gative : active AIN1 et dÃ©sactive AIN2
         PLIB_PORTS_PinSet(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
         PLIB_PORTS_PinClear(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
     }
     else if (pData->SpeedSetting > 0)
     {
-        // Direction positive : active AIN2 et désactive AIN1
+        // Direction positive : active AIN2 et dÃ©sactive AIN1
         PLIB_PORTS_PinClear(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
         PLIB_PORTS_PinSet(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
     }
     else
     {
-        // Vitesse nulle : désactive les deux entrées du pont en H
+        // Vitesse nulle : dÃ©sactive les deux entrÃ©es du pont en H
         PLIB_PORTS_PinClear(PORTS_ID_0, AIN1_HBRIDGE_PORT, AIN1_HBRIDGE_BIT);
         PLIB_PORTS_PinClear(PORTS_ID_0, AIN2_HBRIDGE_PORT, AIN2_HBRIDGE_BIT);
     }
 
     // Calcul de la largeur d'impulsion pour OC2 (PWM pour la vitesse)
-    PulseWidthOC2 = pData->absSpeed * PWM_OC2_SCALE; // Étape 1 : Multiplie par l'échelle 125
-    PulseWidthOC2 = PulseWidthOC2 / PWM_OC2_DIV;   // Étape 2 : Divise par 99 pour normaliser (0% à 100%)
-    PLIB_OC_PulseWidth16BitSet(OC_ID_2, PulseWidthOC2); // Applique la largeur calculée à OC2
+    PulseWidthOC2 = pData->absSpeed * PWM_OC2_SCALE; // Ã‰tape 1 : Multiplie par l'Ã©chelle 125
+    PulseWidthOC2 = PulseWidthOC2 / PWM_OC2_DIV;   // Ã‰tape 2 : Divise par 99 pour normaliser (0% Ã  100%)
+    PLIB_OC_PulseWidth16BitSet(OC_ID_2, PulseWidthOC2); // Applique la largeur calculÃ©e Ã  OC2
 
     // Calcul de la largeur d'impulsion pour OC3 (PWM pour l'angle)
-    PulseWidthOC3 = ((pData->absAngle * (PWM_OC3_MAX - PWM_OC3_MIN)) / PWM_OC3_DIV) + PWM_OC3_MIN; // 0.6 ms à 2.4 ms
-    PLIB_OC_PulseWidth16BitSet(OC_ID_3, PulseWidthOC3); // Applique la largeur calculée à OC3
+    PulseWidthOC3 = ((pData->absAngle * (PWM_OC3_MAX - PWM_OC3_MIN)) / PWM_OC3_DIV) + PWM_OC3_MIN; // 0.6 ms Ã  2.4 ms
+    PLIB_OC_PulseWidth16BitSet(OC_ID_3, PulseWidthOC3); // Applique la largeur calculÃ©e Ã  OC3
 }
 
 /**
- * @brief Exécute une PWM logicielle pour le contrôle d'une LED.
+ * @brief ExÃ©cute une PWM logicielle pour le contrÃ´le d'une LED.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @param pData Pointeur vers une structure S_pwmSettings contenant les paramètres de vitesse (absSpeed).
+ * @param pData Pointeur vers une structure S_pwmSettings contenant les paramÃ¨tres de vitesse (absSpeed).
  *
- * @details Cette fonction génère une PWM logicielle en contrôlant l'état de la LED BSP_LED_2
- *          en fonction de la vitesse absolue. La période est fixe (100 cycles).
+ * @details Cette fonction gÃ©nÃ¨re une PWM logicielle en contrÃ´lant l'Ã©tat de la LED BSP_LED_2
+ *          en fonction de la vitesse absolue. La pÃ©riode est fixe (100 cycles).
  */
 void GPWM_ExecPWMSoft(S_pwmSettings *pData)
 {
-    // Compteur pour générer la PWM logicielle
+    // Compteur pour gÃ©nÃ©rer la PWM logicielle
     static uint8_t pwmCounter = 0;
 
-    // Gestion de l'état de la LED en fonction de la vitesse absolue
+    // Gestion de l'Ã©tat de la LED en fonction de la vitesse absolue
     if (pwmCounter < pData->absSpeed || pData->absSpeed == 99)
     {
-        // Lorsque le compteur est inférieur à la vitesse absolue (ON)
-        BSP_LEDOff(BSP_LED_2); // État logique pour éteindre la LED
+        // Lorsque le compteur est infÃ©rieur Ã  la vitesse absolue (ON)
+        BSP_LEDOff(BSP_LED_2); // Ã‰tat logique pour Ã©teindre la LED
     }
     else
     {
         // Sinon, allumer la LED
-        BSP_LEDOn(BSP_LED_2); // État logique pour allumer la LED
+        BSP_LEDOn(BSP_LED_2); // Ã‰tat logique pour allumer la LED
     }
 
-    // Incrémentation du compteur
+    // IncrÃ©mentation du compteur
     pwmCounter = pwmCounter + 1;
 
-    // Réinitialisation du compteur après 100 cycles
+    // RÃ©initialisation du compteur aprÃ¨s 100 cycles
     if (pwmCounter >= 100)
     {
         pwmCounter = 0;

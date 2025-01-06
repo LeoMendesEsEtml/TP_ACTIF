@@ -82,31 +82,32 @@ S_pwmSettings pData;
 // Section: Application Callback Functions
 // *****************************************************************************
 // *****************************************************************************
+
 /**
- * @brief Callback pour le Timer 1. GËre les actions pÈriodiques de l'application.
+ * @brief Callback pour le Timer 1. G√®re les actions p√©riodiques de l'application.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @details Cette fonction est appelÈe ‡ chaque interruption du Timer 1. Elle gËre
- *          un compteur pour les 3 premiËres secondes, met ‡ jour l'Ètat de l'application
- *          et exÈcute des t‚ches spÈcifiques aprËs cette pÈriode.
+ * @details Cette fonction est appel√©e √† chaque interruption du Timer 1. Elle g√®re
+ *          un compteur pour les 3 premi√®res secondes, met √† jour l'√©tat de l'application
+ *          et ex√©cute des t√¢ches sp√©cifiques apr√®s cette p√©riode.
  */
 void App_Timer1Callback()
 {
-    // Compteur pour les 3 premiËres secondes (approximation basÈe sur une pÈriode du timer)
+    // Compteur pour les 3 premi√®res secondes (approximation bas√©e sur une p√©riode du timer)
     static uint8_t threeSecondCounter = 0;
 
     // Compteur pour nettoyer les lignes LCD une seule fois
     static uint8_t endInit = 0;
 
-    // Pendant les 3 premiËres secondes
+    // Pendant les 3 premi√®res secondes
     if (threeSecondCounter < 149)
     {
-        threeSecondCounter++; // IncrÈmente le compteur
+        threeSecondCounter++; // Incr√©mente le compteur
     }
     else
     {
-        // AprËs les 3 premiËres secondes, exÈcute les t‚ches de service
+        // Apr√®s les 3 premi√®res secondes, ex√©cute les t√¢ches de service
         APP_UpdateState(APP_STATE_SERVICE_TASKS);
         
         // Nettoie les lignes 2 et 3 du LCD une seule fois
@@ -118,43 +119,44 @@ void App_Timer1Callback()
             endInit = 1; 
         }
 
-        // Allume la LED 0 (BSP_LED_0) pour indiquer l'exÈcution des t‚ches
+        // Allume la LED 0 (BSP_LED_0) pour indiquer l'ex√©cution des t√¢ches
         BSP_LEDOn(BSP_LED_0);
 
-        // RÈcupËre les paramËtres PWM dans `pData`
+        // R√©cup√®re les param√®tres PWM dans `pData`
         GPWM_GetSettings(&pData);
 
-        // Affiche les paramËtres PWM sur l'Ècran LCD
+        // Affiche les param√®tres PWM sur l'√©cran LCD
         GPWM_DispSettings(&pData);
 
-        // ExÈcute la PWM avec les paramËtres actuels
+        // Ex√©cute la PWM avec les param√®tres actuels
         GPWM_ExecPWM(&pData);
 
-        // …teint la LED 0 (BSP_LED_0) aprËs l'exÈcution des t‚ches
+        // √âteint la LED 0 (BSP_LED_0) apr√®s l'ex√©cution des t√¢ches
         BSP_LEDOff(BSP_LED_0);
     }
 }
 
 /**
- * @brief Callback pour le Timer 4. GËre l'exÈcution de la PWM logiciel.
+ * @brief Callback pour le Timer 4. G√®re l'ex√©cution de la PWM logiciel.
  * @author LMS - VCO
  * @date 2025-01-02
  *
- * @details Cette fonction est appelÈe ‡ chaque interruption du Timer 4. Elle allume
- *          une LED pour indiquer l'exÈcution de la PWM logiciel, exÈcute la PWM
- *          et Èteint ensuite la LED.
+ * @details Cette fonction est appel√©e √† chaque interruption du Timer 4. Elle allume
+ *          une LED pour indiquer l'ex√©cution de la PWM logiciel, ex√©cute la PWM
+ *          et √©teint ensuite la LED.
  */
 void App_Timer4Callback()
 {
-    // Allume la LED BSP_LED_1 pendant l'exÈcution de la PWM logiciel
+    // Allume la LED BSP_LED_1 pendant l'ex√©cution de la PWM logiciel
     BSP_LEDOn(BSP_LED_1);
 
-    // ExÈcute la PWM logiciel avec les paramËtres contenus dans `pData`
+    // Ex√©cute la PWM logiciel avec les param√®tres contenus dans `pData`
     GPWM_ExecPWMSoft(&pData);
 
-    // …teint la LED BSP_LED_1 aprËs l'exÈcution de la PWM logiciel
+    // √âteint la LED BSP_LED_1 apr√®s l'ex√©cution de la PWM logiciel
     BSP_LEDOff(BSP_LED_1);
 }
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -163,15 +165,15 @@ void App_Timer4Callback()
 // *****************************************************************************
 
 /**
- * @brief Nettoie l'Ècran LCD en effaÁant toutes ses lignes (1 ‡ 4).
+ * @brief Nettoie l'√©cran LCD en effa√ßant toutes ses lignes (1 √† 4).
  * 
  * @author LMS- VCO
  * @date 2025-01-02
  *
  * @details
  * Cette fonction appelle successivement la routine `lcd_ClearLine()` pour
- * chaque ligne de l'Ècran (de la 1 ‡ la 4), permettant ainsi de rÈinitialiser
- * complËtement l'affichage avant d'y Ècrire de nouvelles informations.
+ * chaque ligne de l'√©cran (de la 1 √† la 4), permettant ainsi de r√©initialiser
+ * compl√®tement l'affichage avant d'y √©crire de nouvelles informations.
  */
 void ClearLcd()
 {
@@ -180,14 +182,15 @@ void ClearLcd()
     lcd_ClearLine(3);
     lcd_ClearLine(4);
 }
+
 /**
  * @brief Allume toutes les LEDs (actives bas).
  * @author LMS - VCO
  * @date 2025-01-02
  *
  * @details Cette fonction utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK`
- *          pour forcer les broches correspondantes ‡ l'Ètat bas (0), allumant ainsi
- *          les LEDs connectÈes.
+ *          pour forcer les broches correspondantes √† l'√©tat bas (0), allumant ainsi
+ *          les LEDs connect√©es.
  */
 void TurnOnAllLEDs(void) {
     // Allumer les LEDs sur PORTA et PORTB
@@ -198,16 +201,16 @@ void TurnOnAllLEDs(void) {
 }
 
 /**
- * @brief …teint toutes les LEDs (actives bas).
+ * @brief √âteint toutes les LEDs (actives bas).
  * @author LMS - VCO
  * @date 2025-01-02
  *
  * @details Cette fonction utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK`
- *          pour forcer les broches correspondantes ‡ l'Ètat haut (1), Èteignant ainsi
- *          les LEDs connectÈes.
+ *          pour forcer les broches correspondantes √† l'√©tat haut (1), √©teignant ainsi
+ *          les LEDs connect√©es.
  */
 void TurnOffAllLEDs(void) {
-    // …teindre les LEDs sur PORTA et PORTB
+    // √âteindre les LEDs sur PORTA et PORTB
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A, 
                      PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) | LEDS_PORTA_MASK);
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B, 
@@ -248,61 +251,61 @@ void APP_Tasks ( void )
     /* Check the application's current state. */
     switch ( appData.state )
     {
-        /* …tat initial de l'application */
+        /* √âtat initial de l'application */
         case APP_STATE_INIT:
         {
-            // Variable statique utilisÈe pour s'assurer que cette section ne s'exÈcute qu'une seule fois
+            // Variable statique utilis√©e pour s'assurer que cette section ne s'ex√©cute qu'une seule fois
             static uint8_t firstInit = 1; 
     
             if (firstInit == 1)
             {
-                // Mise ‡ jour de la variable pour empÍcher la rÈinitialisation lors des prochains appels
+                // Mise √† jour de la variable pour emp√™cher la r√©initialisation lors des prochains appels
                 firstInit = 0; 
                 
-                // Initialisation de l'Ècran LCD
+                // Initialisation de l'√©cran LCD
                 lcd_init(); 
         
-                // Allume le rÈtroÈclairage de l'Ècran LCD
+                // Allume le r√©tro√©clairage de l'√©cran LCD
                 lcd_bl_on(); 
         
-                // Positionne le curseur ‡ la premiËre ligne du LCD
+                // Positionne le curseur √† la premi√®re ligne du LCD
                 lcd_gotoxy(1, 1); 
         
-                // Affiche un texte d'introduction sur la premiËre ligne
+                // Affiche un texte d'introduction sur la premi√®re ligne
                 printf_lcd("TP1 PWM 2024-25"); 
         
-                // Positionne le curseur ‡ la deuxiËme ligne
+                // Positionne le curseur √† la deuxi√®me ligne
                 lcd_gotoxy(1, 2); 
         
-                // Affiche le nom de l'auteur 1 sur la deuxiËme ligne
+                // Affiche le nom de l'auteur 1 sur la deuxi√®me ligne
                 printf_lcd("Leo Mendes"); 
         
-                // Positionne le curseur ‡ la troisiËme ligne
+                // Positionne le curseur √† la troisi√®me ligne
                 lcd_gotoxy(1, 3); 
         
-                // Affiche le nom de l'auteur 2 sur la troisiËme ligne
+                // Affiche le nom de l'auteur 2 sur la troisi√®me ligne
                 printf_lcd("Vitor Coelho");           
         
-                // Initialisation du PWM avec des donnÈes passÈes par pointeur
+                // Initialisation du PWM avec des donn√©es pass√©es par pointeur
                 GPWM_Initialize(&pData); 
 
-                // Initialisation des ADC (convertisseurs analogiques-numÈriques)
+                // Initialisation des ADC (convertisseurs analogiques-num√©riques)
                 BSP_InitADC10(); 
                 
                 TurnOffAllLEDs();
             }
         break; 
         }
-        /* …tat attente de l'application */
+        /* √âtat attente de l'application */
         case APP_STATE_WAIT :
         {
             break;
         }
         
-        /* …tat execution de l'application */
+        /* √âtat execution de l'application */
         case APP_STATE_SERVICE_TASKS :
         {
-            // Passage de l'Ètat de la achine en attente
+            // Passage de l'√©tat de la achine en attente
             APP_UpdateState(APP_STATE_WAIT);
             break; 
         }
@@ -310,28 +313,28 @@ void APP_Tasks ( void )
         /* The default state should never be executed. */
         default:
         {
-            /* Gestion d'erreur de la machine d'Ètat */
+            /* Gestion d'erreur de la machine d'√©tat */
             break;
         }
     }
 }
 
 /**
- * @brief Met ‡ jour l'Ètat actuel de l'application.
+ * @brief Met √† jour l'√©tat actuel de l'application.
  * @author LMS - VCO
  * @date 2025-01-02
  * 
- * @param Newstate Nouveau Ètat ‡ affecter ‡ l'application (type APP_STATES).
+ * @param Newstate Nouveau √©tat √† affecter √† l'application (type APP_STATES).
  * 
- * @details Cette fonction met ‡ jour la variable globale `appData.state` avec
- *          la valeur de l'Ètat fourni en paramËtre.
+ * @details Cette fonction met √† jour la variable globale `appData.state` avec
+ *          la valeur de l'√©tat fourni en param√®tre.
  */
 void APP_UpdateState(APP_STATES Newstate)
 {
-    // Met ‡ jour l'Ètat de l'application avec le nouvel Ètat spÈcifiÈ
+    // Met √† jour l'√©tat de l'application avec le nouvel √©tat sp√©cifi√©
     appData.state = Newstate;
 }
 
-/*******************************************************************************
+//*******************************************************************************
  End of File
  */
