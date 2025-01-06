@@ -12,48 +12,43 @@
 // Version      : V1.1
 // Compilateur  : XC32 V1.42 + Harmony 1.08
 //
-// Modification : 1.12.2023 SCA : enlevé decl. PWMData extern
+// Modification : 1.12.2023 SCA : enlevÃ© decl. PWMData extern
 //
 /*--------------------------------------------------------*/
-#include <stdint.h>                  // Types standard (uint8_t, etc.)
-#include "app.h"                    // Dépendances applicatives
-#include "bsp.h"                    // Gestion des ADC et matériel de base
-#include "Mc32DriverLcd.h"          // Pilote pour écran LCD
-#include "Mc32DriverAdc.h"          // Pilote pour ADC
 #include "peripheral/oc/plib_oc.h"  // Pilote pour Output Compare
 
 /*--------------------------------------------------------*/
-// Définitions des constantes
+// DÃ©finitions des constantes
 /*--------------------------------------------------------*/
 
-// Définitions constantes ADC1
+// DÃ©finitions constantes ADC1
 #define ADC_SAMPLING_SIZE 10  // Taille des buffers pour moyennes glissantes
-#define ADC1_MAX 1023         // Résolution maximale de l'ADC (10 bits)
-#define ADC1_VALUE_MAX 198    // Plage mappée pour vitesse (0 à 198)
+#define ADC1_MAX 1023         // RÃ©solution maximale de l'ADC (10 bits)
+#define ADC1_VALUE_MAX 198    // Plage mappÃ©e pour vitesse (0 Ã  198)
 
-// Définitions constantes ADC2
-#define ADC2_MAX 1023         // Résolution maximale de l'ADC (10 bits)
-#define ADC2_ANGLE_MAX 180    // Plage angulaire (0° à 180°)
-#define ADC2_ANGLE_OFFSET 90  // Décalage pour angle (-90° à +90°)
+// DÃ©finitions constantes ADC2
+#define ADC2_MAX 1023         // RÃ©solution maximale de l'ADC (10 bits)
+#define ADC2_ANGLE_MAX 180    // Plage angulaire (0Â° Ã  180Â°)
+#define ADC2_ANGLE_OFFSET 90  // DÃ©calage pour angle (-90Â° Ã  +90Â°)
 
 // Gestions des Output compare 
-#define PWM_OC2_SCALE 125    // Échelle pour le calcul de la largeur d'impulsion OC2
+#define PWM_OC2_SCALE 125    // Ã‰chelle pour le calcul de la largeur d'impulsion OC2
 #define PWM_OC2_DIV 99       // Diviseur pour normaliser la largeur d'impulsion OC2
 
 #define PWM_OC3_MIN 749      // Valeur minimale pour la largeur d'impulsion OC3
 #define PWM_OC3_MAX 2999     // Valeur maximale pour la largeur d'impulsion OC3
 #define PWM_OC3_DIV 180      // Diviseur pour normaliser la largeur d'impulsion OC3
 /*--------------------------------------------------------*/
-// Définition de la structure S_pwmSettings
+// DÃ©finition de la structure S_pwmSettings
 /*--------------------------------------------------------*/
 
 /**
- * @brief Structure contenant les paramètres pour la gestion des PWM.
+ * @brief Structure contenant les paramÃ¨tres pour la gestion des PWM.
  */
 typedef struct {
-    uint8_t absSpeed;    // Vitesse absolue (0 à 99)
-    uint8_t absAngle;    // Angle absolu (0 à 180)
-    int8_t SpeedSetting; // Consigne de vitesse (-99 à +99)
+    uint8_t absSpeed;    // Vitesse absolue (0 Ã  99)
+    uint8_t absAngle;    // Angle absolu (0 Ã  180)
+    int8_t SpeedSetting; // Consigne de vitesse (-99 Ã  +99)
 } S_pwmSettings;
 
 /*--------------------------------------------------------*/
@@ -61,32 +56,32 @@ typedef struct {
 /*--------------------------------------------------------*/
 
 /**
- * @brief Initialise la structure PWM et configure le matériel associé.
- * @param pData Pointeur vers la structure S_pwmSettings à initialiser.
+ * @brief Initialise la structure PWM et configure le matÃ©riel associÃ©.
+ * @param pData Pointeur vers la structure S_pwmSettings Ã  initialiser.
  */
 void GPWM_Initialize(S_pwmSettings *pData);
 
 /**
- * @brief Lit les données des ADC pour calculer la vitesse et l'angle.
- * @param pData Pointeur vers la structure S_pwmSettings à mettre à jour.
+ * @brief Lit les donnÃ©es des ADC pour calculer la vitesse et l'angle.
+ * @param pData Pointeur vers la structure S_pwmSettings Ã  mettre Ã  jour.
  */
 void GPWM_GetSettings(S_pwmSettings *pData);
 
 /**
- * @brief Affiche les paramètres PWM (vitesse et angle) sur un écran LCD.
- * @param pData Pointeur vers la structure S_pwmSettings à afficher.
+ * @brief Affiche les paramÃ¨tres PWM (vitesse et angle) sur un Ã©cran LCD.
+ * @param pData Pointeur vers la structure S_pwmSettings Ã  afficher.
  */
 void GPWM_DispSettings(S_pwmSettings *pData);
 
 /**
- * @brief Exécute la PWM pour le contrôle du moteur en fonction des consignes.
- * @param pData Pointeur vers la structure S_pwmSettings utilisée pour le contrôle.
+ * @brief ExÃ©cute la PWM pour le contrÃ´le du moteur en fonction des consignes.
+ * @param pData Pointeur vers la structure S_pwmSettings utilisÃ©e pour le contrÃ´le.
  */
 void GPWM_ExecPWM(S_pwmSettings *pData);
 
 /**
- * @brief Génère une PWM logicielle pour simuler un signal PWM.
- * @param pData Pointeur vers la structure S_pwmSettings utilisée pour la génération.
+ * @brief GÃ©nÃ¨re une PWM logicielle pour simuler un signal PWM.
+ * @param pData Pointeur vers la structure S_pwmSettings utilisÃ©e pour la gÃ©nÃ©ration.
  */
 void GPWM_ExecPWMSoft(S_pwmSettings *pData);
 
