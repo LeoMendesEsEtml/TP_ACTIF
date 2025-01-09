@@ -243,7 +243,7 @@
       <Template dnOrder="15">
         <Name dnOrder="0">system_config.h</Name>
         <Path dnOrder="1">Header&amp;#160;Files/app/system_config/default</Path>
-        <Checksum dnOrder="2">96D1DD310E8EB9DD0C693E0AF61ADE5B</Checksum>
+        <Checksum dnOrder="2">990D7898FCB609E009B991A6B0AD2F9E</Checksum>
       </Template>
       <Template dnOrder="16">
         <Name dnOrder="0">app.h</Name>
@@ -252,12 +252,12 @@
       <Template dnOrder="17">
         <Name dnOrder="0">drv_tmr_static.c</Name>
         <Path dnOrder="1">Source&amp;#160;Files/app/system_config/default/framework/driver/tmr/src</Path>
-        <Checksum dnOrder="2">1112742AA50B4F8F638F8ABBA60320DC</Checksum>
+        <Checksum dnOrder="2">73035D7BB73E1F9DFE9D369927E28786</Checksum>
       </Template>
       <Template dnOrder="18">
         <Name dnOrder="0">system_interrupt.c</Name>
         <Path dnOrder="1">Source&amp;#160;Files/app/system_config/default</Path>
-        <Checksum dnOrder="2">AFB335AF6DBCF489724E9812468AE10A</Checksum>
+        <Checksum dnOrder="2">1216398F7D468FA1630EB867904772E2</Checksum>
         <ProjectFileChecksum dnOrder="3">FC877B122116750A01A407CA23B60EC2</ProjectFileChecksum>
       </Template>
       <Template dnOrder="19">
