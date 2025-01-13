@@ -53,6 +53,20 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 #include "app.h"
+// --------------- Inclusions standard ---------------
+#include <stdint.h>              // Types entiers (uint8_t, etc.)
+
+// --------------- Inclusions Harmony ---------------
+#include "system_config.h"       // Configuration du système (Harmony)
+#include "system_definitions.h"  // Définitions du système (Harmony)
+#include "bsp.h"                 // Board Support Package Harmony
+
+// --------------- Inclusions supplémentaires ---------------
+// (Écran LCD, ADC, etc.)
+#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
+#include "Mc32DriverAdc.h"       // Pilote pour ADC
+#include "peripheral/ports/plib_ports.h" //Gestion des ports
+#include "gestPWM.h"            // gestion des pwm
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions

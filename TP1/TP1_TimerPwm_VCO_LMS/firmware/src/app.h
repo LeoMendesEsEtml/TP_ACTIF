@@ -51,23 +51,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-// --------------- Inclusions standard ---------------
-#include <stdint.h>              // Types entiers (uint8_t, etc.)
-#include <stdbool.h>             // Type booléen (true/false)
-#include <stddef.h>              // Définit size_t, NULL, etc.
-#include <stdlib.h>              // Fonctions utilitaires standard
-
-// --------------- Inclusions Harmony ---------------
-#include "system_config.h"       // Configuration du système (Harmony)
-#include "system_definitions.h"  // Définitions du système (Harmony)
-#include "bsp.h"                 // Board Support Package Harmony
-
-// --------------- Inclusions supplémentaires ---------------
-// (Écran LCD, ADC, etc.)
-#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
 #include "Mc32DriverAdc.h"       // Pilote pour ADC
-#include "peripheral/ports/plib_ports.h" //Gestion des ports
-#include "gestPWM.h"            // gestion des pwm
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
