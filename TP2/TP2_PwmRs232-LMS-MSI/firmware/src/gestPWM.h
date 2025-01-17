@@ -14,9 +14,8 @@
 //
 // Modification : 1.12.2023 SCA : enlevé decl. PWMData extern
 //
-/*--------------------------------------------------------*/
+// --------------- Inclusions supplémentaires ---------------
 #include "app.h"                    // Dépendances applicatives
-#include "peripheral/oc/plib_oc.h"  // Pilote pour Output Compare
 
 /*--------------------------------------------------------*/
 // Définitions des constantes

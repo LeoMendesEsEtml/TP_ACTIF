@@ -10,7 +10,21 @@
 //	Compilateur	:	XC32 V1.42 + Harmony 1.08
 //
 /*--------------------------------------------------------*/
-#include "GestPWM.h"
+// --------------- Inclusions standard ---------------
+#include <stdint.h>              // Types entiers (uint8_t, etc.)
+
+// --------------- Inclusions Harmony ---------------
+#include "system_config.h"       // Configuration du système (Harmony)
+#include "system_definitions.h"  // Définitions du système (Harmony)
+#include "bsp.h"                 // Board Support Package Harmony
+
+// --------------- Inclusions supplémentaires ---------------
+// (Écran LCD, ADC, etc.)
+#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
+#include "Mc32DriverAdc.h"       // Pilote pour ADC
+#include "gestPWM.h"            // gestion des pwm
+#include "peripheral/oc/plib_oc.h"  // Pilote pour Output Compare
+
 S_pwmSettings PWMData;  // pour les settings
 
 /**

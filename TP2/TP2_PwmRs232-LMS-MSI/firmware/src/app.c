@@ -53,6 +53,21 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 #include "app.h"
+// --------------- Inclusions standard ---------------
+#include <stdint.h>              // Types entiers (uint8_t, etc.)
+
+// --------------- Inclusions Harmony ---------------
+#include "system_config.h"       // Configuration du système (Harmony)
+#include "system_definitions.h"  // Définitions du système (Harmony)
+#include "bsp.h"                 // Board Support Package Harmony
+
+// --------------- Inclusions supplémentaires ---------------
+// (Écran LCD, ADC, etc.)
+#include "Mc32DriverLcd.h"       // Pilote pour écran LCD
+#include "Mc32DriverAdc.h"       // Pilote pour ADC
+#include "peripheral/ports/plib_ports.h" //Gestion des ports
+#include "gestPWM.h"            // gestion des pwm
+#include "Mc32gest_RS232.h"     // gestion des communications RS-232
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -109,51 +124,9 @@ void App_Timer1Callback()
         // Après les 3 premières secondes, exécute les tâches de service
         APP_UpdateState(APP_STATE_SERVICE_TASKS);
         
-        // Nettoie les lignes 2 et 3 du LCD une seule fois
-        if (endInit == 0)
-        {
-            DRV_TMR3_Start(); // Timer 4
-            // Nettoyer le LCD
-            ClearLcd();
-            endInit = 1; 
-        }
-
-        // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
-        BSP_LEDOn(BSP_LED_0);
-
-        // Récupère les paramètres PWM dans `pData`
-        GPWM_GetSettings(&pData);
-
-        // Affiche les paramètres PWM sur l'écran LCD
-        GPWM_DispSettings(&pData);
-
-        // Exécute la PWM avec les paramètres actuels
-        GPWM_ExecPWM(&pData);
-
-        // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
-        BSP_LEDOff(BSP_LED_0);
+        // Nettoyer le LCD
+        ClearLcd();
     }
-}
-
-/**
- * @brief Callback pour le Timer 4. Gère l'exécution de la PWM logiciel.
- * @author LMS - VCO
- * @date 2025-01-02
- *
- * @details Cette fonction est appelée à chaque interruption du Timer 4. Elle allume
- *          une LED pour indiquer l'exécution de la PWM logiciel, exécute la PWM
- *          et éteint ensuite la LED.
- */
-void App_Timer4Callback()
-{
-    // Allume la LED BSP_LED_1 pendant l'exécution de la PWM logiciel
-    BSP_LEDOn(BSP_LED_1);
-
-    // Exécute la PWM logiciel avec les paramètres contenus dans `pData`
-    GPWM_ExecPWMSoft(&pData);
-
-    // Éteint la LED BSP_LED_1 après l'exécution de la PWM logiciel
-    BSP_LEDOff(BSP_LED_1);
 }
 
 // *****************************************************************************
@@ -161,7 +134,6 @@ void App_Timer4Callback()
 // Section: Application Local Functions
 // *****************************************************************************
 // *****************************************************************************
-
 /**
  * @brief Nettoie l'écran LCD en effaçant toutes ses lignes (1 à 4).
  * 
@@ -180,6 +152,7 @@ void ClearLcd()
     lcd_ClearLine(3);
     lcd_ClearLine(4);
 }
+
 /**
  * @brief Allume toutes les LEDs (actives bas).
  * @author LMS - VCO
@@ -259,6 +232,8 @@ void APP_Tasks ( void )
                 // Mise à jour de la variable pour empêcher la réinitialisation lors des prochains appels
                 firstInit = 0; 
                 
+                TurnOffAllLEDs();
+                
                 // Initialisation de l'écran LCD
                 lcd_init(); 
         
@@ -269,7 +244,7 @@ void APP_Tasks ( void )
                 lcd_gotoxy(1, 1); 
         
                 // Affiche un texte d'introduction sur la première ligne
-                printf_lcd("TP1 PWM 2024-25"); 
+                printf_lcd("TP2 USART 2024-25"); 
         
                 // Positionne le curseur à la deuxième ligne
                 lcd_gotoxy(1, 2); 
@@ -281,7 +256,7 @@ void APP_Tasks ( void )
                 lcd_gotoxy(1, 3); 
         
                 // Affiche le nom de l'auteur 2 sur la troisième ligne
-                printf_lcd("Vitor Coelho");           
+                printf_lcd("Matteo Stefanelli");           
         
                 // Initialisation du PWM avec des données passées par pointeur
                 GPWM_Initialize(&pData); 
@@ -289,7 +264,9 @@ void APP_Tasks ( void )
                 // Initialisation des ADC (convertisseurs analogiques-numériques)
                 BSP_InitADC10(); 
                 
-                TurnOffAllLEDs();
+                // Initilisation de la fifo
+                InitFifoComm(); 
+                
             }
         break; 
         }
@@ -302,8 +279,28 @@ void APP_Tasks ( void )
         /* État execution de l'application */
         case APP_STATE_SERVICE_TASKS :
         {
+            // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
+            BSP_LEDOn(BSP_LED_0);
+
+            // Récupère les paramètres PWM dans `pData`
+            GPWM_GetSettings(&pData);
+
+            // Affiche les paramètres PWM sur l'écran LCD
+            GPWM_DispSettings(&pData);
+
+            // Exécute la PWM avec les paramètres actuels
+            GPWM_ExecPWM(&pData);
+
+            // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
+            BSP_LEDOff(BSP_LED_0);
+
+            GetMessage(&pData); 
+            
+            SendMessage(&pData);
+
             // Passage de l'état de la achine en attente
             APP_UpdateState(APP_STATE_WAIT);
+ 
             break; 
         }
 

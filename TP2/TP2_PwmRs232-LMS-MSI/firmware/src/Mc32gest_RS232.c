@@ -87,8 +87,6 @@ int GetMessage(S_pwmSettings *pData)
     GetCharFromFifo ( &descrFifoRX, &RxC );
     }
 
-    
-    
     // Gestion controle de flux de la réception
     if(GetWriteSpace ( &descrFifoRX) >= (2*MESS_SIZE)) {
         // autorise émission par l'autre
