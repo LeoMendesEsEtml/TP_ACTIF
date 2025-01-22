@@ -128,23 +128,33 @@ void GPWM_GetSettings(S_pwmSettings *pData) {
 }
 
 /**
- * @brief Affiche les paramètres PWM sur l'écran LCD.
+ * @brief Affiche les paramètres PWM sur l'écran LCD en fonction de CommStatus (local ou remote).
  * @author LMS - VCO
- * @date 2025-01-02
+ * @date 2025-01-22
  *
  * @param pData Pointeur vers une structure S_pwmSettings contenant les paramètres à afficher.
+ * @param CommStatus Indicateur d'état de communication :
+ *                   - 0 : Local (données obtenues localement via ADC).
+ *                   - 1 : Remote (données reçues via RS232).
  *
  * @details Cette fonction met à jour les lignes de l'écran LCD avec les informations suivantes :
- *          - Ligne 1 : Titre statique.
+ *          - Ligne 1 : Origine des réglages ("Remote Settings" ou "Local Settings").
  *          - Ligne 2 : Vitesse signée (SpeedSetting).
  *          - Ligne 3 : Vitesse absolue (absSpeed).
  *          - Ligne 4 : Angle ajusté (absAngle).
  */
-void GPWM_DispSettings(S_pwmSettings *pData)
+void GPWM_DispSettings(S_pwmSettings *pData, int CommStatus)
 {
-    // Ligne 1 : Message statique
+    // Ligne 1 : Origine des réglages
     lcd_gotoxy(1, 1); // Positionne le curseur en haut à gauche
-    printf_lcd("TP1 PWM 2024-25"); // Affiche le message statique
+    if (CommStatus == 1)
+    {
+        printf_lcd("Remote Settings"); // Affiche "Remote Settings"
+    }
+    else
+    {
+        printf_lcd("Local Settings"); // Affiche "Local Settings"
+    }
 
     // Ligne 2 : Vitesse signée (SpeedSetting)
     lcd_gotoxy(1, 2); // Place le curseur pour le texte statique
@@ -176,7 +186,6 @@ void GPWM_DispSettings(S_pwmSettings *pData)
         printf_lcd("%3d", pData->SpeedSetting); // Exemple : "-15"
     }
 
-
     // Ligne 3 : Vitesse absolue (absSpeed)
     lcd_gotoxy(1, 3); // Place le curseur pour le texte statique
     printf_lcd("AbsSpeed:"); // Affiche l'étiquette "AbsSpeed"
@@ -191,6 +200,7 @@ void GPWM_DispSettings(S_pwmSettings *pData)
     lcd_gotoxy(11, 4); // Place la valeur à la colonne 11
     printf_lcd("%3d", pData->absAngle - 90); // Affiche l'angle ajusté (-90 à +90) sur 3 caractères
 }
+
 
 /**
  * @brief Exécute la PWM et contrôle le moteur en fonction des paramètres.

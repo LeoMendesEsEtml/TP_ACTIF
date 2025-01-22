@@ -16,58 +16,11 @@
 #include "gestPWM.h"
 #include "Mc32CalCrc16.h"
 
-/**
- * @brief Union permettant de manipuler un entier 16 bits (uint16_t) de différentes manières.
- * 
- * Cette union offre deux représentations du même entier :
- * - Accès direct à la valeur complète via le membre `val` (uint16_t).
- * - Accès séparé aux deux octets constituant l'entier via la structure `shl` :
- *   - `lsb` : Octet de poids faible (Least Significant Byte).
- *   - `msb` : Octet de poids fort (Most Significant Byte).
- */
-typedef union {
-        uint16_t Val;
-        struct {uint8_t Lsb;
-                uint8_t Msb;} shl;
-} U_manip16;
-
-
-// Definition pour les messages (Taille du message)
-#define MESS_SIZE  5
-// avec int8_t besoin -86 au lieu de 0xAA
-#define STX_CODE  (-86)
-
-/**
- * @brief Structure décrivant le format d'un message.
- * 
- * Cette structure définit les différents champs nécessaires pour transmettre un message,
- * comprenant des informations de contrôle, des paramètres, et un CRC pour la vérification.
- * 
- * Champs :
- * - `Start` : Identifiant de début de message (1 octet).
- * - `Speed` : Vitesse exprimée en entier signé (1 octet, plage [-128, 127]).
- * - `Angle` : Angle exprimé en entier signé (1 octet, plage [-128, 127]).
- * - `MsbCrc` : Octet de poids fort du CRC (1 octet).
- * - `LsbCrc` : Octet de poids faible du CRC (1 octet).
- */
-typedef struct {
-    uint8_t Start;    // Identifiant du début du message
-    int8_t  Speed;    // Vitesse (valeur signée)
-    int8_t  Angle;    // Angle (valeur signée)
-    uint8_t MsbCrc;   // Octet de poids fort du CRC
-    uint8_t LsbCrc;   // Octet de poids faible du CRC
-} StruMess;
-
-
 
 // Struct pour émission des messages
 StruMess TxMess;
 // Struct pour réception des messages
 StruMess RxMess;
-
-// Declaration des FIFO pour réception et émission
-#define FIFO_RX_SIZE ( (4*MESS_SIZE) + 1)  // 4 messages
-#define FIFO_TX_SIZE ( (4*MESS_SIZE) + 1)  // 4 messages
 
 int8_t fifoRX[FIFO_RX_SIZE];
 // Declaration du descripteur du FIFO de réception
@@ -79,12 +32,6 @@ int8_t fifoTX[FIFO_TX_SIZE];
 S_fifo descrFifoTX;
 
 
-#define CRCINIT 0xFFFF
-// Déclaration des constantes pour GetMessage
-//Définition de la valeur de caractère de start
-#define CHARSTAR 0xAA
-// Nombre de message en erreur avant passage en local
-#define NBR_MESS_ERROR 10
 
 // Initialisation de la communication sérielle
 void InitFifoComm(void)
@@ -230,16 +177,19 @@ int GetMessage(S_pwmSettings *pData)
 void SendMessage(S_pwmSettings *pData)
 {
     // Variable locale pour stocker la taille libre dans la FIFO de transmission
-    int8_t freeSize;
+    int16_t FreeSize;
 
     // Initialisation de la valeur CRC avec une constante prédéfinie
     uint16_t CrcVal = CRCINIT;
+    
+    // Union pour le calcul et la validation du CRC
+    U_manip16 Crc;
 
     // Obtient l'espace libre disponible dans la FIFO TX
-    freeSize = GetWriteSpace(&descrFifoTX);
+    FreeSize = GetWriteSpace(&descrFifoTX);
 
     // Vérifie si l'espace libre est suffisant pour un message complet
-    if (freeSize >= MESS_SIZE)
+    if (FreeSize >= MESS_SIZE)
     {
         // Met à jour le CRC avec le code de démarrage du message
         CrcVal = updateCRC16(CrcVal, STX_CODE);
@@ -249,6 +199,9 @@ void SendMessage(S_pwmSettings *pData)
 
         // Met à jour le CRC avec la valeur de l'angle
         CrcVal = updateCRC16(CrcVal, pData->absAngle);
+        
+        // Affecte le crc caculer à l'union local CRC
+        Crc.Val = CrcVal;
 
         // Affecte le code de démarrage dans la structure TxMess
         TxMess.Start = STX_CODE;
@@ -260,10 +213,10 @@ void SendMessage(S_pwmSettings *pData)
         TxMess.Angle = pData->absAngle;
 
         // Affecte le MSB du CRC dans la structure TxMess
-        TxMess.MsbCrc = CrcVal >> 8;
+        TxMess.MsbCrc = Crc.shl.Msb;
 
         // Affecte le LSB du CRC dans la structure TxMess
-        TxMess.LsbCrc = CrcVal & 0xFF;
+        TxMess.LsbCrc = Crc.shl.Lsb;
 
         // Dépose le code de démarrage dans la FIFO TX
         PutCharInFifo(&descrFifoTX, TxMess.Start);
@@ -282,10 +235,10 @@ void SendMessage(S_pwmSettings *pData)
     }
 
     // Met à jour la taille libre disponible dans la FIFO TX
-    freeSize = GetWriteSpace(&descrFifoTX);
+    FreeSize = GetWriteSpace(&descrFifoTX);
 
     // Vérifie si le signal CTS est bas et qu'il reste de l'espace disponible
-    if ((RS232_CTS == 0) && (freeSize > 0))
+    if ((RS232_CTS == 0) && (FreeSize > 0))
     {
         // Active l'interruption pour autoriser l'émission de données
         PLIB_INT_SourceEnable(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
@@ -294,92 +247,120 @@ void SendMessage(S_pwmSettings *pData)
 
 
 
-// Interruption USART1
-// !!!!!!!!
-// Attention ne pas oublier de supprimer la réponse générée dans system_interrupt
-// !!!!!!!!
- void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
+/**
+ * @brief Interruption pour la gestion de l'USART (RX, TX, erreurs).
+ * 
+ * @details Cette fonction gère les interruptions liées à l'USART 1.
+ * Elle couvre :
+ * 1. Le traitement des erreurs de réception.
+ * 2. La réception des données (FIFO hardware -> FIFO software).
+ * 3. La transmission des données (FIFO software -> FIFO hardware).
+ */
+void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void) 
 {
-    USART_ERROR UsartStatus;    
+    // Déclaration pour gérer les erreurs USART
+    USART_ERROR UsartStatus;
 
+    static int8_t CharUsartToFifo;  // Donnée reçue depuis le UART à transférer dans la FIFO
+    static int8_t TxData;           // Donnée à transmettre depuis la FIFO
+    uint8_t BuffSoftSize = 0;       // Taille des données présentes dans la FIFO software
+    uint8_t BuffHardFull = 0;       // Indicateur d'état du buffer hardware de transmission (plein ou non)
 
-    // Marque début interruption avec Led3
+    // Allume LED3 pour indiquer le début de l'interruption
     LED3_W = 1;
-    
-    // Is this an Error interrupt ?
-    if ( PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_ERROR) &&
-                 PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_ERROR) ) {
-        /* Clear pending interrupt */
+
+    // 1. Gestion des erreurs UART
+    if (PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_ERROR) && 
+        PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_ERROR)) 
+    {
+        // Efface le drapeau d'interruption d'erreur
         PLIB_INT_SourceFlagClear(INT_ID_0, INT_SOURCE_USART_1_ERROR);
-        // Traitement de l'erreur à la réception.
+
+        // Vidange le buffer hardware pour supprimer les erreurs restantes
+        while (PLIB_USART_ReceiverDataIsAvailable(USART_ID_1)) {
+            PLIB_USART_ReceiverByteReceive(USART_ID_1);
+        }
     }
-   
 
-    // Is this an RX interrupt ?
-    if ( PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_RECEIVE) &&
-                 PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_RECEIVE) ) {
-
-        // Oui Test si erreur parité ou overrun
+    // 2. Gestion des données RX (réception)
+    if (PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_RECEIVE) && 
+        PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_RECEIVE)) 
+    {
+        // Vérifie s'il y a des erreurs de réception (parité, framing, overrun)
         UsartStatus = PLIB_USART_ErrorsGet(USART_ID_1);
 
-        if ( (UsartStatus & (USART_ERROR_PARITY |
-                             USART_ERROR_FRAMING | USART_ERROR_RECEIVER_OVERRUN)) == 0) {
+        if ((UsartStatus & (USART_ERROR_PARITY | USART_ERROR_FRAMING | USART_ERROR_RECEIVER_OVERRUN)) == 0) 
+        {
+            // Lecture des données tant qu'elles sont disponibles dans le buffer hardware RX
+            while (PLIB_USART_ReceiverDataIsAvailable(USART_ID_1)) {
+                // Récupère un caractère du buffer hardware
+                CharUsartToFifo = PLIB_USART_ReceiverByteReceive(USART_ID_1);
+                // Ajoute ce caractère dans la FIFO software RX
+                PutCharInFifo(&descrFifoRX, CharUsartToFifo);
+            }
 
-            // Traitement RX à faire ICI
-            // Lecture des caractères depuis le buffer HW -> fifo SW
-			//  (pour savoir s'il y a une data dans le buffer HW RX : PLIB_USART_ReceiverDataIsAvailable())
-			//  (Lecture via fonction PLIB_USART_ReceiverByteReceive())
-            // ...
-            
-                         
-            LED4_W = !LED4_R; // Toggle Led4
-            // buffer is empty, clear interrupt flag
+            // Inverse l'état de LED4 pour indiquer qu'une donnée a été reçue
+            LED4_W = !LED4_R;
+
+            // Efface le drapeau d'interruption RX (plus de données à lire)
             PLIB_INT_SourceFlagClear(INT_ID_0, INT_SOURCE_USART_1_RECEIVE);
-        } else {
-            // Suppression des erreurs
-            // La lecture des erreurs les efface sauf pour overrun
-            if ( (UsartStatus & USART_ERROR_RECEIVER_OVERRUN) == USART_ERROR_RECEIVER_OVERRUN) {
-                   PLIB_USART_ReceiverOverrunErrorClear(USART_ID_1);
+        } 
+        else 
+        {
+            // Suppression des erreurs spécifiques (notamment overrun)
+            if ((UsartStatus & USART_ERROR_RECEIVER_OVERRUN) == USART_ERROR_RECEIVER_OVERRUN) {
+                PLIB_USART_ReceiverOverrunErrorClear(USART_ID_1);
             }
         }
 
-        
-        // Traitement controle de flux reception à faire ICI
-        // Gerer sortie RS232_RTS en fonction de place dispo dans fifo reception
-        // ...
+        // Contrôle de flux pour la réception : bloque l'émission si FIFO RX presque pleine
+        if (GetWriteSpace(&descrFifoRX) < (2 * MESS_SIZE)) {
+            RS232_RTS = 0;  // Arrête l'émission du PC
+        } else {
+            RS232_RTS = 1;  // Autorise l'émission
+        }
+    }
 
-        
-    } // end if RX
+    // 3. Gestion des données TX (transmission)
+    if (PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT) && 
+        PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT)) 
+    {
+        // Lit la taille disponible dans la FIFO software TX et l'état du buffer hardware TX
+        BuffSoftSize = GetReadSize(&descrFifoTX);
+        BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
 
-    
-    // Is this an TX interrupt ?
-    if ( PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT) &&
-                 PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT) ) {
+        // Si le signal CTS (Clear To Send) est bas, on peut émettre
+        if (RS232_CTS == 0) 
+        {
+            // Transmission des données tant que les conditions sont remplies
+            while (RS232_CTS == 0 && BuffSoftSize > 0 && BuffHardFull == false) 
+            {
+                // Récupère une donnée à transmettre depuis la FIFO software
+                GetCharFromFifo(&descrFifoTX, &TxData);
+                // Envoie cette donnée dans le buffer hardware TX
+                PLIB_USART_TransmitterByteSend(USART_ID_1, TxData);
 
-        // Traitement TX à faire ICI
-        // Envoi des caractères depuis le fifo SW -> buffer HW
-            
-        // Avant d'émettre, on vérifie 3 conditions :
-        //  Si CTS = 0 autorisation d'émettre (entrée RS232_CTS)
-        //  S'il y a un caratères à émettre dans le fifo
-        //  S'il y a de la place dans le buffer d'émission (PLIB_USART_TransmitterBufferIsFull)
-        //   (envoi avec PLIB_USART_TransmitterByteSend())
-       
-        // ...
-       
-	   
-        LED5_W = !LED5_R; // Toggle Led5
-		
-        // disable TX interrupt (pour éviter une interrupt. inutile si plus rien à transmettre)
+                // Mets à jour les indicateurs après l'envoi
+                BuffSoftSize = GetReadSize(&descrFifoTX);
+                BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
+            }
+        } 
+        else 
+        {
+            // Si CTS est haut, désactive l'émetteur pour éviter une surcharge
+            PLIB_USART_TransmitterDisable(USART_ID_1);
+        }
+
+        // Inverse l'état de LED5 pour indiquer une transmission
+        LED5_W = !LED5_R;
+
+        // Désactive l'interruption TX si aucune donnée n'est à transmettre
         PLIB_INT_SourceDisable(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
-        
-        // Clear the TX interrupt Flag (Seulement apres TX) 
+
+        // Efface le drapeau d'interruption TX
         PLIB_INT_SourceFlagClear(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
     }
-    // Marque fin interruption avec Led3
+
+    // Éteint LED3 pour indiquer la fin de l'interruption
     LED3_W = 0;
- }
-
-
-
-
+}

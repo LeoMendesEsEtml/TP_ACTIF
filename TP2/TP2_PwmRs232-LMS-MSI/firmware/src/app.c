@@ -111,9 +111,6 @@ void App_Timer1Callback()
     // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
     static uint8_t threeSecondCounter = 0;
 
-    // Compteur pour nettoyer les lignes LCD une seule fois
-    static uint8_t endInit = 0;
-
     // Pendant les 3 premières secondes
     if (threeSecondCounter < 149)
     {
@@ -218,6 +215,9 @@ void APP_Initialize ( void )
 
 void APP_Tasks ( void )
 {
+    static uint8_t CommStatus = 0;
+    S_pwmSettings PWMDataToSend;  
+    
     /* Check the application's current state. */
     switch ( appData.state )
     {
@@ -238,22 +238,28 @@ void APP_Tasks ( void )
                 lcd_init(); 
         
                 // Allume le rétroéclairage de l'écran LCD
-                lcd_bl_on(); 
-        
+                lcd_bl_on();
+                
                 // Positionne le curseur à la première ligne du LCD
                 lcd_gotoxy(1, 1); 
+        
+                // Affiche l'etat des paramètres 
+                printf_lcd("Local Settings"); 
+                
+                // Positionne le curseur à la première ligne du LCD
+                lcd_gotoxy(1, 2); 
         
                 // Affiche un texte d'introduction sur la première ligne
                 printf_lcd("TP2 USART 2024-25"); 
         
                 // Positionne le curseur à la deuxième ligne
-                lcd_gotoxy(1, 2); 
+                lcd_gotoxy(1, 3); 
         
                 // Affiche le nom de l'auteur 1 sur la deuxième ligne
                 printf_lcd("Leo Mendes"); 
         
                 // Positionne le curseur à la troisième ligne
-                lcd_gotoxy(1, 3); 
+                lcd_gotoxy(1, 4); 
         
                 // Affiche le nom de l'auteur 2 sur la troisième ligne
                 printf_lcd("Matteo Stefanelli");           
@@ -263,6 +269,8 @@ void APP_Tasks ( void )
 
                 // Initialisation des ADC (convertisseurs analogiques-numériques)
                 BSP_InitADC10(); 
+                
+                InitFifoComm();
                 
                 // Initilisation de la fifo
                 InitFifoComm(); 
@@ -281,22 +289,30 @@ void APP_Tasks ( void )
         {
             // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
             BSP_LEDOn(BSP_LED_0);
+            
+            CommStatus = GetMessage(&pData);
+            
+            if (CommStatus == 0) 
+            { // Mode local
+                GPWM_GetSettings(&pData);
+            } 
+            else 
+            { // Mode remote
+                GPWM_GetSettings(&PWMDataToSend);
+                SendMessage(&PWMDataToSend);
+            }
+            
 
-            // Récupère les paramètres PWM dans `pData`
-            GPWM_GetSettings(&pData);
+            GPWM_ExecPWM(&pData);
 
             // Affiche les paramètres PWM sur l'écran LCD
-            GPWM_DispSettings(&pData);
+            GPWM_DispSettings(&pData, CommStatus);
 
             // Exécute la PWM avec les paramètres actuels
             GPWM_ExecPWM(&pData);
 
             // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
             BSP_LEDOff(BSP_LED_0);
-
-            GetMessage(&pData); 
-            
-            SendMessage(&pData);
 
             // Passage de l'état de la achine en attente
             APP_UpdateState(APP_STATE_WAIT);

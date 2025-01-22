@@ -70,8 +70,12 @@ void GPWM_GetSettings(S_pwmSettings *pData);
 /**
  * @brief Affiche les paramètres PWM (vitesse et angle) sur un écran LCD.
  * @param pData Pointeur vers la structure S_pwmSettings à afficher.
+ * @param CommStatus Indique l'origine des paramètres :
+ *                   - 0 : Local (paramètres obtenus localement).
+ *                   - 1 : Remote (paramètres reçus via RS232).
  */
-void GPWM_DispSettings(S_pwmSettings *pData);
+void GPWM_DispSettings(S_pwmSettings *pData, int CommStatus);
+
 
 /**
  * @brief Exécute la PWM pour le contrôle du moteur en fonction des consignes.
