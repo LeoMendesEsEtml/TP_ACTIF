@@ -272,8 +272,7 @@ void APP_Tasks ( void )
                 
                 InitFifoComm();
                 
-                // Initilisation de la fifo
-                InitFifoComm(); 
+                DRV_USART0_Initialize();
                 
             }
         break; 
@@ -287,29 +286,45 @@ void APP_Tasks ( void )
         /* État execution de l'application */
         case APP_STATE_SERVICE_TASKS :
         {
+            static int8_t Iteration = 0; 
+            static int8_t Iteration1ocal = 0; 
+            
             // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
             BSP_LEDOn(BSP_LED_0);
             
+            // Réception param. remote
             CommStatus = GetMessage(&pData);
-            
-            if (CommStatus == 0) 
-            { // Mode local
-                GPWM_GetSettings(&pData);
-            } 
-            else 
-            { // Mode remote
-                GPWM_GetSettings(&PWMDataToSend);
-                SendMessage(&PWMDataToSend);
+            // Lecture pot.
+            if (CommStatus == LOCAL)
+            { // local ?
+                GPWM_GetSettings(&pData); // local
             }
+            else
+            {
+                GPWM_GetSettings(&PWMDataToSend); 
+            }// remote
             
-
+            // Affichage
+            GPWM_DispSettings(&pData, CommStatus );
+            // Execution PWM et gestion moteur
             GPWM_ExecPWM(&pData);
+            
+            Iteration++;
+            
+            if(Iteration >= 5)
+            {
+                // Envoi valeurs
+                if (CommStatus == LOCAL)
+                { // local ?
+                SendMessage(&pData); // local
+                }
+                else
+                {
+                SendMessage(&PWMDataToSend); // remote
+                }
+                Iteration = 0;
+            }            
 
-            // Affiche les paramètres PWM sur l'écran LCD
-            GPWM_DispSettings(&pData, CommStatus);
-
-            // Exécute la PWM avec les paramètres actuels
-            GPWM_ExecPWM(&pData);
 
             // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
             BSP_LEDOff(BSP_LED_0);

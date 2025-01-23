@@ -43,6 +43,7 @@ void GPWM_Initialize(S_pwmSettings *pData)
     pData->absSpeed = 0;        // Vitesse absolue initialisée à 0
     pData->absAngle = 0;        // Angle absolu initialisé à 0
     pData->SpeedSetting = 0;    // Réglage de vitesse initialisé à 0
+    pData->AngleSetting = 0;    // Réglage'angle signé 
 
     // Activation du pont en H pour la commande moteur
     BSP_EnableHbrige();
@@ -125,6 +126,7 @@ void GPWM_GetSettings(S_pwmSettings *pData) {
     // Conversion des données ADC du canal 2 en un angle absolu
     angle = (avgAdc2 * ADC2_ANGLE_MAX) / ADC2_MAX; // Échelle la valeur entre 0 et 180
     pData->absAngle = angle; // Met à jour l'angle absolu (0 à 180 degrés)
+    pData->AngleSetting =  angle - 90; 
 }
 
 /**
@@ -147,7 +149,7 @@ void GPWM_DispSettings(S_pwmSettings *pData, int CommStatus)
 {
     // Ligne 1 : Origine des réglages
     lcd_gotoxy(1, 1); // Positionne le curseur en haut à gauche
-    if (CommStatus == 1)
+    if (CommStatus == REMOTE)
     {
         printf_lcd("Remote Settings"); // Affiche "Remote Settings"
     }
@@ -198,7 +200,7 @@ void GPWM_DispSettings(S_pwmSettings *pData, int CommStatus)
     printf_lcd("Angle:"); // Affiche l'étiquette "Angle"
 
     lcd_gotoxy(11, 4); // Place la valeur à la colonne 11
-    printf_lcd("%3d", pData->absAngle - 90); // Affiche l'angle ajusté (-90 à +90) sur 3 caractères
+    printf_lcd("%3d", pData->AngleSetting ); // Affiche l'angle ajusté (-90 à +90) sur 3 caractères
 }
 
 

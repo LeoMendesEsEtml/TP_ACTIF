@@ -7,6 +7,8 @@
 
 #include <xc.h>
 #include <sys/attribs.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include "system_definitions.h"
 // Ajout CHR
 #include <GenericTypeDefs.h>
@@ -61,7 +63,7 @@ int GetMessage(S_pwmSettings *pData)
     int CommStatus = 0;
 
     // Compteur statique pour le nombre d'erreurs consécutives dans les messages
-    static uint8_t NbMessError = 0;
+    static uint8_t NbMessError = 10;
 
     // Nombre de caractères à lire depuis la FIFO RX
     static uint8_t NbCharToRead = 0;
@@ -116,9 +118,11 @@ int GetMessage(S_pwmSettings *pData)
             {
                 // Met à jour la vitesse dans les paramètres PWM
                 pData->SpeedSetting = RxMess.Speed;
-
+                pData->absSpeed = abs(RxMess.Speed);        
+                
                 // Met à jour l'angle dans les paramètres PWM
-                pData->absAngle = RxMess.Angle;
+                pData->AngleSetting = RxMess.Angle;
+                pData->absAngle = abs(RxMess.Angle);
 
                 // Réinitialise le nombre de caractères à lire
                 NbCharToRead = 0;
@@ -144,17 +148,22 @@ int GetMessage(S_pwmSettings *pData)
             NbMessError++;
         }
     }
+    else
+    {
+         NbMessError++;  
+    }
 
     // Vérifie si le nombre d'erreurs consécutives a atteint la limite autorisée
     if (NbMessError >= NBR_MESS_ERROR)
     {
         // Définit le mode local si trop d'erreurs sont détectées
-        CommStatus = 0;
+        CommStatus = LOCAL;
+        NbMessError = 10;
     }
     else
     {
         // Définit le mode remote si les messages sont valides
-        CommStatus = 1;
+        CommStatus = REMOTE;
     }
 
     // Vérifie l'espace disponible dans la FIFO RX pour gérer le contrôle de flux
@@ -198,7 +207,7 @@ void SendMessage(S_pwmSettings *pData)
         CrcVal = updateCRC16(CrcVal, pData->SpeedSetting);
 
         // Met à jour le CRC avec la valeur de l'angle
-        CrcVal = updateCRC16(CrcVal, pData->absAngle);
+        CrcVal = updateCRC16(CrcVal, pData->AngleSetting);
         
         // Affecte le crc caculer à l'union local CRC
         Crc.Val = CrcVal;
@@ -210,7 +219,7 @@ void SendMessage(S_pwmSettings *pData)
         TxMess.Speed = pData->SpeedSetting;
 
         // Affecte l'angle dans la structure TxMess
-        TxMess.Angle = pData->absAngle;
+        TxMess.Angle = pData->AngleSetting;
 
         // Affecte le MSB du CRC dans la structure TxMess
         TxMess.MsbCrc = Crc.shl.Msb;
@@ -264,7 +273,7 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
     static int8_t CharUsartToFifo;  // Donnée reçue depuis le UART à transférer dans la FIFO
     static int8_t TxData;           // Donnée à transmettre depuis la FIFO
     uint8_t BuffSoftSize = 0;       // Taille des données présentes dans la FIFO software
-    uint8_t BuffHardFull = 0;       // Indicateur d'état du buffer hardware de transmission (plein ou non)
+    bool BuffHardFull = false;       // Indicateur d'état du buffer hardware de transmission (plein ou non)
 
     // Allume LED3 pour indiquer le début de l'interruption
     LED3_W = 1;
@@ -314,10 +323,10 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
         }
 
         // Contrôle de flux pour la réception : bloque l'émission si FIFO RX presque pleine
-        if (GetWriteSpace(&descrFifoRX) < (2 * MESS_SIZE)) {
-            RS232_RTS = 0;  // Arrête l'émission du PC
+        if (GetWriteSpace(&descrFifoRX) >= (2 * MESS_SIZE)) {
+            RS232_RTS = 0; // Autorise l'émission par l'autre
         } else {
-            RS232_RTS = 1;  // Autorise l'émission
+            RS232_RTS = 1; // Bloque l'émission
         }
     }
 

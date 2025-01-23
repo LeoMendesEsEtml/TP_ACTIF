@@ -27,6 +27,7 @@
 #define MESS_SIZE 5              // Taille d'un message complet en octets.
 #define STX_CODE (-86)           // Code de départ du message (converti en int8_t).
 
+
 // Tailles des FIFO pour réception et émission (supporte 4 messages complets chacun).
 #define FIFO_RX_SIZE ((4 * MESS_SIZE) + 1)
 #define FIFO_TX_SIZE ((4 * MESS_SIZE) + 1)

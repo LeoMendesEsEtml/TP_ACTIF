@@ -46,9 +46,10 @@
  * @brief Structure contenant les paramètres pour la gestion des PWM.
  */
 typedef struct {
-    uint8_t absSpeed;    // Vitesse absolue (0 à 99)
-    uint8_t absAngle;    // Angle absolu (0 à 180)
-    int8_t SpeedSetting; // Consigne de vitesse (-99 à +99)
+    uint8_t absSpeed;    //Vitesse 0 à 99
+    uint8_t absAngle;    //Angle  0 à 180
+    int8_t SpeedSetting; //Consigne vitesse -99 à +99
+    int8_t AngleSetting; //Consigne angle  -90 à +90
 } S_pwmSettings;
 
 /*--------------------------------------------------------*/

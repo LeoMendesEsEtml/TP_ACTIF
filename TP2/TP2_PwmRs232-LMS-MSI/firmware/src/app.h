@@ -68,6 +68,9 @@ extern "C" {
 // Masques pour les LEDs
 #define LEDS_PORTA_MASK  0b1000011111110011 // RA0-RA7 et RA15
 #define LEDS_PORTB_MASK  0b0000010000000000 // RB10
+    
+#define LOCAL 0
+#define REMOTE 1
 /**
  * @enum APP_STATES
  * @brief Énumération pour les différents états de l'application.
