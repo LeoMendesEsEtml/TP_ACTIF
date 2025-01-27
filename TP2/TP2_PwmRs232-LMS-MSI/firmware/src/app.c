@@ -215,7 +215,7 @@ void APP_Initialize ( void )
 
 void APP_Tasks ( void )
 {
-    static uint8_t CommStatus = 0;
+    uint8_t CommStatus = 0;
     S_pwmSettings PWMDataToSend;  
     
     /* Check the application's current state. */
@@ -316,11 +316,11 @@ void APP_Tasks ( void )
                 // Envoi valeurs
                 if (CommStatus == LOCAL)
                 { // local ?
-                SendMessage(&pData); // local
+                    SendMessage(&pData); // local
                 }
                 else
                 {
-                SendMessage(&PWMDataToSend); // remote
+                    SendMessage(&PWMDataToSend); // remote
                 }
                 Iteration = 0;
             }            
