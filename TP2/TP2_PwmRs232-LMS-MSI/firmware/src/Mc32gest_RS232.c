@@ -60,7 +60,7 @@ void InitFifoComm(void)
 int GetMessage(S_pwmSettings *pData)
 {
     // Initialise le statut de la communication (local par défaut)
-    int CommStatus = 0;
+    static int CommStatus = 0;
 
     // Compteur statique pour le nombre d'erreurs consécutives dans les messages
     static uint8_t NbMessError = 10;
@@ -124,14 +124,11 @@ int GetMessage(S_pwmSettings *pData)
                 pData->AngleSetting = RxMess.Angle;
                 pData->absAngle = abs(RxMess.Angle);
 
-                // Réinitialise le nombre de caractères à lire
-                NbCharToRead = 0;
-
-                // Allume une LED pour indiquer un CRC valide
-                BSP_LEDOn(BSP_LED_6);
-
+                CommStatus = REMOTE;
                 // Réinitialise le compteur d'erreurs de message
                 NbMessError = 0;
+                // Allume une LED pour indiquer un CRC valide
+                BSP_LEDOn(BSP_LED_6);
             }
             else
             {
@@ -150,20 +147,15 @@ int GetMessage(S_pwmSettings *pData)
     }
     else
     {
-         NbMessError++;  
-    }
-
-    // Vérifie si le nombre d'erreurs consécutives a atteint la limite autorisée
-    if (NbMessError >= NBR_MESS_ERROR)
-    {
-        // Définit le mode local si trop d'erreurs sont détectées
-        CommStatus = LOCAL;
-        NbMessError = 10;
-    }
-    else
-    {
-        // Définit le mode remote si les messages sont valides
-        CommStatus = REMOTE;
+        // Incrémente le compteur d'erreurs de message si le code de début est incorrect
+        NbMessError++;
+        // Vérifie si le nombre d'erreurs consécutives a atteint la limite autorisée
+        if (NbMessError >= NBR_MESS_ERROR)
+        {
+          // Définit le mode local si trop d'erreurs sont détectées
+          CommStatus = LOCAL;
+          NbMessError = 10;
+     }
     }
 
     // Vérifie l'espace disponible dans la FIFO RX pour gérer le contrôle de flux
@@ -279,15 +271,21 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
     LED3_W = 1;
 
     // 1. Gestion des erreurs UART
-    if (PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_ERROR) && 
-        PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_ERROR)) 
-    {
-        // Efface le drapeau d'interruption d'erreur
+    if (PLIB_INT_SourceFlagGet(INT_ID_0, INT_SOURCE_USART_1_ERROR) &&
+            PLIB_INT_SourceIsEnabled(INT_ID_0, INT_SOURCE_USART_1_ERROR)) {
+        // On nettoie le flag d'interruption
         PLIB_INT_SourceFlagClear(INT_ID_0, INT_SOURCE_USART_1_ERROR);
 
-        // Vidange le buffer hardware pour supprimer les erreurs restantes
+        // Lit la cause de l'erreur
+        UsartStatus = PLIB_USART_ErrorsGet(USART_ID_1);
+
+        // Si overrun, on le clear
+        if ((UsartStatus & USART_ERROR_RECEIVER_OVERRUN) == USART_ERROR_RECEIVER_OVERRUN) {
+            PLIB_USART_ReceiverOverrunErrorClear(USART_ID_1);
+        }
+        // Si besoin, lire le FIFO RX hardware pour vider les éventuelles data erronées
         while (PLIB_USART_ReceiverDataIsAvailable(USART_ID_1)) {
-            PLIB_USART_ReceiverByteReceive(USART_ID_1);
+            (void) PLIB_USART_ReceiverByteReceive(USART_ID_1);
         }
     }
 
@@ -321,13 +319,10 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
                 PLIB_USART_ReceiverOverrunErrorClear(USART_ID_1);
             }
         }
-
-        // Contrôle de flux pour la réception : bloque l'émission si FIFO RX presque pleine
-        if (GetWriteSpace(&descrFifoRX) >= (2 * MESS_SIZE)) {
-            RS232_RTS = 0; // Autorise l'émission par l'autre
-        } else {
-            RS232_RTS = 1; // Bloque l'émission
-        }
+      if (GetWriteSpace(&descrFifoRX) <= MESS_SIZE +1) 
+      {
+            RS232_RTS = 1; 
+      }
     }
 
     // 3. Gestion des données TX (transmission)
@@ -339,7 +334,7 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
         BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
 
         // Si le signal CTS (Clear To Send) est bas, on peut émettre
-        if (RS232_CTS == 0) 
+        if ((RS232_CTS == 0) && (BuffSoftSize > 0) && (BuffHardFull == false))
         {
             // Transmission des données tant que les conditions sont remplies
             while (RS232_CTS == 0 && BuffSoftSize > 0 && BuffHardFull == false) 
@@ -362,9 +357,6 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
 
         // Inverse l'état de LED5 pour indiquer une transmission
         LED5_W = !LED5_R;
-
-        // Désactive l'interruption TX si aucune donnée n'est à transmettre
-        PLIB_INT_SourceDisable(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
 
         // Efface le drapeau d'interruption TX
         PLIB_INT_SourceFlagClear(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
