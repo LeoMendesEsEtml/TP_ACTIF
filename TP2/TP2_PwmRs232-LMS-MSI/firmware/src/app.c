@@ -305,11 +305,9 @@ void APP_Tasks ( void )
             }// remote
             
             // Affichage
-            GPWM_DispSettings(&pData, CommStatus );
+            GPWM_DispSettings(&pData, CommStatus);
             // Execution PWM et gestion moteur
             GPWM_ExecPWM(&pData);
-            
-            Iteration++;
             
             if(Iteration >= 5)
             {
@@ -323,7 +321,11 @@ void APP_Tasks ( void )
                     SendMessage(&PWMDataToSend); // remote
                 }
                 Iteration = 0;
-            }            
+            }
+            else 
+            {
+                Iteration++;   
+            }
 
 
             // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches

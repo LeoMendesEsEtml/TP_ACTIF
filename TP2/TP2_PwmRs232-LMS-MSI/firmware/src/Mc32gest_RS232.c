@@ -60,10 +60,10 @@ void InitFifoComm(void)
 int GetMessage(S_pwmSettings *pData)
 {
     // Initialise le statut de la communication (local par défaut)
-    int CommStatus = 0;
+    static int CommStatus = 0;
 
     // Compteur statique pour le nombre d'erreurs consécutives dans les messages
-    static uint8_t NbMessError;
+    static uint8_t NbMessError = 10;
 
     // Nombre de caractères à lire depuis la FIFO RX
     static uint8_t NbCharToRead = 0;
@@ -138,23 +138,32 @@ int GetMessage(S_pwmSettings *pData)
                 // Éteint la LED pour indiquer une erreur CRC
                 BSP_LEDOff(BSP_LED_6);
 
+                // Incrémente le compteur d'erreurs de message
+                NbMessError++;
             }
         }
-   
+        else
+        {
+            // Incrémente le compteur d'erreurs de message si le code de début est incorrect
+            NbMessError++;
+        }
     }
- 
+    else
+    {
+         NbMessError++;  
+    }
+
     // Vérifie si le nombre d'erreurs consécutives a atteint la limite autorisée
     if (NbMessError >= NBR_MESS_ERROR)
     {
         // Définit le mode local si trop d'erreurs sont détectées
         CommStatus = LOCAL;
+        NbMessError = 10;
     }
     else
     {
         // Définit le mode remote si les messages sont valides
         CommStatus = REMOTE;
-        // Incrémente le compteur d'erreurs de message
-        NbMessError++;
     }
 
     // Vérifie l'espace disponible dans la FIFO RX pour gérer le contrôle de flux
@@ -238,12 +247,14 @@ void SendMessage(S_pwmSettings *pData)
     FreeSize = GetWriteSpace(&descrFifoTX);
 
     // Vérifie si le signal CTS est bas et qu'il reste de l'espace disponible
-    if (FreeSize > 0)
+    if ((RS232_CTS == 0) && (FreeSize > 0))
     {
         // Active l'interruption pour autoriser l'émission de données
         PLIB_INT_SourceEnable(INT_ID_0, INT_SOURCE_USART_1_TRANSMIT);
     }
 }
+
+
 
 /**
  * @brief Interruption pour la gestion de l'USART (RX, TX, erreurs).
@@ -312,12 +323,9 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
         }
 
         // Contrôle de flux pour la réception : bloque l'émission si FIFO RX presque pleine
-        if (GetWriteSpace(&descrFifoRX) >= (2 * MESS_SIZE)) 
-        {
+        if (GetWriteSpace(&descrFifoRX) >= (2 * MESS_SIZE)) {
             RS232_RTS = 0; // Autorise l'émission par l'autre
-        } 
-        else 
-        {
+        } else {
             RS232_RTS = 1; // Bloque l'émission
         }
     }
@@ -331,31 +339,21 @@ void __ISR(_UART_1_VECTOR, ipl5AUTO) _IntHandlerDrvUsartInstance0(void)
         BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
 
         // Si le signal CTS (Clear To Send) est bas, on peut émettre
-        if (RS232_CTS == 0)
+        if (RS232_CTS == 0) 
         {
-            // Vérification si le tampon logiciel contient des données à transmettre et que le tampon matériel n'est pas plein
-            if (BuffSoftSize > 0 && BuffHardFull == false)
+            // Transmission des données tant que les conditions sont remplies
+            while (RS232_CTS == 0 && BuffSoftSize > 0 && BuffHardFull == false) 
             {
-                // Boucle de transmission tant que :
-                // - La ligne CTS permet la transmission (RS232_CTS == 0)
-                // - Le tampon logiciel contient des données (sizeBufferSoft > 0)
-                // - Le tampon matériel n'est pas plein (bufferHardFull == false)
-                while (RS232_CTS == 0 && BuffSoftSize > 0 && BuffHardFull == false)
-                {
-                    // Lecture d'un caractère du tampon FIFO logiciel
-                    GetCharFromFifo(&descrFifoTX, &TxData);
+                // Récupère une donnée à transmettre depuis la FIFO software
+                GetCharFromFifo(&descrFifoTX, &TxData);
+                // Envoie cette donnée dans le buffer hardware TX
+                PLIB_USART_TransmitterByteSend(USART_ID_1, TxData);
 
-                    // Envoi du caractère lu via le module USART
-                    PLIB_USART_TransmitterByteSend(USART_ID_1, TxData);
-
-                    // Mise à jour de la taille restante dans le tampon logiciel
-                    BuffSoftSize = GetReadSize(&descrFifoTX);
-
-                    // Vérification de l'état du tampon matériel (plein ou non)
-                    BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
-                }
+                // Mets à jour les indicateurs après l'envoi
+                BuffSoftSize = GetReadSize(&descrFifoTX);
+                BuffHardFull = PLIB_USART_TransmitterBufferIsFull(USART_ID_1);
             }
-        }
+        } 
         else 
         {
             // Si CTS est haut, désactive l'émetteur pour éviter une surcharge
