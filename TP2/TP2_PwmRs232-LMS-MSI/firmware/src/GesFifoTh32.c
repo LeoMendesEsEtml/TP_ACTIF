@@ -152,4 +152,11 @@ uint8_t GetCharFromFifo ( S_fifo *pDescrFifo, int8_t *carLu )
    return (readStatus);
 } // GetCharFromFifo 
 
-
+/**
+ * @brief Réinitialise une FIFO en mettant les pointeurs en position initiale.
+ * @param pDescrFifo Pointeur vers la structure de descripteur de FIFO.
+ */
+void ResetFifo(S_fifo *pDescrFifo) {
+    pDescrFifo->pWrite = pDescrFifo->pDebFifo; // Réinitialise le pointeur d?écriture
+    pDescrFifo->pRead = pDescrFifo->pDebFifo;  // Réinitialise le pointeur de lecture
+}

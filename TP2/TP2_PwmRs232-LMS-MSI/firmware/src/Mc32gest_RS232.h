@@ -22,7 +22,6 @@
 /*--------------------------------------------------------*/
 
 #define CRCINIT 0xFFFF           // Valeur initiale pour le calcul CRC16-CCITT.
-#define CHARSTAR 0xAA            // Caractère identifiant le début du message.
 #define NBR_MESS_ERROR 10        // Nombre maximal d'erreurs de message avant de passer en mode local.
 #define MESS_SIZE 5              // Taille d'un message complet en octets.
 #define STX_CODE (-86)           // Code de départ du message (converti en int8_t).
@@ -73,12 +72,26 @@ typedef union {
 /*--------------------------------------------------------*/
 
 /**
- * @brief Initialise les FIFO pour la réception et l'émission RS232.
+ * @brief Initialise les buffers FIFO et configure le signal RTS.
  * 
- * @details Cette fonction configure les descripteurs des FIFO RX et TX et
- * initialise l'état du signal RTS (Ready To Send) à 1 (émission bloquée).
+ * @details Cette fonction initialise les descripteurs des buffers FIFO pour la 
+ *          réception et l'émission de données série. Elle configure également
+ *          le signal RTS pour bloquer temporairement l'émission externe.
+ * 
+ * @param[in] void Aucun paramètre requis.
+ * 
+ * @return void Aucun retour. La fonction met à jour les structures globales.
  */
 void InitFifoComm(void);
+
+/**
+ * @brief Vide les FIFO RX/TX et désactive l'émission externe lors du débranchement du câble.
+ * @details Cette fonction est appelée une seule fois lorsqu?un événement de débranchement
+ *          du câble est détecté. Elle réinitialise uniquement les pointeurs des FIFO et bloque
+ *          la réception par l'autre appareil.
+ */
+void HandleCableDisconnection(void);
+
 
 /**
  * @brief Récupère un message depuis la FIFO RX.

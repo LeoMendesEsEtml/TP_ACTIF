@@ -98,33 +98,56 @@ S_pwmSettings pData;
 // *****************************************************************************
 // *****************************************************************************
 /**
- * @brief Callback pour le Timer 1. Gère les actions périodiques de l'application.
- * @author LMS - VCO
- * @date 2025-01-02
- *
- * @details Cette fonction est appelée à chaque interruption du Timer 1. Elle gère
- *          un compteur pour les 3 premières secondes, met à jour l'état de l'application
- *          et exécute des tâches spécifiques après cette période.
+ * @brief Callback pour le Timer 1 : gère les actions périodiques de l'application.
+ * 
+ * @details Cette fonction est appelée à chaque interruption générée par le Timer 1. 
+ *          Pendant les 3 premières secondes, un compteur est incrémenté pour surveiller 
+ *          la période initiale de démarrage. Après cette période, la fonction exécute
+ *          des tâches spécifiques telles que la mise à jour de l'état de l'application
+ *          et le nettoyage de l'écran LCD.
+ * 
+ * @param[in] void Aucun paramètre requis.
+ * 
+ * @return void Aucun retour. Toutes les mises à jour sont gérées via des variables globales 
+ *              ou des fonctions applicatives.
  */
-void App_Timer1Callback()
+/**
+ * @brief Callback pour le Timer 1 : gère les actions périodiques de l'application.
+ */
+void App_Timer1Callback(void)
 {
-    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
+    // Compteur pour gérer les 3 premières secondes (approximation basée sur la période du timer)
     static uint8_t threeSecondCounter = 0;
 
+    // Indicateur pour demander un nettoyage de l'écran
+    static uint8_t ClearScreenRequest = 0;
+
     // Pendant les 3 premières secondes
-    if (threeSecondCounter < 149)
+    if (threeSecondCounter < 149) // 149 interruptions approximativement égales à 3 secondes
     {
-        threeSecondCounter++; // Incrémente le compteur
+        // Incrémente le compteur
+        threeSecondCounter++;
+
+        // Marque que le nettoyage de l'écran est requis
+        ClearScreenRequest = 1;
     }
     else
     {
         // Après les 3 premières secondes, exécute les tâches de service
         APP_UpdateState(APP_STATE_SERVICE_TASKS);
-        
-        // Nettoyer le LCD
-        ClearLcd();
+
+        // Si le nettoyage de l'écran est demandé
+        if (ClearScreenRequest == 1)
+        {
+            // Nettoie l'écran LCD
+            ClearLcd();
+
+            // Réinitialise la demande de nettoyage
+            ClearScreenRequest = 0;
+        }
     }
 }
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -213,132 +236,118 @@ void APP_Initialize ( void )
     See prototype in app.h.
  */
 
-void APP_Tasks ( void )
+void APP_Tasks(void)
 {
+    // Statut de la communication (LOCAL ou REMOTE).
     static uint8_t CommStatus = 0;
-    static S_pwmSettings PWMDataToSend;  
+
+    // Structure pour stocker les paramètres PWM à envoyer.
+    static S_pwmSettings PWMDataToSend;
     
-    /* Check the application's current state. */
-    switch ( appData.state )
+    // Variable statique pour s'assurer que cette section s'exécute une seule fois.
+    static uint8_t firstInit = 1;
+    // Compteur pour contrôler les cycles d'exécution.
+    static int8_t Iteration = 0;
+    
+    /* Vérifie l'état actuel de l'application. */
+    switch (appData.state)
     {
         /* État initial de l'application */
         case APP_STATE_INIT:
         {
-            // Variable statique utilisée pour s'assurer que cette section ne s'exécute qu'une seule fois
-            static uint8_t firstInit = 1; 
-    
+
             if (firstInit == 1)
             {
-                // Mise à jour de la variable pour empêcher la réinitialisation lors des prochains appels
-                firstInit = 0; 
-                
-                TurnOffAllLEDs();
-                
-                // Initialisation de l'écran LCD
-                lcd_init(); 
-        
-                // Allume le rétroéclairage de l'écran LCD
-                lcd_bl_on();
-                
-                // Positionne le curseur à la première ligne du LCD
-                lcd_gotoxy(1, 1); 
-        
-                // Affiche l'etat des paramètres 
-                printf_lcd("Local Settings"); 
-                
-                // Positionne le curseur à la première ligne du LCD
-                lcd_gotoxy(1, 2); 
-        
-                // Affiche un texte d'introduction sur la première ligne
-                printf_lcd("TP2 USART 2024-25"); 
-        
-                // Positionne le curseur à la deuxième ligne
-                lcd_gotoxy(1, 3); 
-        
-                // Affiche le nom de l'auteur 1 sur la deuxième ligne
-                printf_lcd("Leo Mendes"); 
-        
-                // Positionne le curseur à la troisième ligne
-                lcd_gotoxy(1, 4); 
-        
-                // Affiche le nom de l'auteur 2 sur la troisième ligne
-                printf_lcd("Matteo Stefanelli");           
-        
-                // Initialisation du PWM avec des données passées par pointeur
-                GPWM_Initialize(&pData); 
+                firstInit = 0; // Empêche la réinitialisation lors des prochains appels.
 
-                // Initialisation des ADC (convertisseurs analogiques-numériques)
-                BSP_InitADC10(); 
-                
-                InitFifoComm();
-                
-               DRV_USART0_Initialize();
-                
+                TurnOffAllLEDs(); // Éteint toutes les LED.
+
+                // Initialisation de l'écran LCD.
+                lcd_init();
+                lcd_bl_on(); // Active le rétroéclairage.
+
+                // Affichage des informations sur l'écran LCD.
+                lcd_gotoxy(1, 1);
+                printf_lcd("Local Settings");
+                lcd_gotoxy(1, 2);
+                printf_lcd("TP2 USART 2024-25");
+                lcd_gotoxy(1, 3);
+                printf_lcd("Leo Mendes");
+                lcd_gotoxy(1, 4);
+                printf_lcd("Matteo Stefanelli");
+
+                // Initialisation des modules de l'application.
+                GPWM_Initialize(&pData);   // Initialisation des paramètres PWM.
+                BSP_InitADC10();          // Initialisation des ADC.
+                InitFifoComm();           // Initialisation des FIFOs.
+                DRV_USART0_Initialize();  // Initialisation de l'USART.
             }
-        break; 
+
+            break;
         }
-        /* État attente de l'application */
-        case APP_STATE_WAIT :
+
+        /* État d'attente de l'application */
+        case APP_STATE_WAIT:
         {
             break;
         }
-        
-        /* État execution de l'application */
-        case APP_STATE_SERVICE_TASKS :
+
+        /* État d'exécution des tâches de l'application */
+        case APP_STATE_SERVICE_TASKS:
         {
-            static int8_t Iteration = 0; 
-            static int8_t Iteration1ocal = 0; 
-            
-            // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
+            // Allume la LED 0 pour indiquer l'exécution des tâches.
             BSP_LEDOn(BSP_LED_0);
-            
-            // Réception param. remote
+
+            // Réception des paramètres (local ou remote).
             CommStatus = GetMessage(&pData);
-            // Lecture pot.
+
+            // Lecture des paramètres PWM en fonction du statut de communication.
             if (CommStatus == LOCAL)
-            { // local ?
-                GPWM_GetSettings(&pData); // local
+            {
+                GPWM_GetSettings(&pData); // Mode local : lit les paramètres directement.
             }
             else
             {
-                GPWM_GetSettings(&PWMDataToSend); 
-            }// remote
-            // Execution PWM et gestion moteur
+                GPWM_GetSettings(&PWMDataToSend); // Mode remote : prépare les données à envoyer.
+            }
+
+            // Exécute les paramètres PWM et gère le moteur.
             GPWM_ExecPWM(&pData);
-            // Affichage
-            GPWM_DispSettings(&pData, CommStatus );
-            
-            
+
+            // Affiche les paramètres PWM et l'état de la communication.
+            GPWM_DispSettings(&pData, CommStatus);
+
+            // Incrémente le compteur d'itérations.
             Iteration++;
-            
-            if(Iteration >= 5)
+
+            // Envoie les paramètres toutes les 5 itérations.
+            if (Iteration >= 5)
             {
-                // Envoi valeurs
                 if (CommStatus == LOCAL)
-                { // local ?
-                SendMessage(&pData); // local
+                {
+                    SendMessage(&pData); // Envoie les paramètres en mode local.
                 }
                 else
                 {
-                SendMessage(&PWMDataToSend); // remote
+                    SendMessage(&PWMDataToSend); // Envoie les paramètres en mode remote.
                 }
-                Iteration = 0;
-            }            
 
+                Iteration = 0; // Réinitialise le compteur.
+            }
 
-            // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
+            // Éteint la LED 0 après l'exécution des tâches.
             BSP_LEDOff(BSP_LED_0);
 
-            // Passage de l'état de la achine en attente
+            // Bascule l'état de l'application en mode attente.
             APP_UpdateState(APP_STATE_WAIT);
- 
-            break; 
+
+            break;
         }
 
-        /* The default state should never be executed. */
+        /* État par défaut (ne devrait jamais être exécuté) */
         default:
         {
-            /* Gestion d'erreur de la machine d'état */
+            // Gestion des erreurs dans la machine d'état.
             break;
         }
     }

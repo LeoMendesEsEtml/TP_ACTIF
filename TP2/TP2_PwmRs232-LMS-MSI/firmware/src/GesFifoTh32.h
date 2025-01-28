@@ -81,4 +81,11 @@ uint8_t PutCharInFifo ( S_fifo *pDescrFifo, int8_t charToPut );
 
 uint8_t GetCharFromFifo ( S_fifo *pDescrFifo, int8_t *carLu );
 
+
+/**
+ * @brief Réinitialise une FIFO en mettant les pointeurs en position initiale.
+ * @param pDescrFifo Pointeur vers la structure de descripteur de FIFO.
+ */
+void ResetFifo(S_fifo *pDescrFifo);
+
 #endif
