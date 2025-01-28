@@ -215,8 +215,8 @@ void APP_Initialize ( void )
 
 void APP_Tasks ( void )
 {
-    uint8_t CommStatus = 0;
-    S_pwmSettings PWMDataToSend;  
+    static uint8_t CommStatus = 0;
+    static S_pwmSettings PWMDataToSend;  
     
     /* Check the application's current state. */
     switch ( appData.state )
@@ -272,7 +272,7 @@ void APP_Tasks ( void )
                 
                 InitFifoComm();
                 
-                DRV_USART0_Initialize();
+               DRV_USART0_Initialize();
                 
             }
         break; 
@@ -303,29 +303,27 @@ void APP_Tasks ( void )
             {
                 GPWM_GetSettings(&PWMDataToSend); 
             }// remote
-            
-            // Affichage
-            GPWM_DispSettings(&pData, CommStatus);
             // Execution PWM et gestion moteur
             GPWM_ExecPWM(&pData);
+            // Affichage
+            GPWM_DispSettings(&pData, CommStatus );
+            
+            
+            Iteration++;
             
             if(Iteration >= 5)
             {
                 // Envoi valeurs
                 if (CommStatus == LOCAL)
                 { // local ?
-                    SendMessage(&pData); // local
+                SendMessage(&pData); // local
                 }
                 else
                 {
-                    SendMessage(&PWMDataToSend); // remote
+                SendMessage(&PWMDataToSend); // remote
                 }
                 Iteration = 0;
-            }
-            else 
-            {
-                Iteration++;   
-            }
+            }            
 
 
             // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
