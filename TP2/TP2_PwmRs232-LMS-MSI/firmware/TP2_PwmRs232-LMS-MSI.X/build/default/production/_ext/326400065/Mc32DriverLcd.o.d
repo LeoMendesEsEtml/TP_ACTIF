@@ -1,5 +1,6 @@
 build/default/production/_ext/326400065/Mc32DriverLcd.o: \
  ../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.c \
+ ../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h \
  ../../../../../../bsp/pic32mx_skes/bsp.h \
  ../../../../../../framework/peripheral/ports/plib_ports.h \
  ../../../../../../framework/peripheral/ports/processor/ports_processor.h \
@@ -52,8 +53,9 @@ build/default/production/_ext/326400065/Mc32DriverLcd.o: \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_CounterAsyncWriteControl_Default.h \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_CounterAsyncWriteInProgress_Default.h \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_TimerOperationMode_Default.h \
- ../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h \
  ../../../../../../bsp/pic32mx_skes/Mc32Delays.h
+
+../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h:
 
 ../../../../../../bsp/pic32mx_skes/bsp.h:
 
@@ -158,7 +160,5 @@ build/default/production/_ext/326400065/Mc32DriverLcd.o: \
 ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_CounterAsyncWriteInProgress_Default.h:
 
 ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_TimerOperationMode_Default.h:
-
-../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h:
 
 ../../../../../../bsp/pic32mx_skes/Mc32Delays.h:

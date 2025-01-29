@@ -45,6 +45,17 @@ void InitFifo ( S_fifo *pDescrFifo, int32_t FifoSize, int8_t *pDebFifo, int8_t I
       pFif++;
    }
 } /* InitFifo */
+#include "GesFifoTh32.h"
+
+/**
+ * @brief Réinitialise les pointeurs de lecture et d'écriture d'une FIFO.
+ * @param pDescrFifo Pointeur vers la structure de descripteur de FIFO.
+ * @details Cette fonction ne modifie pas les données présentes dans la FIFO.
+ */
+void ResetFifo(S_fifo *pDescrFifo) {
+    pDescrFifo->pWrite = pDescrFifo->pDebFifo; // Réinitialise le pointeur d?écriture
+    pDescrFifo->pRead = pDescrFifo->pDebFifo;  // Réinitialise le pointeur de lecture
+}
 
 
 /*---------------*/
@@ -152,11 +163,4 @@ uint8_t GetCharFromFifo ( S_fifo *pDescrFifo, int8_t *carLu )
    return (readStatus);
 } // GetCharFromFifo 
 
-/**
- * @brief Réinitialise une FIFO en mettant les pointeurs en position initiale.
- * @param pDescrFifo Pointeur vers la structure de descripteur de FIFO.
- */
-void ResetFifo(S_fifo *pDescrFifo) {
-    pDescrFifo->pWrite = pDescrFifo->pDebFifo; // Réinitialise le pointeur d?écriture
-    pDescrFifo->pRead = pDescrFifo->pDebFifo;  // Réinitialise le pointeur de lecture
-}
+

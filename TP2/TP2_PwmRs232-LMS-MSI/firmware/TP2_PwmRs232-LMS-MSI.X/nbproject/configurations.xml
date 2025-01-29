@@ -656,7 +656,7 @@
         <property key="memories.programmemory.ranges" value="1d000000-1d003fff"/>
         <property key="memories.rww" value="true"/>
         <property key="programmerToGoFilePath"
-                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP1/TP1_TimerPwm_VCO_LMS/firmware/TP1_TimerPwm_VCO_LMS.X/debug/default/TP1_TimerPwm_VCO_LMS_ptg"/>
+                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP2/TP2_PwmRs232-LMS-MSI/firmware/TP2_PwmRs232-LMS-MSI.X/debug/default/TP2_PwmRs232-LMS-MSI_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>
