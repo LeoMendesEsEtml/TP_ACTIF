@@ -204,143 +204,110 @@ void APP_Initialize ( void )
     appData.state = APP_STATE_INIT;
 }
 
-
-/******************************************************************************
-  Function:
-    void APP_Tasks ( void )
-
-  Remarks:
-    See prototype in app.h.
+/**
+ * @brief Gère l'exécution des tâches de l'application en fonction de son état.
+ *
+ * @details Cette fonction implémente la machine d'état de l'application. 
+ * - Dans l'état `APP_STATE_INIT`, elle effectue l'initialisation une seule fois.
+ * - Dans l'état `APP_STATE_WAIT`, elle attend un nouvel événement.
+ * - Dans l'état `APP_STATE_SERVICE_TASKS`, elle gère la réception, le traitement et l'envoi des données.
  */
-
-void APP_Tasks ( void )
+/**
+ * @brief Exécute les tâches principales de l'application en fonction de son état.
+ */
+void APP_Tasks(void)
 {
-    static uint8_t CommStatus = 0;
-    static S_pwmSettings PWMDataToSend;  
-    
-    /* Check the application's current state. */
-    switch ( appData.state )
+    static uint8_t CommStatus = 0; // Statut de la communication (LOCAL ou REMOTE)
+    static S_pwmSettings PWMDataToSend; // Stocke les valeurs locales des potentiomètres
+    static uint8_t firstInit = 1; // Vérifie si l'initialisation a déjà été effectuée
+    static int8_t Iteration = 0; // Compteur pour gérer l'envoi périodique des données
+
+    switch (appData.state)
     {
-        /* État initial de l'application */
-        case APP_STATE_INIT:
+        case APP_STATE_INIT: // Initialisation de l'application
         {
-            // Variable statique utilisée pour s'assurer que cette section ne s'exécute qu'une seule fois
-            static uint8_t firstInit = 1; 
-    
             if (firstInit == 1)
             {
-                // Mise à jour de la variable pour empêcher la réinitialisation lors des prochains appels
-                firstInit = 0; 
-                
-                TurnOffAllLEDs();
-                
-                // Initialisation de l'écran LCD
-                lcd_init(); 
-        
-                // Allume le rétroéclairage de l'écran LCD
-                lcd_bl_on();
-                
-                // Positionne le curseur à la première ligne du LCD
-                lcd_gotoxy(1, 1); 
-        
-                // Affiche l'etat des paramètres 
-                printf_lcd("Local Settings"); 
-                
-                // Positionne le curseur à la première ligne du LCD
-                lcd_gotoxy(1, 2); 
-        
-                // Affiche un texte d'introduction sur la première ligne
-                printf_lcd("TP2 USART 2024-25"); 
-        
-                // Positionne le curseur à la deuxième ligne
-                lcd_gotoxy(1, 3); 
-        
-                // Affiche le nom de l'auteur 1 sur la deuxième ligne
-                printf_lcd("Leo Mendes"); 
-        
-                // Positionne le curseur à la troisième ligne
-                lcd_gotoxy(1, 4); 
-        
-                // Affiche le nom de l'auteur 2 sur la troisième ligne
-                printf_lcd("Matteo Stefanelli");           
-        
-                // Initialisation du PWM avec des données passées par pointeur
-                GPWM_Initialize(&pData); 
+                firstInit = 0; // Empêche une nouvelle exécution de cette section
 
-                // Initialisation des ADC (convertisseurs analogiques-numériques)
-                BSP_InitADC10(); 
+                TurnOffAllLEDs(); // Désactive toutes les LEDs
                 
-                InitFifoComm();
+                lcd_init(); // Initialise l'écran LCD
+                lcd_bl_on(); // Active le rétroéclairage
                 
-               DRV_USART0_Initialize();
+                lcd_gotoxy(1, 1);
+                printf_lcd("Local Settings"); // Affiche l'état initial
                 
+                lcd_gotoxy(1, 2);
+                printf_lcd("TP2 USART 2024-25"); // Affiche le titre du projet
+                
+                lcd_gotoxy(1, 3);
+                printf_lcd("Leo Mendes"); // Affiche le premier auteur
+                
+                lcd_gotoxy(1, 4);
+                printf_lcd("Matteo Stefanelli"); // Affiche le second auteur
+            
+                GPWM_Initialize(&pData); // Initialise la gestion du PWM
+                BSP_InitADC10(); // Initialise l'ADC
+                InitFifoComm(); // Initialise la communication FIFO
+                DRV_USART0_Initialize(); // Initialise l'USART
             }
-        break; 
-        }
-        /* État attente de l'application */
-        case APP_STATE_WAIT :
-        {
             break;
         }
-        
-        /* État execution de l'application */
-        case APP_STATE_SERVICE_TASKS :
-        {
-            static int8_t Iteration = 0; 
-            static int8_t Iteration1ocal = 0; 
-            
-            // Allume la LED 0 (BSP_LED_0) pour indiquer l'exécution des tâches
-            BSP_LEDOn(BSP_LED_0);
-            
-            // Réception param. remote
-            CommStatus = GetMessage(&pData);
-            // Lecture pot.
-            if (CommStatus == LOCAL)
-            { // local ?
-                GPWM_GetSettings(&pData); // local
+
+        case APP_STATE_WAIT: // Mode attente, aucune action requise
+            break;
+
+        case APP_STATE_SERVICE_TASKS: // Traitement des données
+        {            
+            BSP_LEDOn(BSP_LED_0); // Allume la LED 0 pour indiquer l'exécution des tâches
+
+            // Récupération de l'état de la communication
+            CommStatus = GetMessage(&pData); 
+
+            if (CommStatus == LOCAL) 
+            {
+                // Mode LOCAL :
+                // - Lecture des potentiomètres
+                // - Stockage dans `pData` pour utilisation immédiate et envoi
+                GPWM_GetSettings(&pData); 
             }
-            else
+            else 
             {
+                // Mode REMOTE :
+                // - `pData` contient les dernières valeurs reçues via RS232
+                // - On évite d?écraser `pData`, donc on stocke les valeurs locales dans `PWMDataToSend`
                 GPWM_GetSettings(&PWMDataToSend); 
-            }// remote
-            // Execution PWM et gestion moteur
-            GPWM_ExecPWM(&pData);
-            // Affichage
-            GPWM_DispSettings(&pData, CommStatus );
+            }
+
+            GPWM_ExecPWM(&pData); // Applique les paramètres PWM
+            GPWM_DispSettings(&pData, CommStatus); // Met à jour l'affichage
             
-            
-            Iteration++;
-            
-            if(Iteration >= 5)
+            Iteration++; // Incrémente le compteur
+
+            if (Iteration >= 5) // Exécute l'envoi des données toutes les 5 itérations
             {
-                // Envoi valeurs
-                if (CommStatus == LOCAL)
-                { // local ?
-                SendMessage(&pData); // local
+                if (CommStatus == LOCAL) 
+                { 
+                    // Envoi des valeurs locales lues depuis les potentiomètres
+                    SendMessage(&pData); 
                 }
-                else
+                else 
                 {
-                SendMessage(&PWMDataToSend); // remote
+                    // Envoi des valeurs des potentiomètres sauvegardées
+                    SendMessage(&PWMDataToSend); 
                 }
-                Iteration = 0;
+                Iteration = 0; // Réinitialisation du compteur
             }            
 
+            BSP_LEDOff(BSP_LED_0); // Éteint la LED 0 après l'exécution des tâches
 
-            // Éteint la LED 0 (BSP_LED_0) après l'exécution des tâches
-            BSP_LEDOff(BSP_LED_0);
-
-            // Passage de l'état de la achine en attente
-            APP_UpdateState(APP_STATE_WAIT);
- 
+            APP_UpdateState(APP_STATE_WAIT); // Repasse en attente
             break; 
         }
 
-        /* The default state should never be executed. */
-        default:
-        {
-            /* Gestion d'erreur de la machine d'état */
+        default: // Sécurité en cas d'état inconnu
             break;
-        }
     }
 }
 

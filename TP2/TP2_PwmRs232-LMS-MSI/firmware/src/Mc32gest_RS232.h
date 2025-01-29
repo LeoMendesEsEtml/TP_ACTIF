@@ -81,6 +81,19 @@ typedef union {
 void InitFifoComm(void);
 
 /**
+ * @brief Lit les paramètres PWM à partir des valeurs des ADC (moyennes glissantes).
+ * @author LMS - VCO
+ * @date 2025-01-02
+ *
+ * @param pData Pointeur vers une structure S_pwmSettings pour stocker les paramètres calculés.
+ *
+ * @details Cette fonction lit les résultats bruts des ADC, calcule les moyennes glissantes
+ *          pour les canaux spécifiés, et met à jour les réglages de vitesse et d'angle
+ *          dans la structure `pData`.
+ */
+void GPWM_GetSettings(S_pwmSettings *pData);
+
+/**
  * @brief Récupère un message depuis la FIFO RX.
  * 
  * @param[in, out] pData Structure S_pwmSettings pour stocker les paramètres du message.

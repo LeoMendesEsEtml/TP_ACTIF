@@ -90,4 +90,7 @@ void GPWM_ExecPWM(S_pwmSettings *pData);
  */
 void GPWM_ExecPWMSoft(S_pwmSettings *pData);
 
+
+
+
 #endif // GestPWM_H
