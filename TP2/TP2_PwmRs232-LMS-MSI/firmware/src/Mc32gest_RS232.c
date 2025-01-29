@@ -83,6 +83,7 @@ void HandleCableDisconnection(void) {
 } // Fin HandleCableDisconnection
 
 
+
 /**
  * @brief Traite la réception de messages et met à jour les données si un message valide est reçu.
  * 
