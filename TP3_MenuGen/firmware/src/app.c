@@ -112,7 +112,7 @@ void App_Timer1Callback()
     {
         // Après les 3 premières secondes, exécute les tâches de service
         APP_UpdateState(APP_STATE_SERVICE_TASKS); 
-        ScanPec12();
+        //ScanPec12();
     }
 }
 /**
