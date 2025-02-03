@@ -53,6 +53,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
+#include <stdbool.h>
 #include "app.h"
 #include "Mc32DriverLcd.h"
 #include "Mc32gestSpiDac.h"
@@ -98,21 +99,29 @@ S_ParamGen LocalParamGen;
  * @details 
  */
 #define WAIT_INIT 2999
-void App_Timer1Callback()
-{
-    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
-    static uint16_t threeSecondCounter = 0;
 
+void App_Timer1Callback() {
+    LED1_W = !LED1_R;
+    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
+    static uint16_t WaitIteration = 0;
+    static bool InitDone = false;
     // Pendant les 3 premières secondes
-    if (threeSecondCounter < WAIT_INIT)
-    {
-        threeSecondCounter++; // Incrémente le compteur
-    }
-    else
-    {
-        // Après les 3 premières secondes, exécute les tâches de service
-        APP_UpdateState(APP_STATE_SERVICE_TASKS); 
-        //ScanPec12();
+    if ((WaitIteration < WAIT_INIT)&&(InitDone == false)) {
+        WaitIteration++; // Incrémente le compteur
+    } else {
+        if (InitDone == false) {
+            ClearLcd();
+            InitDone = true;
+            WaitIteration = 0;
+        }
+        if (WaitIteration == 10) {
+            WaitIteration = 0;
+            // Après les 3 premières secondes, exécute les tâches de service
+            APP_UpdateState(APP_STATE_SERVICE_TASKS);
+            //ScanPec12();            
+        } else {
+            WaitIteration++;
+        }
     }
 }
 /**

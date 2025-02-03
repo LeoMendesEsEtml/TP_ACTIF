@@ -3,9 +3,6 @@
 // Fichier MenuGen.c
 // Gestion du menu  du générateur
 // Traitement cyclique à 10 ms
-
-
-
 #include <stdint.h>                   
 #include <stdbool.h>
 #include "MenuGen.h"
