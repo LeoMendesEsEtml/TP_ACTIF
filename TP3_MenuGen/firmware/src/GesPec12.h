@@ -44,7 +44,13 @@ typedef struct {
             uint16_t InactivityDuration;   // Pour durée inactivité
 } S_Pec12_Descriptor;
 
-
+typedef struct {
+            uint8_t OK  : 1;              // événement action OK
+            uint8_t ESC : 1;             // événement action ESC
+            uint8_t NoActivity: 1 ;      // Indication de non activité
+            uint16_t PressDuration;   // Pour durée pression du P.B.
+            uint16_t InactivityDuration;   // Pour durée inactivité
+} S_PB_Descriptor;
 
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -77,31 +83,34 @@ typedef struct {
 //     __________                       __________________
 // A:            |_____________________|        
 
-void ScanPec12 (bool ValA, bool ValB, bool ValPB);
+void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9);
 
-void Pec12Init (void);
+void Pec12Init(void);
 
 //       Pec12IsPlus       true indique un nouveau incrément
-bool Pec12IsPlus    (void);
+bool Pec12IsPlus(void);
 //       Pec12IsMinus      true indique un nouveau décrément
-bool Pec12IsMinus    (void);
+bool Pec12IsMinus(void);
 //       Pec12IsOK         true indique action OK
-bool Pec12IsOK    (void);
+bool Pec12IsOK(void);
 //       Pec12IsESC        true indique action ESC
-bool Pec12IsESC    (void);
+bool Pec12IsESC(void);
 //       Pec12NoActivity   true indique abscence d'activité sur PEC12
-bool Pec12NoActivity    (void);
+bool Pec12NoActivity(void);
 
 //  Fonctions pour quittance des indications
 //       Pec12ClearPlus    annule indication d'incrément
-void Pec12ClearPlus   (void);
+void Pec12ClearPlus(void);
 //       Pec12ClearMinus   annule indication de décrément
-void Pec12ClearMinus   (void);
+void Pec12ClearMinus(void);
 //       Pec12ClearOK      annule indication action OK
-void Pec12ClearOK   (void);
+void Pec12ClearOK(void);
 //       Pec12ClearESC     annule indication action ESC
-void Pec12ClearESC   (void);
-void Pec12ClearInactivity   (void);
+void Pec12ClearESC(void);
+void Pec12ClearInactivity(void);
+
+bool S9IsOK(void);
+void S9ClearOK(void);
 
 
 #endif

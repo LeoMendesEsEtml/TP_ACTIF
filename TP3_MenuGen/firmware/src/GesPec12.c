@@ -27,14 +27,21 @@
 
 #include "GesPec12.h"
 #include "Mc32Debounce.h"
+#include "Mc32DriverLcd.h"
 
+#define INACTIVITY_THRESHOLD 5000
+#define PRESS_THRESHOLD 500
 // Descripteur des sinaux
 S_SwitchDescriptor DescrA;
 S_SwitchDescriptor DescrB;
 S_SwitchDescriptor DescrPB;
+S_SwitchDescriptor DescrS9;
 
 // Structure pour les traitement du Pec12
 S_Pec12_Descriptor Pec12;
+// Structure pour les traitement du S9
+S_PB_Descriptor S9;
+
 
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -67,25 +74,72 @@ S_Pec12_Descriptor Pec12;
 //     __________                       __________________
 // A:            |_____________________|        
 
-void ScanPec12 (bool ValA, bool ValB, bool ValPB)
-{
-   // Traitement antirebond sur A, B et PB
-   DoDebounce (&DescrA, ValA);
-   DoDebounce (&DescrB, ValB);
-   DoDebounce (&DescrPB, ValPB);
-   
-   // Détection incrément / décrément
-  
-   
-    
-   // Traitement du PushButton
-   
-   
-   // Gestion inactivité
+void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9) {
+    // Traitement antirebond sur A, B et PB
+    DoDebounce(&DescrA, ValA);
+    DoDebounce(&DescrB, ValB);
+    DoDebounce(&DescrPB, ValPB);
+    DoDebounce(&DescrS9, ValS9);
 
+    if (DebounceIsPressed(&DescrB) && (DebounceGetInput(&DescrA) == 0)) {
+        Pec12.Dec = 0;
+        Pec12.Inc = 1;
+        Pec12.NoActivity = 0;
+    }
+    else if (DebounceIsPressed(&DescrB) && (DebounceGetInput(&DescrA) == 1)) {
+        Pec12.Inc = 0;
+        Pec12.Dec = 1;
+        Pec12.NoActivity = 0;
+    }
+    else if (DebounceIsPressed(&DescrPB)) {
+        if (DebounceGetInput(&DescrPB) == 0) {
+            Pec12.PressDuration++;
+        } else {
+            if (DebounceIsPressed(&DescrPB)) {
+                if (Pec12.PressDuration < PRESS_THRESHOLD) {
+                    Pec12.OK = 1;
+                } else {
+                    Pec12.ESC = 1;
+                }
+                Pec12.PressDuration = 0;
+                DebounceClearPressed(&DescrPB);
+                DebounceClearReleased(&DescrPB);
+            }
+        }
+    }
 
-   
- } // ScanPec12
+    // Clear les flag d'appui et de relachement de l'encodeur (partie B)
+    DebounceClearPressed(&DescrB);
+    DebounceClearReleased(&DescrB);
+
+    if (DebounceIsPressed(&DescrS9)) {
+        DebounceClearPressed(&DescrS9);
+        S9.PressDuration++;
+    } else {
+        if (S9.PressDuration < PRESS_THRESHOLD) {
+            S9.OK = 0;
+        } else {
+            S9.OK = 1;
+            S9.PressDuration = 0;
+        }
+    }
+
+    if ((Pec12.Dec == 0) && (Pec12.Inc == 0) && (DescrPB.bits.KeyValue == 1) && (S9.PressDuration == 0)) {
+        if ((Pec12.InactivityDuration < INACTIVITY_THRESHOLD) &&
+                (S9.InactivityDuration < INACTIVITY_THRESHOLD)) {
+            Pec12.InactivityDuration++;
+            S9.InactivityDuration++;
+        } else {
+            lcd_bl_off();
+            Pec12.NoActivity = 1;
+            S9.NoActivity = 1;
+        }
+    } else if ((Pec12.NoActivity == 1)&&(S9.NoActivity == 1)) {
+        lcd_bl_on();
+        Pec12.NoActivity = 0;
+        S9.NoActivity = 0;
+    }
+} // ScanPec12
 
 
 void Pec12Init (void)
@@ -94,6 +148,7 @@ void Pec12Init (void)
    DebounceInit(&DescrA);
    DebounceInit(&DescrB);
    DebounceInit(&DescrPB);
+   DebounceInit(&DescrS9);
    
    // Init de la structure PEc12
     Pec12.Inc = 0;             // événement incrément  
@@ -105,10 +160,6 @@ void Pec12Init (void)
     Pec12.InactivityDuration = 0; // Durée inactivité
   
  } // Pec12Init
-
-
-
-
 
 //       Pec12IsPlus       true indique un nouveau incrément
 bool Pec12IsPlus    (void) {
@@ -161,4 +212,12 @@ void Pec12ClearInactivity   (void) {
   Pec12.InactivityDuration = 0;
 }
 
+//       S9IsOK          true indique action OK
+bool S9IsOK    (void) {
+   return (S9.OK);
+}
 
+//       Pec12ClearOK      annule indication action OK
+void S9ClearOK   (void) {
+   S9.OK = 0;
+}

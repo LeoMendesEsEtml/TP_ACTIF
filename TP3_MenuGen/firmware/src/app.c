@@ -116,9 +116,9 @@ void App_Timer1Callback() {
         }
         if (WaitIteration == 10) {
             WaitIteration = 0;
+            ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
             // Après les 3 premières secondes, exécute les tâches de service
-            APP_UpdateState(APP_STATE_SERVICE_TASKS);
-            //ScanPec12();            
+            APP_UpdateState(APP_STATE_SERVICE_TASKS);          
         } else {
             WaitIteration++;
         }
