@@ -25,4 +25,15 @@ typedef struct {
       uint32_t Magic;
 } S_ParamGen;
 
+typedef enum {
+    MENU_FORME_SEL,
+    MENU_FORME_EDIT,
+    MENU_FREQ_SEL,
+    MENU_FREQ_EDIT,
+    MENU_AMPL_SEL,
+    MENU_AMPL_EDIT,
+    MENU_OFFSET_SEL,
+    MENU_OFFSET_EDIT,
+    MENU_INIT
+} MenuState_t;
 #endif

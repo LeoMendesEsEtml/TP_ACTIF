@@ -16,7 +16,7 @@
 // Initialisation du menu et des paramètres
 void MENU_Initialize(S_ParamGen *pParam) 
 {
-
+    
 }
 
 void MENU_Display(S_ParamGen *pParam, uint8_t selection)
@@ -44,25 +44,201 @@ void MENU_Display(S_ParamGen *pParam, uint8_t selection)
     printf_lcd("Offest [mV]");
     lcd_gotoxy(13,4);
     printf_lcd("%d", (int)pParam->Offset);
-    
-    lcd_gotoxy(1,selection);
-    printf_lcd("*");
+   
 }
 
 void MENU_Execute(S_ParamGen *pParam) {
-    static uint8_t selection = 1;
-    static bool editing = false;
-    static const uint16_t minValues[4] = {0, 20, 0, -5000};
-    static const uint16_t maxValues[4] = {3, 2000, 10000, 5000};
-    static const uint16_t stepValues[4] = {1, 20, 100, 100};
+    static MenuState_t menu = MENU_FORME_SEL;
+    static int8_t minValues[4] = {1,1,1,1};
+    static int8_t maxValues[4] = {10,10,10,10};    
+    switch (menu) {
+        case MENU_FORME_SEL:
+            if (Pec12IsPlus() == true) {
+                menu = MENU_FREQ_SEL;
+                ClearLcd();
+                Pec12ClearPlus();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_OFFSET_SEL;
+                ClearLcd();
+                Pec12ClearMinus();
+            }
+            if (Pec12IsOK() == true) {
+                menu = MENU_FORME_EDIT;
+                ClearLcd();
+                Pec12ClearOK();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 1);
+            printf_lcd("*");
+            break;
+            
+        case MENU_FORME_EDIT:
+            if (Pec12IsPlus() == true) {
+                pParam->Forme++;
+                if (pParam->Forme > maxValues[0]) {
+                    pParam->Forme = minValues[0];
+                }
+                Pec12ClearPlus();
+                ClearLcd();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_OFFSET_SEL;
+                pParam->Forme--;
+                if (pParam->Forme < minValues[0]) {
+                    pParam->Forme = maxValues[0];
+                }
+                Pec12ClearMinus();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 1);
+            printf_lcd("?");                        
+            break;
+            
+        case MENU_FREQ_SEL:
+            if (Pec12IsPlus() == true) {
+                menu = MENU_FORME_SEL;
+                ClearLcd();
+                Pec12ClearPlus();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_AMPL_SEL;
+                ClearLcd();
+                Pec12ClearMinus();
+            }
+            if (Pec12IsOK() == true) {
+                menu = MENU_FREQ_EDIT;
+                ClearLcd();
+                Pec12ClearOK();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 2);
+            printf_lcd("*");
+            break;
+        case MENU_FREQ_EDIT:
+            if (Pec12IsPlus() == true) {
+                pParam->Frequence++;
+                if (pParam->Frequence > maxValues[1]) {
+                    pParam->Frequence = minValues[1];
+                }
+                Pec12ClearPlus();
+                ClearLcd();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_OFFSET_SEL;
+                pParam->Frequence--;
+                if (pParam->Frequence < minValues[1]) {
+                    pParam->Frequence = maxValues[1];
+                }
+                Pec12ClearMinus();
+                ClearLcd();
+            }
+            if (Pec12IsOK() == true) {
+                menu = MENU_FREQ_EDIT;
+                ClearLcd();
+                Pec12ClearOK();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 2);
+            printf_lcd("?");
+            break;
+        case MENU_AMPL_SEL:
+            if (Pec12IsPlus() == true) {
+                menu = MENU_OFFSET_SEL;
+                ClearLcd();
+                Pec12ClearPlus();
+            }
+            if (Pec12IsMinus() == true) {
+                Pec12ClearMinus();
 
-    if (editing == false) {
+            }
+            if (Pec12IsOK() == true) {
+                menu = MENU_AMPL_EDIT;
+                ClearLcd();
+                Pec12ClearOK();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 3);
+            printf_lcd("*");
+            break;
+
+        case MENU_AMPL_EDIT:
+            if (Pec12IsPlus() == true) {
+                pParam->Amplitude++;
+                if (pParam->Amplitude > maxValues[2]) {
+                    pParam->Amplitude = minValues[2];
+                }
+                Pec12ClearPlus();
+                ClearLcd();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_OFFSET_SEL;
+                pParam->Forme--;
+                if (pParam->Forme < minValues[2]) {
+                    pParam->Forme = maxValues[2];
+                }
+                Pec12ClearMinus();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 3);
+            printf_lcd("?");
+            break;
+        case MENU_OFFSET_SEL:
+            if (Pec12IsPlus() == true) {
+                menu = MENU_OFFSET_SEL;
+                ClearLcd();
+                Pec12ClearPlus();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_FREQ_SEL;
+                ClearLcd();
+                Pec12ClearMinus();
+            }
+            if (Pec12IsOK() == true) {
+                menu = MENU_AMPL_EDIT;
+                ClearLcd();
+                Pec12ClearOK();
+            }
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 4);
+            printf_lcd("*");
+            break;
+
+        case MENU_OFFSET_EDIT:
+            if (Pec12IsPlus() == true) {
+                pParam->Offset++;
+                if (pParam->Offset > maxValues[2]) {
+                    pParam->Offset = minValues[2];
+                }
+                Pec12ClearPlus();
+                ClearLcd();
+            }
+            if (Pec12IsMinus() == true) {
+                menu = MENU_OFFSET_SEL;
+                pParam->Offset--;
+                if (pParam->Offset < minValues[3]) {
+                    pParam->Offset = maxValues[3];
+                }
+                Pec12ClearMinus();
+            }            
+            MENU_Display(pParam, 1);
+            lcd_gotoxy(1, 4);
+            printf_lcd("?");
+            break;
+
+        default:
+            
+            break;
+    }
+    
+    /* if (editing == false) {
         if (Pec12IsPlus() == true) {
             Pec12ClearPlus();
             selection++;
             if (selection >= 4) {
                 selection = 1;
             }
+            MENU_Display(pParam,selection);
         }
         if (Pec12IsMinus() == true) {
             Pec12ClearMinus();
@@ -70,20 +246,18 @@ void MENU_Execute(S_ParamGen *pParam) {
             if (selection < 1) {
                 selection = 3;
             }
+            MENU_Display(pParam,selection);
         }
         if (Pec12IsOK() == true) {
             Pec12ClearOK();
             editing = true;
+            MENU_Display(pParam,selection);
         }
-        MENU_Display(pParam,selection);
     } else {
         if (Pec12IsPlus() == true) {
             Pec12ClearPlus();
             if (selection == 0) {
-                pParam->Forme = pParam->Forme + 1;
-                if (pParam->Forme > maxValues[0]) {
-                    pParam->Forme = minValues[0];
-                }
+
             } else if (selection == 1) {
                 pParam->Frequence = pParam->Frequence + stepValues[1];
                 if (pParam->Frequence > maxValues[1]) {
@@ -143,6 +317,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             MENU_Display(pParam, selection);
         }
     }
+     */
 }
 
 

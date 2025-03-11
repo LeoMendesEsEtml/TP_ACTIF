@@ -81,64 +81,88 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9) {
     DoDebounce(&DescrPB, ValPB);
     DoDebounce(&DescrS9, ValS9);
 
+    //gestion rotation codeur
     if (DebounceIsPressed(&DescrB) && (DebounceGetInput(&DescrA) == 0)) {
         Pec12.Dec = 0;
         Pec12.Inc = 1;
         Pec12.NoActivity = 0;
-    }
-    else if (DebounceIsPressed(&DescrB) && (DebounceGetInput(&DescrA) == 1)) {
+        DebounceClearPressed(&DescrB);
+    } else if (DebounceIsPressed(&DescrB) && (DebounceGetInput(&DescrA) == 1)) {
         Pec12.Inc = 0;
         Pec12.Dec = 1;
         Pec12.NoActivity = 0;
-    }
-    else if (DebounceIsPressed(&DescrPB)) {
-        if (DebounceGetInput(&DescrPB) == 0) {
-            Pec12.PressDuration++;
-        } else {
-            if (DebounceIsPressed(&DescrPB)) {
-                if (Pec12.PressDuration < PRESS_THRESHOLD) {
-                    Pec12.OK = 1;
-                } else {
-                    Pec12.ESC = 1;
-                }
-                Pec12.PressDuration = 0;
-                DebounceClearPressed(&DescrPB);
-                DebounceClearReleased(&DescrPB);
-            }
-        }
+        DebounceClearPressed(&DescrB);
     }
 
-    // Clear les flag d'appui et de relachement de l'encodeur (partie B)
-    DebounceClearPressed(&DescrB);
-    DebounceClearReleased(&DescrB);
-
-    if (DebounceIsPressed(&DescrS9)) {
-        DebounceClearPressed(&DescrS9);
-        S9.PressDuration++;
-    } else {
-        if (S9.PressDuration < PRESS_THRESHOLD) {
-            S9.OK = 0;
-        } else {
-            S9.OK = 1;
-            S9.PressDuration = 0;
-        }
-    }
-
-    if ((Pec12.Dec == 0) && (Pec12.Inc == 0) && (DescrPB.bits.KeyValue == 1) && (S9.PressDuration == 0)) {
-        if ((Pec12.InactivityDuration < INACTIVITY_THRESHOLD) &&
-                (S9.InactivityDuration < INACTIVITY_THRESHOLD)) {
-            Pec12.InactivityDuration++;
-            S9.InactivityDuration++;
-        } else {
-            lcd_bl_off();
-            Pec12.NoActivity = 1;
-            S9.NoActivity = 1;
-        }
-    } else if ((Pec12.NoActivity == 1)&&(S9.NoActivity == 1)) {
-        lcd_bl_on();
+    //gestion enfoncement bouton codeur
+    if (DebounceIsPressed(&DescrPB)) {  //btn blanc d'appui
+        DebounceClearPressed(&DescrB);
+        Pec12.PressDuration = 0;
         Pec12.NoActivity = 0;
-        S9.NoActivity = 0;
     }
+    else if (DebounceGetInput(&DescrPB) == 0)  //btn maintenu enfoncé
+    {
+        Pec12.PressDuration++;
+        Pec12.NoActivity = 0;
+    }       
+    else if (DebounceIsReleased(&DescrPB)) {//btn blanc relachement
+        DebounceClearPressed(&DescrPB);
+        if (Pec12.PressDuration >= PRESS_THRESHOLD) {
+            Pec12.OK = 0;
+            Pec12.ESC = 1;
+        } else {
+            Pec12.ESC = 0;
+            Pec12.OK = 1;
+        }
+        Pec12.PressDuration = 0;
+        Pec12.NoActivity = 0;
+    }
+
+//    //gestion bouton S9
+//    if (DebounceIsPressed(&DescrS9)) {
+//        DebounceClearPressed(&DescrS9);
+//        S9.PressDuration++;
+//        S9.NoActivity = 0;
+////        if (DebounceIsReleased(&DescrS9)) {
+////            DebounceClearPressed(&DescrS9);
+//        }
+//    }
+//    else if ()
+//
+//    if (DebounceIsReleased(&DescrS9)) {
+//        S9.PressDuration = 0;
+//        S9.NoActivity = 0;
+//        if (S9.PressDuration >= PRESS_THRESHOLD) {
+//            S9.OK = 1;
+//        }
+//        DebounceClearReleased(&DescrS9);
+//
+//    }
+
+    if (Pec12.InactivityDuration < INACTIVITY_THRESHOLD)    //dernière activité < 5 sec
+    {
+        Pec12.InactivityDuration++;
+    }
+    else //inactif depuis >= 5 sec
+    {
+        Pec12.NoActivity = 1;
+    }
+    
+//    if ((Pec12.Dec == 0) && (Pec12.Inc == 0) && (DescrPB.bits.KeyValue == 1) && (S9.PressDuration == 0)) {
+//        if ((Pec12.InactivityDuration < INACTIVITY_THRESHOLD) &&
+//                (S9.InactivityDuration < INACTIVITY_THRESHOLD)) {
+//            Pec12.InactivityDuration++;
+//            S9.InactivityDuration++;
+//        } else {
+//            lcd_bl_off();
+//            Pec12.NoActivity = 1;
+//            S9.NoActivity = 1;
+//        }
+//    } else if ((Pec12.NoActivity == 1)&&(S9.NoActivity == 1)) {
+//        lcd_bl_on();
+//        Pec12.NoActivity = 0;
+//        S9.NoActivity = 0;
+//    }
 } // ScanPec12
 
 

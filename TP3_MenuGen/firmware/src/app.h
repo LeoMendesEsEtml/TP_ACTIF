@@ -85,8 +85,11 @@ typedef enum
 {
 	/* Application's state machine's initial state. */
 	APP_STATE_INIT=0,
-        APP_STATE_WAIT=1,
-        APP_STATE_SERVICE_TASKS=2
+    APP_STATE_INIT_WAIT,
+    APP_STATE_INIT_CLEAR,
+    APP_STATE_WAIT,
+            
+    APP_STATE_SERVICE_TASKS
 	
 } APP_STATES;
 

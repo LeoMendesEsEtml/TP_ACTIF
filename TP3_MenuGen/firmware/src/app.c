@@ -100,29 +100,58 @@ S_ParamGen LocalParamGen;
  */
 #define WAIT_INIT 2999
 
+
+//timer 1 : 1 ms
 void App_Timer1Callback() {
+//    LED1_W = !LED1_R;
+//    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
+//    static uint16_t WaitIteration = 0;
+//    static bool InitDone = false;
+//    // Pendant les 3 premières secondes
+//    if ((WaitIteration < WAIT_INIT)&&(InitDone == false)) {
+//        WaitIteration++; // Incrémente le compteur
+//    } else {
+//        if (InitDone == false) {
+//            ClearLcd();
+//            InitDone = true;
+//            WaitIteration = 0;
+//            APP_UpdateState(APP_STATE_SERVICE_TASKS);
+//        }
+//        if (WaitIteration == 10) {
+//            WaitIteration = 0;
+//            ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
+//            // Après les 3 premières secondes, exécute les tâches de service
+//            APP_UpdateState(APP_STATE_SERVICE_TASKS);          
+//        } else {
+//            WaitIteration++;
+//        }
+//    }
+ 
     LED1_W = !LED1_R;
     // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
     static uint16_t WaitIteration = 0;
-    static bool InitDone = false;
+//    static bool InitDone = false;
+    ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
+    
     // Pendant les 3 premières secondes
-    if ((WaitIteration < WAIT_INIT)&&(InitDone == false)) {
+    if ((WaitIteration < WAIT_INIT)/*&&(InitDone == false)*/) {
         WaitIteration++; // Incrémente le compteur
     } else {
-        if (InitDone == false) {
-            ClearLcd();
-            InitDone = true;
-            WaitIteration = 0;
+        if (appData.state == APP_STATE_INIT_WAIT)
+        {
+            APP_UpdateState(APP_STATE_INIT_CLEAR);    
         }
-        if (WaitIteration == 10) {
+        else
+        if (WaitIteration >= 10) {
             WaitIteration = 0;
-            ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
+            
             // Après les 3 premières secondes, exécute les tâches de service
             APP_UpdateState(APP_STATE_SERVICE_TASKS);          
         } else {
             WaitIteration++;
         }
     }
+    
 }
 /**
  * @brief Callback pour le Timer 3. 
@@ -267,9 +296,20 @@ void APP_Tasks ( void )
             // Active les timers 
             DRV_TMR0_Start();
             DRV_TMR1_Start();
-            appData.state = APP_STATE_WAIT;
+            appData.state = APP_STATE_INIT_WAIT;
             break;
         }
+        
+        case APP_STATE_INIT_WAIT :
+          // nothing to do
+        break;
+                
+        case APP_STATE_INIT_CLEAR :
+            //efface lcd 1x a la fin des 3 s d'init
+            ClearLcd();
+            appData.state = APP_STATE_WAIT;
+        break;              
+        
         case APP_STATE_WAIT :
           // nothing to do
         break;
