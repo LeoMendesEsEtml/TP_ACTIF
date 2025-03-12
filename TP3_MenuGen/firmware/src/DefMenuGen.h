@@ -34,6 +34,7 @@ typedef enum {
     MENU_AMPL_EDIT,
     MENU_OFFSET_SEL,
     MENU_OFFSET_EDIT,
-    MENU_INIT
+    MENU_INIT,
+    MENU_SAUVEGARDE
 } MenuState_t;
 #endif

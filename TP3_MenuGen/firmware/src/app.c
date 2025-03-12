@@ -103,30 +103,6 @@ S_ParamGen LocalParamGen;
 
 //timer 1 : 1 ms
 void App_Timer1Callback() {
-//    LED1_W = !LED1_R;
-//    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
-//    static uint16_t WaitIteration = 0;
-//    static bool InitDone = false;
-//    // Pendant les 3 premières secondes
-//    if ((WaitIteration < WAIT_INIT)&&(InitDone == false)) {
-//        WaitIteration++; // Incrémente le compteur
-//    } else {
-//        if (InitDone == false) {
-//            ClearLcd();
-//            InitDone = true;
-//            WaitIteration = 0;
-//            APP_UpdateState(APP_STATE_SERVICE_TASKS);
-//        }
-//        if (WaitIteration == 10) {
-//            WaitIteration = 0;
-//            ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
-//            // Après les 3 premières secondes, exécute les tâches de service
-//            APP_UpdateState(APP_STATE_SERVICE_TASKS);          
-//        } else {
-//            WaitIteration++;
-//        }
-//    }
- 
     LED1_W = !LED1_R;
     // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
     static uint16_t WaitIteration = 0;

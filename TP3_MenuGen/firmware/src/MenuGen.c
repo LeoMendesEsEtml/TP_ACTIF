@@ -50,7 +50,7 @@ void MENU_Display(S_ParamGen *pParam, uint8_t selection)
 void MENU_Execute(S_ParamGen *pParam) {
     static MenuState_t menu = MENU_FORME_SEL;
     static uint8_t Timer_S9 = 0; // Timer pour la détection de l'appui long sur S9
-    const char MenuFormes[4][21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
+    //2const char MenuFormes[4][21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
 
     switch (menu) {
         case MENU_FORME_SEL:
@@ -98,7 +98,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (S9IsOK()) {  
                 menu = MENU_FORME_SEL;
-                pParam->Forme = NVM_ReadParam()->Forme;
+                //pParam->Forme = NVM_ReadParam()->Forme;
                 ClearLcd();
                 S9ClearOK();
             }
@@ -148,7 +148,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (S9IsOK()) {
                 menu = MENU_FREQ_SEL;
-                pParam->Frequence = NVM_ReadParam()->Frequence;
+                //pParam->Frequence = NVM_ReadParam()->Frequence;
                 ClearLcd();
                 S9ClearOK();
             }
@@ -198,7 +198,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (S9IsOK()) {
                 menu = MENU_AMPL_SEL;
-                pParam->Amplitude = NVM_ReadParam()->Amplitude;
+                //pParam->Amplitude = NVM_ReadParam()->Amplitude;
                 ClearLcd();
                 S9ClearOK();
             }
@@ -248,7 +248,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (S9IsOK()) {
                 menu = MENU_OFFSET_SEL;
-                pParam->Offset = NVM_ReadParam()->Offset;
+//                pParam->Offset = NVM_ReadParam()->Offset;
                 ClearLcd();
                 S9ClearOK();
             }
