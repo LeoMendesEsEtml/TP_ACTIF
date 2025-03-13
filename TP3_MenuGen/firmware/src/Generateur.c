@@ -12,14 +12,15 @@
 #include "DefMenuGen.h"
 #include "Mc32gestSpiDac.h"
 
+
 // T.P. 2016 100 echantillons
 #define MAX_ECH 100
-
 
 
 // Initialisation du  générateur
 void  GENSIG_Initialize(S_ParamGen *pParam)
 {
+ 
 }
   
 

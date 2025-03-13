@@ -110,7 +110,8 @@ void Pec12ClearESC(void);
 void Pec12ClearInactivity(void);
 
 bool S9IsOK(void);
+bool S9IsESC(void);
 void S9ClearOK(void);
-
+void S9ClearESC(void);
 
 #endif

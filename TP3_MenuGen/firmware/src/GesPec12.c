@@ -113,13 +113,27 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
     // ================================
     // Gestion du bouton S9
     // ================================
-    static uint8_t lastS9State = 1;
-    if (ValS9 == 0 && lastS9State == 1) {
-        S9.OK = 1; // Détection d'un appui sur S9
-    } else {
-        S9.OK = 0;
+    // ================================
+    // Gestion du bouton S9
+    // ================================
+    if (DebounceIsPressed(&DescrS9)) {
+        Pec12.NoActivity = 1;
+        DebounceClearPressed(&DescrS9);
+        S9.PressDuration = 0;
     }
-    lastS9State = ValS9;
+    else if (DebounceGetInput(&DescrS9) == 0) {
+        S9.PressDuration++;
+    }
+    else if (DebounceIsReleased(&DescrS9)) {
+        DebounceClearReleased(&DescrS9);
+ 
+        if (S9.PressDuration < 500) {
+            S9.OK = 1; // Appui court
+        } else {
+            S9.ESC = 1; // Appui long
+        }
+        S9.PressDuration = 0; // Réinitialisation après traitement
+    }
 
     // ================================
     // Gestion de l'inactivité
@@ -148,6 +162,7 @@ bool Pec12IsOK(void) { return (Pec12.OK); }
 bool Pec12IsESC(void) { return (Pec12.ESC); }
 bool Pec12NoActivity(void) { return (Pec12.NoActivity); }
 bool S9IsOK(void) { return (S9.OK); }
+bool S9IsESC(void) {return (S9.ESC);}
 
 // ================================
 // Fonctions pour annuler les événements
@@ -158,3 +173,4 @@ void Pec12ClearOK(void) { Pec12.OK = 0; }
 void Pec12ClearESC(void) { Pec12.ESC = 0; }
 void Pec12ClearInactivity(void) { Pec12.NoActivity = 0; Pec12.InactivityDuration = 0; }
 void S9ClearOK(void) { S9.OK = 0; }
+void S9ClearESC(void) { S9.ESC = 0; }
