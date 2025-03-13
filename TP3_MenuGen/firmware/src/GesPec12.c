@@ -55,6 +55,12 @@ void Pec12Init(void)
     Pec12.NoActivity = 0;
     Pec12.PressDuration = 0;
     Pec12.InactivityDuration = 0;
+
+    S9.OK = 0;
+    Pec12.ESC = 0;
+    Pec12.NoActivity = 0;
+    Pec12.PressDuration = 0;
+    Pec12.InactivityDuration = 0;
 }
 
 void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
@@ -70,7 +76,7 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
     // ================================
     if (DebounceIsPressed(&DescrB)) {
         DebounceClearPressed(&DescrB);
-        Pec12.NoActivity = 0; // Réinitialise l'inactivité
+        Pec12.NoActivity = 1; // Réinitialise l'inactivité
 
         if (DebounceGetInput(&DescrA) == 0) {
             Pec12.Inc = 1; // Incrémentation
@@ -84,7 +90,8 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
     // ================================
     // Gestion du bouton poussoir (PB)
     // ================================
-    if (DebounceIsPressed(&DescrPB)) {  
+    if (DebounceIsPressed(&DescrPB)) {
+        Pec12.NoActivity = 1;
         DebounceClearPressed(&DescrPB);
         Pec12.PressDuration = 0;
     } 
@@ -96,10 +103,8 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
 
         if (Pec12.PressDuration < 500) {
             Pec12.OK = 1; // Appui bref ? OK
-            Pec12.ESC = 0;
         } else {
             Pec12.ESC = 1; // Appui long ? ESC
-            Pec12.OK = 0;
         }
         
         Pec12.PressDuration = 0; // Réinitialisation après traitement
@@ -119,23 +124,20 @@ void ScanBtn(bool ValA, bool ValB, bool ValPB, bool ValS9)
     // ================================
     // Gestion de l'inactivité
     // ================================
-    if ((Pec12.Inc == 0) && (Pec12.Dec == 0) && (DebounceGetInput(&DescrPB) == 1) && (S9.OK == 0)) {
+    if ((Pec12.NoActivity == 0)) {
         if (Pec12.InactivityDuration >= AFK_TIME) {
-            if (Pec12.NoActivity == 0) { // Sécurité pour éviter la boucle infinie
-                lcd_bl_off();
-                Pec12.NoActivity = 1;
-            }
-        } else {
+            lcd_bl_off();
+        }
+        else {
             Pec12.InactivityDuration++;
         }
     } else {
-        if (Pec12.NoActivity == 1) { // Réactivation du LCD uniquement après une extinction
-            Pec12ClearInactivity();
-            lcd_bl_on();
-        }
-        Pec12.InactivityDuration = 0;
+        Pec12ClearInactivity();
+        lcd_bl_on();
     }
+   
 }
+
 
 // ================================
 // Fonctions de test des événements

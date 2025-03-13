@@ -13,6 +13,8 @@
 #include <stdint.h>
 
 #define MAGIC 0x123455AA
+#define SELECT 0
+#define EDIT 1
 
 typedef enum  { SignalSinus, SignalTriangle, SignalDentDeScie, SignalCarre } E_FormesSignal;
 
@@ -26,15 +28,16 @@ typedef struct {
 } S_ParamGen;
 
 typedef enum {
-    MENU_FORME_SEL,
-    MENU_FORME_EDIT,
-    MENU_FREQ_SEL,
-    MENU_FREQ_EDIT,
-    MENU_AMPL_SEL,
-    MENU_AMPL_EDIT,
-    MENU_OFFSET_SEL,
-    MENU_OFFSET_EDIT,
-    MENU_INIT,
-    MENU_SAUVEGARDE
+    MENU_INIT = 0,
+    MENU_FORME_SEL = 1,
+    MENU_FREQ_SEL = 2,
+    MENU_AMPL_SEL = 3, 
+    MENU_OFFSET_SEL = 4,        
+    MENU_FORME_EDIT = 5,
+    MENU_FREQ_EDIT = 6,
+    MENU_AMPL_EDIT = 7,
+    MENU_OFFSET_EDIT = 8,
+    MENU_SAUVEGARDE = 9,
+    MENU_SAVEINFO = 10        
 } MenuState_t;
 #endif

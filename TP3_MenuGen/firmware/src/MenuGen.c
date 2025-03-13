@@ -16,264 +16,351 @@
 // Initialisation du menu et des paramètres
 void MENU_Initialize(S_ParamGen *pParam) 
 {
-    
+ 
 }
 
-void MENU_Display(S_ParamGen *pParam, uint8_t selection)
-{
-    const char MenuFormes [4] [21] = { "Sinus", "Triangle", "DentDeScie", "Carre" };
+void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
+    const char MenuFormes [4] [21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
     ClearLcd();
-    lcd_bl_on();
-    
-    lcd_gotoxy(2, 1);
-    printf_lcd("Forme =");
-    lcd_gotoxy(11,1);
-    printf_lcd("%s", MenuFormes[pParam->Forme]);
-    
-    lcd_gotoxy(2, 2);
-    printf_lcd("Freq [Hz]");
-    lcd_gotoxy(13,2);
-    printf_lcd("%d", pParam->Frequence);
 
-    lcd_gotoxy(2, 3);
-    printf_lcd("Ampl [mV]");
-    lcd_gotoxy(13,3);
-    printf_lcd("%d", pParam->Amplitude);
-    
-    lcd_gotoxy(2, 4);
-    printf_lcd("Offest [mV]");
-    lcd_gotoxy(13,4);
-    printf_lcd("%d", (int)pParam->Offset);
-   
+    if (menu < 9) {
+        lcd_gotoxy(2, 1);
+        printf_lcd("Forme =");
+        lcd_gotoxy(11, 1);
+        printf_lcd("%s", MenuFormes[pParam->Forme]);
+
+        lcd_gotoxy(2, 2);
+        printf_lcd("Freq [Hz]");
+        lcd_gotoxy(13, 2);
+        printf_lcd("%d", pParam->Frequence);
+
+        lcd_gotoxy(2, 3);
+        printf_lcd("Ampl [mV]");
+        lcd_gotoxy(13, 3);
+        printf_lcd("%d", pParam->Amplitude);
+
+        lcd_gotoxy(2, 4);
+        printf_lcd("Offest [mV]");
+        lcd_gotoxy(13, 4);
+        printf_lcd("%d", (int) pParam->Offset);
+
+        if (menu <= 4) {
+            lcd_gotoxy(1, menu);
+            printf_lcd("*");
+        } else {
+            menu = menu - 4;
+            lcd_gotoxy(1, menu);
+            printf_lcd("?");
+        }
+    } else {
+        lcd_gotoxy(2, 3);
+        printf_lcd("Sauvegarde ?");
+        lcd_gotoxy(2, 3);
+        printf_lcd("(appui long)");
+    }
 }
 
 void MENU_Execute(S_ParamGen *pParam) {
-    static MenuState_t menu = MENU_FORME_SEL;
+    static MenuState_t menu = MENU_INIT;
     static uint8_t Timer_S9 = 0; // Timer pour la détection de l'appui long sur S9
-    //2const char MenuFormes[4][21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
+    static uint8_t saveOk = 0;
+    static uint8_t RefreshMenu = 0;
+    static uint8_t wait2s = 0;
+    S_ParamGen pParamSave;
 
     switch (menu) {
+        case MENU_INIT:
+            MENU_Display(pParam, MENU_FORME_SEL);
+            pParam->Forme = 0;
+            pParam->Frequence = 20;
+            pParam->Amplitude = 0;
+            pParam->Offset = 0;
+            menu = MENU_FORME_SEL;
+            break;
+
         case MENU_FORME_SEL:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_FORME_SEL);
+            }
             if (Pec12IsPlus()) {
                 menu = MENU_FREQ_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearPlus();
             }
             if (Pec12IsMinus()) {
                 menu = MENU_OFFSET_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearMinus();
             }
-            if (Pec12IsOK()) {  
+            if (Pec12IsOK()) {
                 menu = MENU_FORME_EDIT;
-                ClearLcd();
+                pParamSave = *pParam;
+                RefreshMenu = 1;
                 Pec12ClearOK();
             }
-            if (S9IsOK() && Timer_S9 >= 200) {  
-                menu = MENU_FORME_EDIT;
-                Timer_S9 = 0;
-                ClearLcd();
-                S9ClearOK();
-            }
-            MENU_Display(pParam, 1);
-            lcd_gotoxy(1, 1);
-            printf_lcd("*");
+
             break;
 
         case MENU_FORME_EDIT:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_FORME_EDIT);
+            }
             if (Pec12IsPlus()) {
                 pParam->Forme = (pParam->Forme + 1) % 4;
+                RefreshMenu = 1;
                 Pec12ClearPlus();
-                ClearLcd();
+
             }
             if (Pec12IsMinus()) {
                 pParam->Forme = (pParam->Forme - 1 + 4) % 4;
+                RefreshMenu = 1;
                 Pec12ClearMinus();
-                ClearLcd();
             }
-            if (Pec12IsOK()) {  
+            if (Pec12IsOK()) {
                 menu = MENU_FORME_SEL;
+                RefreshMenu = 1;
                 Pec12ClearOK();
-                ClearLcd();
             }
-            if (S9IsOK()) {  
+            if (Pec12IsESC()) {
                 menu = MENU_FORME_SEL;
-                //pParam->Forme = NVM_ReadParam()->Forme;
-                ClearLcd();
+                pParam->Forme = pParamSave.Forme;
+                RefreshMenu = 1;
+                Pec12ClearESC();
+            }
+
+            if (S9IsOK()) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
                 S9ClearOK();
             }
-            MENU_Display(pParam, 1);
-            lcd_gotoxy(1, 1);
-            printf_lcd("?");
             break;
 
         case MENU_FREQ_SEL:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_FREQ_SEL);
+            }
             if (Pec12IsPlus()) {
                 menu = MENU_AMPL_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearPlus();
             }
             if (Pec12IsMinus()) {
                 menu = MENU_FORME_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearMinus();
             }
             if (Pec12IsOK()) {
                 menu = MENU_FREQ_EDIT;
-                ClearLcd();
+                pParamSave = *pParam;
+                RefreshMenu = 1;
                 Pec12ClearOK();
             }
-            MENU_Display(pParam, 2);
-            lcd_gotoxy(1, 2);
-            printf_lcd("*");
             break;
 
         case MENU_FREQ_EDIT:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_FREQ_EDIT);
+            }
             if (Pec12IsPlus()) {
-                pParam->Frequence += 10;
-                if (pParam->Frequence > 2000) pParam->Frequence = 20;
+                pParam->Frequence += 20;
+                if (pParam->Frequence > 2000) {
+                    pParam->Frequence = 20;
+                }
+                RefreshMenu = 1;
                 Pec12ClearPlus();
-                ClearLcd();
             }
             if (Pec12IsMinus()) {
-                pParam->Frequence -= 10;
-                if (pParam->Frequence < 20) pParam->Frequence = 2000;
+                pParam->Frequence -= 20;
+                if (pParam->Frequence < 20) {
+                    pParam->Frequence = 2000;
+                }
+                RefreshMenu = 1;
                 Pec12ClearMinus();
-                ClearLcd();
             }
             if (Pec12IsOK()) {
                 menu = MENU_FREQ_SEL;
+                RefreshMenu = 1;
                 Pec12ClearOK();
-                ClearLcd();
+            }
+            if (Pec12IsESC()) {
+                menu = MENU_FREQ_SEL;
+                pParam->Frequence = pParamSave.Frequence;
+                RefreshMenu = 1;
+                Pec12ClearESC();
             }
             if (S9IsOK()) {
-                menu = MENU_FREQ_SEL;
-                //pParam->Frequence = NVM_ReadParam()->Frequence;
-                ClearLcd();
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
                 S9ClearOK();
             }
-            MENU_Display(pParam, 2);
-            lcd_gotoxy(1, 2);
-            printf_lcd("?");
             break;
 
         case MENU_AMPL_SEL:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_AMPL_SEL);
+            }
             if (Pec12IsPlus()) {
                 menu = MENU_OFFSET_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearPlus();
             }
             if (Pec12IsMinus()) {
                 menu = MENU_FREQ_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearMinus();
             }
             if (Pec12IsOK()) {
                 menu = MENU_AMPL_EDIT;
-                ClearLcd();
+                pParamSave = *pParam;
+                RefreshMenu = 1;
                 Pec12ClearOK();
             }
-            MENU_Display(pParam, 3);
-            lcd_gotoxy(1, 3);
-            printf_lcd("*");
+
             break;
 
         case MENU_AMPL_EDIT:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_AMPL_EDIT);
+            }
             if (Pec12IsPlus()) {
                 pParam->Amplitude += 100;
-                if (pParam->Amplitude > 10000) pParam->Amplitude = 0;
+                if (pParam->Amplitude > 10000) {
+                    pParam->Amplitude = 0;
+                }
+                RefreshMenu = 1;
                 Pec12ClearPlus();
-                ClearLcd();
             }
             if (Pec12IsMinus()) {
                 pParam->Amplitude -= 100;
-                if (pParam->Amplitude < 0) pParam->Amplitude = 10000;
+                if (pParam->Amplitude < 0) {
+                    pParam->Amplitude = 10000;
+                }
+                RefreshMenu = 1;
                 Pec12ClearMinus();
-                ClearLcd();
             }
             if (Pec12IsOK()) {
                 menu = MENU_AMPL_SEL;
+                RefreshMenu = 1;
                 Pec12ClearOK();
-                ClearLcd();
+            }
+            if (Pec12IsESC()) {
+                menu = MENU_AMPL_SEL;
+                pParam->Amplitude = pParamSave.Amplitude;
+                RefreshMenu = 1;
+                Pec12ClearESC();
             }
             if (S9IsOK()) {
-                menu = MENU_AMPL_SEL;
-                //pParam->Amplitude = NVM_ReadParam()->Amplitude;
-                ClearLcd();
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
                 S9ClearOK();
             }
-            MENU_Display(pParam, 3);
-            lcd_gotoxy(1, 3);
-            printf_lcd("?");
             break;
 
         case MENU_OFFSET_SEL:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_OFFSET_SEL);
+            }
             if (Pec12IsPlus()) {
                 menu = MENU_FORME_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearPlus();
             }
             if (Pec12IsMinus()) {
                 menu = MENU_AMPL_SEL;
-                ClearLcd();
+                RefreshMenu = 1;
                 Pec12ClearMinus();
             }
             if (Pec12IsOK()) {
                 menu = MENU_OFFSET_EDIT;
-                ClearLcd();
+                pParamSave = *pParam;
+                RefreshMenu = 1;
                 Pec12ClearOK();
             }
-            MENU_Display(pParam, 4);
-            lcd_gotoxy(1, 4);
-            printf_lcd("*");
+
             break;
 
         case MENU_OFFSET_EDIT:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_OFFSET_EDIT);
+            }
             if (Pec12IsPlus()) {
                 pParam->Offset += 100;
                 if (pParam->Offset > 5000) pParam->Offset = -5000;
+                RefreshMenu = 1;
                 Pec12ClearPlus();
-                ClearLcd();
             }
             if (Pec12IsMinus()) {
                 pParam->Offset -= 100;
                 if (pParam->Offset < -5000) pParam->Offset = 5000;
+                RefreshMenu = 1;
                 Pec12ClearMinus();
-                ClearLcd();
             }
             if (Pec12IsOK()) {
                 menu = MENU_OFFSET_SEL;
+                RefreshMenu = 1;
                 Pec12ClearOK();
-                ClearLcd();
+            }
+            if (Pec12IsESC()) {
+                menu = MENU_OFFSET_SEL;
+                pParam->Offset = pParamSave.Offset;
+                RefreshMenu = 1;
+                Pec12ClearESC();
             }
             if (S9IsOK()) {
-                menu = MENU_OFFSET_SEL;
-//                pParam->Offset = NVM_ReadParam()->Offset;
-                ClearLcd();
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
                 S9ClearOK();
             }
-            MENU_Display(pParam, 4);
-            lcd_gotoxy(1, 4);
-            printf_lcd("?");
+
             break;
 
         case MENU_SAUVEGARDE:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
+                MENU_Display(pParam, MENU_SAUVEGARDE);
+            }
+
             if (S9IsOK()) {
-                menu = MENU_FORME_SEL;
-                Timer_S9 = 0;
+                menu = MENU_SAVEINFO;
+                saveOk = 1;
+                RefreshMenu = 0;
+                S9ClearOK();
+            } else if (Pec12NoActivity() == 0) {
+                menu = MENU_SAVEINFO;
+                saveOk = 1;
+                RefreshMenu = 0;
+            }
+
+            break;
+        case MENU_SAVEINFO:
+            if (RefreshMenu == 1) {
+                RefreshMenu = 0;
                 ClearLcd();
+                if (saveOk == 1) {
+                    lcd_gotoxy(2, 3);
+                    printf_lcd("Sauvegarde OK");
+                } else {
+                    printf_lcd("Sauvegarde ANNULEE !");
+                }
             }
-            if (Pec12IsOK()) {
-                NVM_WriteBlock((uint32_t *) pParam, sizeof(S_ParamGen));
-                lcd_gotoxy(6, 2);
-                printf_lcd("Sauvegarde OK !");
-                menu = MENU_FORME_SEL;
-                Timer_S9 = 0;
+
+            wait2s++;
+            if (wait2s == 200) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
             }
+
             break;
     }
 
-    Pec12ClearInactivity();
     Pec12ClearPlus();
     Pec12ClearMinus();
     Pec12ClearOK();

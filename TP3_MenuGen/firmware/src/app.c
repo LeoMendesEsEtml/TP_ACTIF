@@ -106,25 +106,27 @@ void App_Timer1Callback() {
     LED1_W = !LED1_R;
     // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
     static uint16_t WaitIteration = 0;
+    static uint8_t InitDone = 0; 
 //    static bool InitDone = false;
     ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
     
     // Pendant les 3 premières secondes
-    if ((WaitIteration < WAIT_INIT)/*&&(InitDone == false)*/) {
+    if((WaitIteration < WAIT_INIT) && (InitDone == 0)){
         WaitIteration++; // Incrémente le compteur
     } else {
         if (appData.state == APP_STATE_INIT_WAIT)
         {
-            APP_UpdateState(APP_STATE_INIT_CLEAR);    
-        }
-        else
-        if (WaitIteration >= 10) {
+            APP_UpdateState(APP_STATE_INIT_CLEAR);
             WaitIteration = 0;
-            
-            // Après les 3 premières secondes, exécute les tâches de service
-            APP_UpdateState(APP_STATE_SERVICE_TASKS);          
+            InitDone = 1;
         } else {
-            WaitIteration++;
+            if (WaitIteration >= 10) {
+                WaitIteration = 0;
+                // Après les 3 premières secondes, exécute les tâches de service
+                APP_UpdateState(APP_STATE_SERVICE_TASKS);
+            } else {
+                WaitIteration++;
+            }
         }
     }
     
@@ -291,7 +293,7 @@ void APP_Tasks ( void )
         break;
 
        case APP_STATE_SERVICE_TASKS:
-            BSP_LEDToggle(BSP_LED_2);
+            BSP_LEDToggle(BSP_LED_7);
 
             // Execution du menu
             MENU_Execute(&LocalParamGen);
