@@ -3,15 +3,18 @@
 // Fichier MenuGen.c
 // Gestion du menu  du générateur
 // Traitement cyclique à 10 ms
-#include <stdint.h>                   
-#include <stdbool.h>
-#include "app.h"
-#include "MenuGen.h"
-#include "Mc32DriverLcd.h"
-#include "GesPec12.h"
-#include "Mc32NVMUtil.h"
-S_ParamGen pParamSave;
-//S_Pec12_Descriptor Pec12;
+// Include standard libraries
+#include <stdint.h>   // Standard integer types
+#include <stdbool.h>  // Boolean type definitions
+
+// Include project-specific headers
+#include "app.h"           // Application state management
+#include "MenuGen.h"       // Menu function declarations
+#include "Mc32DriverLcd.h" // LCD display management
+#include "GesPec12.h"      // PEC12 rotary encoder management
+#include "Mc32NVMUtil.h"   // Non-volatile memory (NVM) management
+
+S_ParamGen pParamSave; // Stores saved parameters
 
 // Initialisation du menu et des paramètres
 void MENU_Initialize(S_ParamGen *pParam) 
@@ -19,6 +22,7 @@ void MENU_Initialize(S_ParamGen *pParam)
 
 }
 
+// Initialize menu parameters
 void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
     const char MenuFormes [4] [21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
     ClearLcd();
@@ -74,12 +78,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             if (pParamSave.Magic == MAGIC) {
                 // Sauvegarde des valeurs récupérées
                 *pParam = pParamSave;
-                lcd_gotoxy(1, 4);
-                printf_lcd("Donnees restaurees");
             } else {
-                lcd_gotoxy(1, 4);
-                printf_lcd("Donnees par defaut");
-
                 // Initialisation des valeurs du générateur
                 pParam->Amplitude = 0;
                 pParam->Forme = SignalSinus;
@@ -112,7 +111,11 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearOK();
             }
-
+            if (S9IsOK()) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
+                S9ClearOK();
+            }
             break;
 
         case MENU_FORME_EDIT:
@@ -142,12 +145,6 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearESC();
             }
-
-            if (S9IsOK()) {
-                menu = MENU_SAUVEGARDE;
-                RefreshMenu = 1;
-                S9ClearOK();
-            }
             break;
 
         case MENU_FREQ_SEL:
@@ -170,6 +167,11 @@ void MENU_Execute(S_ParamGen *pParam) {
                 pParamSave = *pParam;
                 RefreshMenu = 1;
                 Pec12ClearOK();
+            }
+            if (S9IsOK()) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
+                S9ClearOK();
             }
             break;
 
@@ -205,11 +207,6 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearESC();
             }
-            if (S9IsOK()) {
-                menu = MENU_SAUVEGARDE;
-                RefreshMenu = 1;
-                S9ClearOK();
-            }
             break;
 
         case MENU_AMPL_SEL:
@@ -233,7 +230,11 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearOK();
             }
-
+            if (S9IsOK()) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
+                S9ClearOK();
+            }
             break;
 
         case MENU_AMPL_EDIT:
@@ -268,11 +269,6 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearESC();
             }
-            if (S9IsOK()) {
-                menu = MENU_SAUVEGARDE;
-                RefreshMenu = 1;
-                S9ClearOK();
-            }
             break;
 
         case MENU_OFFSET_SEL:
@@ -296,7 +292,12 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearOK();
             }
-
+            
+            if (S9IsOK()) {
+                menu = MENU_SAUVEGARDE;
+                RefreshMenu = 1;
+                S9ClearOK();
+            }
             break;
 
         case MENU_OFFSET_EDIT:
@@ -327,12 +328,6 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;
                 Pec12ClearESC();
             }
-            if (S9IsOK()) {
-                menu = MENU_SAUVEGARDE;
-                RefreshMenu = 1;
-                S9ClearOK();
-            }
-
             break;
 
         case MENU_SAUVEGARDE:
