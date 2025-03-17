@@ -341,6 +341,7 @@ void MENU_Execute(S_ParamGen *pParam) {
                 saveOk = 1;
                 RefreshMenu = 1;
                 S9ClearESC();
+                S9ClearOK();
             }
             else if ((Pec12IsPlus()) || (Pec12IsMinus()) || (Pec12IsOK())) {
 

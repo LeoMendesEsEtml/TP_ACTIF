@@ -292,11 +292,14 @@ void APP_Tasks ( void )
           // nothing to do
         break;
 
-       case APP_STATE_SERVICE_TASKS:
-            BSP_LEDToggle(BSP_LED_7);
-
+        case APP_STATE_SERVICE_TASKS:
+            BSP_LEDToggle(BSP_LED_2);
             // Execution du menu
             MENU_Execute(&LocalParamGen);
+
+            GENSIG_UpdatePeriode(&LocalParamGen);
+            GENSIG_UpdateSignal(&LocalParamGen);
+
             appData.state = APP_STATE_WAIT;
          break;
         /* TODO: implement your application state machine.*/

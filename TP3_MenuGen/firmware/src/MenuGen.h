@@ -14,8 +14,6 @@
 
 
 void MENU_Initialize(S_ParamGen *pParam);
-
-
 void MENU_Execute(S_ParamGen *pParam);
 void MENU_Display(S_ParamGen *pParam, uint8_t menu);
 #endif
