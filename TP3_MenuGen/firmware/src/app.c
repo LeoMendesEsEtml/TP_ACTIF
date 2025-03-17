@@ -8,11 +8,11 @@
     app.c
 
   Summary:
-     Pour Tp3 Menu et generateur de signal .
+    Pour Tp3 Menu et generateur de signal.
 
   Description:
-    This file contains the source code for the MPLAB Harmony application.  It 
-    implements the logic of the application's state machine and it may call 
+    This file contains the source code for the MPLAB Harmony application.  
+    It implements the logic of the application's state machine and it may call 
     API routines of other MPLAB Harmony modules in the system, such as drivers,
     system services, and middleware.  However, it does not call any of the
     system interfaces (such as the "Initialize" and "Tasks" functions) of any of
@@ -23,7 +23,8 @@
 
 // DOM-IGNORE-BEGIN
 /*******************************************************************************
-Copyright (c) 2013-2014 released Microchip Technology Inc.  All rights reserved.
+Copyright (c) 2013-2014 released Microchip Technology Inc. 
+All rights reserved.
 
 Microchip licenses to you the right to use, modify, copy and distribute
 Software only when embedded on a Microchip microcontroller or digital signal
@@ -46,20 +47,19 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
  *******************************************************************************/
 // DOM-IGNORE-END
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files 
 // *****************************************************************************
 // *****************************************************************************
 
-#include <stdbool.h>
-#include "app.h"
-#include "Mc32DriverLcd.h"
-#include "Mc32gestSpiDac.h"
-#include "MenuGen.h"
-#include "GesPec12.h"
-#include "Generateur.h"
+#include <stdbool.h>          // Permet l'utilisation du type bool
+#include "app.h"             // Fichier principal de l'application (appData, etc.)
+#include "Mc32DriverLcd.h"   // Gestion de l'affichage LCD
+#include "Mc32gestSpiDac.h"  // Gestion SPI du DAC LTC2604
+#include "MenuGen.h"         // Gestion du menu générique
+#include "GesPec12.h"        // Gestion du codeur rotatif PEC12
+#include "Generateur.h"      // Gestion du générateur de signal
 
 // *****************************************************************************
 // *****************************************************************************
@@ -67,84 +67,70 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-// *****************************************************************************
-/* Application Data
-
-  Summary:
-    Holds application data
-
-  Description:
-    This structure holds the application's data.
-
-  Remarks:
-    This structure should be initialized by the APP_Initialize function.
-    
-    Application strings and buffers are be defined outside this structure.
-*/
-
-APP_DATA appData;
-S_ParamGen LocalParamGen;
-
+APP_DATA appData;            // Structure globale contenant l'état de l'application
+S_ParamGen LocalParamGen;    // Structure locale pour les paramètres du générateur
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
 // *****************************************************************************
 // *****************************************************************************
+
 /**
- * @brief Callback pour le Timer 1. Gère les actions périodiques de l'application.
- * @author LMS - TCT
- * @date 2025-01-30
- *
- * @details 
+ * @brief Macro de définition d'un délai d'initialisation (en itérations).
  */
-#define WAIT_INIT 2999
+#define WAIT_INIT 2999  // Nombre d'itérations approximatives pour 3 secondes
 
-
-//timer 1 : 1 ms
+// -----------------------------------------------------------------------------
+/**
+ * @brief Callback Timer1 (1 ms). Gère des actions périodiques, notamment ScanBtn.
+ * 
+ * Appelé toutes les 1 ms, ce callback va inverser LED1_W, compter un délai
+ * d'initialisation et gérer la transition d'état de l'application.
+ */
 void App_Timer1Callback() {
-    LED1_W = !LED1_R;
-    // Compteur pour les 3 premières secondes (approximation basée sur une période du timer)
-    static uint16_t WaitIteration = 0;
-    static uint8_t InitDone = 0; 
-//    static bool InitDone = false;
-    ScanBtn(PEC12_A, PEC12_B, PEC12_PB,S_OK);
-    
-    // Pendant les 3 premières secondes
-    if((WaitIteration < WAIT_INIT) && (InitDone == 0)){
-        WaitIteration++; // Incrémente le compteur
+    LED1_W = !LED1_R; // Inverse l'état de LED1_W en se basant sur LED1_R
+
+    // Compteur pour les 3 premières secondes
+    static uint16_t WaitIteration = 0; // Variable statique qui conserve sa valeur entre appels
+    static uint8_t InitDone = 0;       // Flag pour indiquer si l'init est terminée
+
+    // Lecture des signaux du codeur PEC12 et du bouton S9 (S_OK)
+    ScanBtn(PEC12_A, PEC12_B, PEC12_PB, S_OK);
+
+    // Pendant les 3 premières secondes, on incrémente WaitIteration
+    if ((WaitIteration < WAIT_INIT) && (InitDone == 0)) {
+        WaitIteration++;            // Incrémente le compteur d'attente
     } else {
-        if (appData.state == APP_STATE_INIT_WAIT)
-        {
-            APP_UpdateState(APP_STATE_INIT_CLEAR);
-            WaitIteration = 0;
-            InitDone = 1;
+        // Si on est toujours dans l'état d'attente d'init (APP_STATE_INIT_WAIT)
+        if (appData.state == APP_STATE_INIT_WAIT) {
+            APP_UpdateState(APP_STATE_INIT_CLEAR); // Change l'état de l'application
+            WaitIteration = 0;                     // Réinitialise le compteur
+            InitDone = 1;                          // Note que l'init est terminée
         } else {
+            // Une fois l'init terminée, on exécute périodiquement le SERVICE_TASKS
             if (WaitIteration >= 10) {
-                WaitIteration = 0;
-                // Après les 3 premières secondes, exécute les tâches de service
-                APP_UpdateState(APP_STATE_SERVICE_TASKS);
+                WaitIteration = 0;                 // Reset du compteur
+                APP_UpdateState(APP_STATE_SERVICE_TASKS); // Demande exécution des tâches
             } else {
-                WaitIteration++;
+                WaitIteration++;                   // Incrémente jusqu'à 10 pour la prochaine exécution
             }
         }
     }
-    
-}
-/**
- * @brief Callback pour le Timer 3. 
- * @author LMS - TCT
- * @date 2025-01-30
- *
- * @details 
- */
-void App_Timer3Callback()
-{
-    LED0_W = 1; 
-    GENSIG_Execute();
-    LED0_W = 0;
 }
 
+// -----------------------------------------------------------------------------
+/**
+ * @brief Callback Timer3. Gère l'exécution du générateur de signal.
+ * 
+ * Appelé périodiquement, ce callback allume LED0, exécute la génération de signal,
+ * puis éteint LED0.
+ */
+void App_Timer3Callback() {
+    LED0_W = 1;          // Force LED0 à l'état bas (active)
+    GENSIG_Execute();    // Génère le signal selon les paramètres en cours
+    LED0_W = 0;          // Rétablit LED0 à l'état haut (désactive)
+}
 
 // *****************************************************************************
 // *****************************************************************************
@@ -153,58 +139,50 @@ void App_Timer3Callback()
 // *****************************************************************************
 
 /**
- * @brief Nettoie l'écran LCD en effaçant toutes ses lignes (1 à 4).
+ * @brief Nettoie l'écran LCD en effaçant chacune des lignes 1 à 4.
  * 
- * @author LMS- VCO
- * @date 2025-01-02
- *
- * @details
- * Cette fonction appelle successivement la routine `lcd_ClearLine()` pour
- * chaque ligne de l'écran (de la 1 à la 4), permettant ainsi de réinitialiser
- * complètement l'affichage avant d'y écrire de nouvelles informations.
+ * @details Cette fonction appelle `lcd_ClearLine()` pour les 4 lignes du LCD,
+ *          afin de supprimer tout affichage courant avant de réécrire des
+ *          informations.
  */
-void ClearLcd()
-{
-    lcd_ClearLine(1);
-    lcd_ClearLine(2);
-    lcd_ClearLine(3);
-    lcd_ClearLine(4);
+void ClearLcd() {
+    lcd_ClearLine(1); // Efface la ligne 1
+    lcd_ClearLine(2); // Efface la ligne 2
+    lcd_ClearLine(3); // Efface la ligne 3
+    lcd_ClearLine(4); // Efface la ligne 4
 }
 
 /**
- * @brief Allume toutes les LEDs (actives bas).
- * @author LMS - VCO
- * @date 2025-01-02
- *
- * @details Cette fonction utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK`
- *          pour forcer les broches correspondantes à l'état bas (0), allumant ainsi
- *          les LEDs connectées.
+ * @brief Allume toutes les LEDs (actives à l'état bas).
+ * 
+ * @details Utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK` pour
+ *          positionner à 0 les bits correspondants sur PORTA et PORTB.
  */
 void TurnOnAllLEDs(void) {
-    // Allumer les LEDs sur PORTA et PORTB
-    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A, 
+    // Lit l'état courant de PORTA, applique un AND avec l'inversion du masque
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A,
                      PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) & ~LEDS_PORTA_MASK);
-    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B, 
+
+    // Idem pour PORTB
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B,
                      PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) & ~LEDS_PORTB_MASK);
 }
 
 /**
- * @brief Éteint toutes les LEDs (actives bas).
- * @author LMS - VCO
- * @date 2025-01-02
- *
- * @details Cette fonction utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK`
- *          pour forcer les broches correspondantes à l'état haut (1), éteignant ainsi
- *          les LEDs connectées.
+ * @brief Éteint toutes les LEDs (actives à l'état bas).
+ * 
+ * @details Utilise les masques `LEDS_PORTA_MASK` et `LEDS_PORTB_MASK` pour
+ *          positionner à 1 les bits correspondants sur PORTA et PORTB.
  */
 void TurnOffAllLEDs(void) {
-    // Éteindre les LEDs sur PORTA et PORTB
-    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A, 
+    // Lit l'état courant de PORTA, applique un OR avec le masque
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A,
                      PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) | LEDS_PORTA_MASK);
-    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B, 
+
+    // Idem pour PORTB
+    PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B,
                      PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) | LEDS_PORTB_MASK);
 }
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -212,113 +190,117 @@ void TurnOffAllLEDs(void) {
 // *****************************************************************************
 // *****************************************************************************
 
-/*******************************************************************************
-  Function:
-    void APP_Initialize ( void )
-
-  Remarks:
-    See prototype in app.h.
+/**
+ * @brief Initialise l'état de l'application et ses ressources.
+ * 
+ * @note Cette fonction est appelée au démarrage pour mettre l'application
+ *       dans son état initial.
  */
-
-void APP_Initialize ( void )
-{
-    /* Place the App state machine in its initial state. */
-    appData.state = APP_STATE_INIT;
-    
-    /* TODO: Initialize your application's state machine and other
-     * parameters.
-     */
+void APP_Initialize(void) {
+    appData.state = APP_STATE_INIT; // Positionne l'application en état d'init
+    // A ce stade, d'autres initialisations peuvent être faites si nécessaire
 }
 
-
-/******************************************************************************
-  Function:
-    void APP_Tasks ( void )
-
-  Remarks:
-    See prototype in app.h.
+/**
+ * @brief Exécute la machine à états de l'application.
+ * 
+ * @details Selon la valeur de `appData.state`, on effectue différentes actions :
+ *          - Initialisation LCD, SPI, PEC12, menu, etc.
+ *          - Attente initiale (3s)
+ *          - Effacement de l'écran LCD après init
+ *          - Exécution des tâches de service (menu, générateur, etc.)
  */
-
-void APP_Tasks ( void )
-{
-    /* Check the application's current state. */
-    switch ( appData.state )
-    {
-        /* Application's initial state. */
+void APP_Tasks(void) {
+    // Vérifie l'état courant de l'application
+    switch (appData.state) {
         case APP_STATE_INIT:
         {
+            // Initialisation du LCD
             lcd_init();
             lcd_bl_on();
 
-            // Init SPI DAC
+            // Initialisation du SPI pour le DAC
             SPI_InitLTC2604();
 
-            // Initialisation PEC12
+            // Initialisation du codeur PEC12
             Pec12Init();
 
             // Initialisation du menu
             MENU_Initialize(&LocalParamGen);
 
-            // Initialisation du generateur
+            // Initialisation du générateur
             GENSIG_Initialize(&LocalParamGen);
 
+            // Affichage initial sur l'écran LCD
             lcd_gotoxy(1, 1);
-            printf_lcd("TP2 USART 2024-25"); // Affiche le titre du projet
+            printf_lcd("TP2 USART 2024-25"); // Titre du projet
 
             lcd_gotoxy(1, 2);
-            printf_lcd("Leo Mendes"); // Affiche le premier auteur
+            printf_lcd("Leo Mendes");       // Nom d'un auteur
 
             lcd_gotoxy(1, 3);
-            printf_lcd("Tassilo Choulat"); // Affiche le second auteur
+            printf_lcd("Tassilo Choulat");  // Nom d'un autre auteur
 
-            // Active les timers 
+            // Démarre les timers TMR0 et TMR1
             DRV_TMR0_Start();
             DRV_TMR1_Start();
+
+            // Passe à l'état d'attente init
             appData.state = APP_STATE_INIT_WAIT;
             break;
         }
-        
-        case APP_STATE_INIT_WAIT :
-          // nothing to do
-        break;
-                
-        case APP_STATE_INIT_CLEAR :
-            //efface lcd 1x a la fin des 3 s d'init
+
+        case APP_STATE_INIT_WAIT:
+            // Rien à faire de particulier ici, tout est géré par le callback Timer1
+            break;
+
+        case APP_STATE_INIT_CLEAR:
+            // Efface l'écran LCD une fois l'init terminée (après 3s)
             ClearLcd();
+            // Puis passe à l'état d'attente
             appData.state = APP_STATE_WAIT;
-        break;              
-        
-        case APP_STATE_WAIT :
-          // nothing to do
-        break;
+            break;
+
+        case APP_STATE_WAIT:
+            // Etat d'attente : on ne fait rien tant qu'on n'a pas été relancé par Timer1
+            break;
 
         case APP_STATE_SERVICE_TASKS:
+            // Bascule une LED (LED_2) pour indiquer un cycle de service
             BSP_LEDToggle(BSP_LED_2);
-            // Execution du menu
+
+            // Exécute le menu (lecture du codeur, mise à jour de l'affichage, etc.)
             MENU_Execute(&LocalParamGen);
 
+            // Met à jour la période et le signal du générateur selon les nouveaux paramètres
             GENSIG_UpdatePeriode(&LocalParamGen);
             GENSIG_UpdateSignal(&LocalParamGen);
 
+            // Une fois fait, repasse en mode attente
             appData.state = APP_STATE_WAIT;
-         break;
-        /* TODO: implement your application state machine.*/
+            break;
 
-        /* The default state should never be executed. */
         default:
         {
-            /* TODO: Handle error in application's state machine. */
+            // Etat par défaut (devrait ne jamais arriver).
+            // On peut éventuellement y gérer une erreur système.
             break;
         }
     }
 }
 
-void APP_UpdateState ( APP_STATES NewState )
-{
-    appData.state = NewState;
+/**
+ * @brief Met à jour l'état de l'application.
+ * 
+ * @param NewState Le nouvel état à appliquer à l'application.
+ * 
+ * @details Cette fonction permet de forcer le passage d'un état à un autre
+ *          depuis d'autres parties du code (ex: Timer1Callback).
+ */
+void APP_UpdateState(APP_STATES NewState) {
+    appData.state = NewState; // Affecte le nouvel état
 }
 
 /*******************************************************************************
  End of File
  */
-
