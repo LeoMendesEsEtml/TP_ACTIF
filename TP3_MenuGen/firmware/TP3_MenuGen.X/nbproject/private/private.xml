@@ -2,18 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/DefMenuGen.h</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/GesPec12.c</file>
-            <file>file:/C:/Program%20Files/Microchip/MPLABX/v5.50/packs/Microchip/PIC32MX_DFP/1.5.259/xc32/startup/crt0.S</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/MenuGen.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/GesPec12.h</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/main.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/system_config/default/system_tasks.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP2/TP2_PwmRs232-LMS-MSI/firmware/src/app.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/app.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/Generateur.c</file>
-            <file>file:/C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP3_MenuGen/firmware/src/MenuGen.h</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

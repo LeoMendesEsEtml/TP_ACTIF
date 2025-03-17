@@ -398,10 +398,14 @@ void MENU_Execute(S_ParamGen *pParam) {
                 S9ClearOK();                    // Au cas où un OK reste actif
             }
             // Sinon, toute autre action (Plus, Minus, OK) annule la sauvegarde
-            else if ((Pec12IsPlus()) || (Pec12IsMinus()) || (Pec12IsOK())) {
+            else if ((Pec12IsPlus()) || (Pec12IsESC()) || (Pec12IsMinus()) || (Pec12IsOK())) {
                 menu = MENU_SAVEINFO;           // Va afficher le résultat
                 saveOk = 0;                     // Indique la sauvegarde annulée
                 RefreshMenu = 1;                // Besoin de rafraîchir
+                Pec12ClearOK();
+                Pec12ClearESC();
+                Pec12ClearMinus();
+                Pec12ClearPlus();
             }
             break;
 
@@ -427,5 +431,9 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;                // Besoin de rafraîchir
             }
             break;
+        default : 
+            // Formes non prise en compte
+            break; 
+        
     }
 }

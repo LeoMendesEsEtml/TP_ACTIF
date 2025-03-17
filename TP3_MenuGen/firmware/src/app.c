@@ -233,13 +233,13 @@ void APP_Tasks(void) {
 
             // Affichage initial sur l'écran LCD
             lcd_gotoxy(1, 1);
-            printf_lcd("TP2 USART 2024-25"); // Titre du projet
+            printf_lcd("TP2 USART 2024-25"); 
 
             lcd_gotoxy(1, 2);
-            printf_lcd("Leo Mendes");       // Nom d'un auteur
+            printf_lcd("Leo Mendes");       
 
             lcd_gotoxy(1, 3);
-            printf_lcd("Tassilo Choulat");  // Nom d'un autre auteur
+            printf_lcd("Tassilo Choulat"); 
 
             // Démarre les timers TMR0 et TMR1
             DRV_TMR0_Start();
