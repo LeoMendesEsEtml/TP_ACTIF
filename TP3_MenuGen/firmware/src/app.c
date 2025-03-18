@@ -269,7 +269,7 @@ void APP_Tasks(void) {
             // Bascule une LED (LED_2) pour indiquer un cycle de service
             BSP_LEDToggle(BSP_LED_2);
 
-            // Exécute le menu (lecture du codeur, mise à jour de l'affichage, etc.)
+            // Exécute le menu
             MENU_Execute(&LocalParamGen);
 
             // Une fois fait, repasse en mode attente

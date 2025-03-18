@@ -120,7 +120,7 @@ void MENU_Execute(S_ParamGen *pParam) {
 
     // Machine à états du menu
     switch (menu) {
-        case MENU_INIT:  // État d'initialisation
+        case MENU_INIT: // État d'initialisation
             NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
             // Test si la valeur Magic est correcte (vérifie l'intégrité)
             if (pParamSave.Magic == MAGIC) {
@@ -134,56 +134,56 @@ void MENU_Execute(S_ParamGen *pParam) {
                 pParam->Magic = MAGIC;
                 pParam->Offset = 0;
             }
-            GENSIG_UpdateSignal(pParam);
             GENSIG_UpdatePeriode(pParam);
+            GENSIG_UpdateSignal(pParam);
             MENU_Display(pParam, MENU_FORME_SEL); // Affiche le menu initial (forme sélectionnée)
-            menu = MENU_FORME_SEL;                // Passe à l'état MENU_FORME_SEL
+            menu = MENU_FORME_SEL; // Passe à l'état MENU_FORME_SEL
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_FORME_SEL: // État de sélection de la forme d'onde
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;             // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_FORME_SEL); // Redessine l'écran avec le nouvel état
             }
-            if (Pec12IsPlus()) {             // Si rotation du codeur (incrément)
-                menu = MENU_FREQ_SEL;        // Passe à la sélection de la fréquence
-                RefreshMenu = 1;             // Signale la nécessité de rafraîchir l'affichage
-                Pec12ClearPlus();            // Réinitialise l'événement d'incrément
+            if (Pec12IsPlus()) { // Si rotation du codeur (incrément)
+                menu = MENU_FREQ_SEL; // Passe à la sélection de la fréquence
+                RefreshMenu = 1; // Signale la nécessité de rafraîchir l'affichage
+                Pec12ClearPlus(); // Réinitialise l'événement d'incrément
             }
-            if (Pec12IsMinus()) {            // Si rotation du codeur (décrément)
-                menu = MENU_OFFSET_SEL;      // Passe à la sélection de l'offset
-                RefreshMenu = 1;             // Besoin de rafraîchir l'affichage
-                Pec12ClearMinus();           // Réinitialise l'événement de décrément
+            if (Pec12IsMinus()) { // Si rotation du codeur (décrément)
+                menu = MENU_OFFSET_SEL; // Passe à la sélection de l'offset
+                RefreshMenu = 1; // Besoin de rafraîchir l'affichage
+                Pec12ClearMinus(); // Réinitialise l'événement de décrément
             }
-            if (Pec12IsOK()) {               // Si appui court sur le codeur
-                menu = MENU_FORME_EDIT;      // Passe en mode édition de la forme
-                pParamSave = *pParam;        // Sauvegarde temporaire du paramètre actuel
-                RefreshMenu = 1;             // Besoin de rafraîchir l'affichage
-                Pec12ClearOK();              // Réinitialise l'événement OK
+            if (Pec12IsOK()) { // Si appui court sur le codeur
+                menu = MENU_FORME_EDIT; // Passe en mode édition de la forme
+                pParamSave = *pParam; // Sauvegarde temporaire du paramètre actuel
+                RefreshMenu = 1; // Besoin de rafraîchir l'affichage
+                Pec12ClearOK(); // Réinitialise l'événement OK
             }
-            if (S9IsOK()) {                  // Si appui sur le bouton S9 (OK)
-                menu = MENU_SAUVEGARDE;      // Passe directement au menu de sauvegarde
-                RefreshMenu = 1;             // Besoin de rafraîchir l'affichage
-                S9ClearOK();                 // Réinitialise l'événement OK de S9
+            if (S9IsOK()) { // Si appui sur le bouton S9 (OK)
+                menu = MENU_SAUVEGARDE; // Passe directement au menu de sauvegarde
+                RefreshMenu = 1; // Besoin de rafraîchir l'affichage
+                S9ClearOK(); // Réinitialise l'événement OK de S9
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_FORME_EDIT: // État d'édition de la forme d'onde
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;             // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_FORME_EDIT); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {             // Si rotation incrément
+            if (Pec12IsPlus()) { // Si rotation incrément
                 pParam->Forme = (pParam->Forme + 1) % 4; // Passe à la forme suivante (en mod 4)
-                RefreshMenu = 1;             // Besoin d'un rafraîchissement
-                Pec12ClearPlus();            // Réinitialise l'événement
+                RefreshMenu = 1; // Besoin d'un rafraîchissement
+                Pec12ClearPlus(); // Réinitialise l'événement
             }
-            if (Pec12IsMinus()) {            // Si rotation décrément
+            if (Pec12IsMinus()) { // Si rotation décrément
                 pParam->Forme = (pParam->Forme - 1 + 4) % 4; // Passe à la forme précédente (en mod 4)
-                RefreshMenu = 1;             // Besoin de rafraîchir
-                Pec12ClearMinus();           // Réinitialise l'événement
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise l'événement
             }
             if (Pec12IsOK()) { // Si appui court (validation)
                 menu = MENU_FORME_SEL; // Retourne à la sélection
@@ -191,200 +191,203 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1; // Besoin de rafraîchir
                 Pec12ClearOK(); // Réinitialise l'événement
             }
-            if (Pec12IsESC()) {              // Si appui long (annulation)
-                menu = MENU_FORME_SEL;       // Retourne à la sélection
+            if (Pec12IsESC()) { // Si appui long (annulation)
+                menu = MENU_FORME_SEL; // Retourne à la sélection
                 pParam->Forme = pParamSave.Forme; // Restaure la forme précédente
-                RefreshMenu = 1;             // Besoin de rafraîchir
-                Pec12ClearESC();             // Réinitialise l'événement
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearESC(); // Réinitialise l'événement
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_FREQ_SEL: // État de sélection de la fréquence
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                 // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_FREQ_SEL); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                 // Rotation incrément
-                menu = MENU_AMPL_SEL;            // Passe à la sélection de l'amplitude
-                RefreshMenu = 1;                 // Besoin de rafraîchir
-                Pec12ClearPlus();                // Réinitialise l'événement
+            if (Pec12IsPlus()) { // Rotation incrément
+                menu = MENU_AMPL_SEL; // Passe à la sélection de l'amplitude
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise l'événement
             }
-            if (Pec12IsMinus()) {                // Rotation décrément
-                menu = MENU_FORME_SEL;           // Retourne à la sélection de la forme
-                RefreshMenu = 1;                 // Besoin de rafraîchir
-                Pec12ClearMinus();               // Réinitialise l'événement
+            if (Pec12IsMinus()) { // Rotation décrément
+                menu = MENU_FORME_SEL; // Retourne à la sélection de la forme
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise l'événement
             }
-            if (Pec12IsOK()) {                   // Appui court
-                menu = MENU_FREQ_EDIT;           // Passe en édition de la fréquence
-                pParamSave = *pParam;            // Sauvegarde temporaire
-                RefreshMenu = 1;                 // Besoin de rafraîchir
-                Pec12ClearOK();                  // Réinitialise l'événement
+            if (Pec12IsOK()) { // Appui court
+                menu = MENU_FREQ_EDIT; // Passe en édition de la fréquence
+                pParamSave = *pParam; // Sauvegarde temporaire
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise l'événement
             }
-            if (S9IsOK()) {                      // Appui sur le bouton S9
-                menu = MENU_SAUVEGARDE;          // Passe au menu de sauvegarde
-                RefreshMenu = 1;                 // Besoin de rafraîchir
-                S9ClearOK();                     // Réinitialise l'événement
+            if (S9IsOK()) { // Appui sur le bouton S9
+                menu = MENU_SAUVEGARDE; // Passe au menu de sauvegarde
+                RefreshMenu = 1; // Besoin de rafraîchir
+                S9ClearOK(); // Réinitialise l'événement
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_FREQ_EDIT: // État d'édition de la fréquence
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                  // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_FREQ_EDIT); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                  // Rotation incrément
-                pParam->Frequence += 20;          // Incrémente la fréquence de 20 Hz
-                if (pParam->Frequence > 2000) {   // Si dépasse 2000 Hz
-                    pParam->Frequence = 20;       // Reboucle à 20 Hz
+            if (Pec12IsPlus()) { // Rotation incrément
+                pParam->Frequence += 20; // Incrémente la fréquence de 20 Hz
+                if (pParam->Frequence > 2000) { // Si dépasse 2000 Hz
+                    pParam->Frequence = 20; // Reboucle à 20 Hz
                 }
-                RefreshMenu = 1;                  // Besoin de rafraîchir
-                Pec12ClearPlus();                 // Réinitialise l'événement
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise l'événement
             }
-            if (Pec12IsMinus()) {                 // Rotation décrément
-                pParam->Frequence -= 20;          // Décrémente la fréquence de 20 Hz
-                if (pParam->Frequence < 20) {     // Si descend en dessous de 20 Hz
-                    pParam->Frequence = 2000;     // Reboucle à 2000 Hz
+            if (Pec12IsMinus()) { // Rotation décrément
+                pParam->Frequence -= 20; // Décrémente la fréquence de 20 Hz
+                if (pParam->Frequence < 20) { // Si descend en dessous de 20 Hz
+                    pParam->Frequence = 2000; // Reboucle à 2000 Hz
                 }
-                RefreshMenu = 1;                  // Besoin de rafraîchir
-                Pec12ClearMinus();                // Réinitialise l'événement
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise l'événement
             }
-            if (Pec12IsOK()) {                    // Appui court (validation)
-                menu = MENU_FREQ_SEL;             // Retourne à la sélection
+            if (Pec12IsOK()) { // Appui court (validation)
+                menu = MENU_FREQ_SEL; // Retourne à la sélection
                 GENSIG_UpdatePeriode(pParam);
-                RefreshMenu = 1;                  // Besoin de rafraîchir
-                Pec12ClearOK();                   // Réinitialise
+                GENSIG_UpdateSignal(pParam);
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise
             }
-            if (Pec12IsESC()) {                   // Appui long (annulation)
-                menu = MENU_FREQ_SEL;             // Retourne à la sélection
+            if (Pec12IsESC()) { // Appui long (annulation)
+                menu = MENU_FREQ_SEL; // Retourne à la sélection
                 pParam->Frequence = pParamSave.Frequence; // Restaure la valeur précédente
-                RefreshMenu = 1;                  // Besoin de rafraîchir
-                Pec12ClearESC();                  // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearESC(); // Réinitialise
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_AMPL_SEL: // État de sélection de l'amplitude
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                   // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_AMPL_SEL); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                   // Rotation incrément
-                menu = MENU_OFFSET_SEL;            // Passe à la sélection de l'offset
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearPlus();                  // Réinitialise
+            if (Pec12IsPlus()) { // Rotation incrément
+                menu = MENU_OFFSET_SEL; // Passe à la sélection de l'offset
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise
             }
-            if (Pec12IsMinus()) {                  // Rotation décrément
-                menu = MENU_FREQ_SEL;              // Retourne à la sélection de la fréquence
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearMinus();                 // Réinitialise
+            if (Pec12IsMinus()) { // Rotation décrément
+                menu = MENU_FREQ_SEL; // Retourne à la sélection de la fréquence
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise
             }
-            if (Pec12IsOK()) {                     // Appui court
-                menu = MENU_AMPL_EDIT;             // Passe en édition de l'amplitude
-                pParamSave = *pParam;              // Sauvegarde temporaire
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearOK();                    // Réinitialise
+            if (Pec12IsOK()) { // Appui court
+                menu = MENU_AMPL_EDIT; // Passe en édition de l'amplitude
+                pParamSave = *pParam; // Sauvegarde temporaire
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise
             }
-            if (S9IsOK()) {                        // Appui sur S9
-                menu = MENU_SAUVEGARDE;            // Passe au menu de sauvegarde
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                S9ClearOK();                       // Réinitialise
+            if (S9IsOK()) { // Appui sur S9
+                menu = MENU_SAUVEGARDE; // Passe au menu de sauvegarde
+                RefreshMenu = 1; // Besoin de rafraîchir
+                S9ClearOK(); // Réinitialise
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_AMPL_EDIT: // État d'édition de l'amplitude
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                   // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_AMPL_EDIT); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                   // Rotation incrément
-                pParam->Amplitude += 100;          // Incrémente de 100 mV
-                if (pParam->Amplitude > 10000) {   // Si dépasse 10 000 mV
-                    pParam->Amplitude = 0;         // Reboucle à 0
+            if (Pec12IsPlus()) { // Rotation incrément
+                pParam->Amplitude += 100; // Incrémente de 100 mV
+                if (pParam->Amplitude > 10000) { // Si dépasse 10 000 mV
+                    pParam->Amplitude = 0; // Reboucle à 0
                 }
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearPlus();                  // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise
             }
-            if (Pec12IsMinus()) {                  // Rotation décrément
-                pParam->Amplitude -= 100;          // Décrémente de 100 mV
-                if (pParam->Amplitude < 0) {       // Si on passe en dessous de 0
-                    pParam->Amplitude = 10000;     // Reboucle à 10 000 mV
+            if (Pec12IsMinus()) { // Rotation décrément
+                pParam->Amplitude -= 100; // Décrémente de 100 mV
+                if (pParam->Amplitude < 0) { // Si on passe en dessous de 0
+                    pParam->Amplitude = 10000; // Reboucle à 10 000 mV
                 }
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearMinus();                 // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise
             }
-            if (Pec12IsOK()) {                     // Appui court (validation)
-                menu = MENU_AMPL_SEL;              // Retour au mode sélection
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearOK();                    // Réinitialise
+            if (Pec12IsOK()) { // Appui court (validation)
+                menu = MENU_AMPL_SEL; // Retour au mode sélection
+                GENSIG_UpdateSignal(pParam);
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise
             }
-            if (Pec12IsESC()) {                    // Appui long (annulation)
-                menu = MENU_AMPL_SEL;              // Retour à la sélection
+            if (Pec12IsESC()) { // Appui long (annulation)
+                menu = MENU_AMPL_SEL; // Retour à la sélection
                 pParam->Amplitude = pParamSave.Amplitude; // Restaure la valeur précédente
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearESC();                   // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearESC(); // Réinitialise
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_OFFSET_SEL: // État de sélection de l'offset
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                    // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_OFFSET_SEL); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                    // Rotation incrément
-                menu = MENU_FORME_SEL;             // Passe à la sélection de la forme
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearPlus();                  // Réinitialise
+            if (Pec12IsPlus()) { // Rotation incrément
+                menu = MENU_FORME_SEL; // Passe à la sélection de la forme
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise
             }
-            if (Pec12IsMinus()) {                   // Rotation décrément
-                menu = MENU_AMPL_SEL;              // Retourne à la sélection de l'amplitude
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearMinus();                 // Réinitialise
+            if (Pec12IsMinus()) { // Rotation décrément
+                menu = MENU_AMPL_SEL; // Retourne à la sélection de l'amplitude
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise
             }
-            if (Pec12IsOK()) {                      // Appui court
-                menu = MENU_OFFSET_EDIT;           // Passe en édition de l'offset
-                pParamSave = *pParam;              // Sauvegarde temporaire
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                Pec12ClearOK();                    // Réinitialise
+            if (Pec12IsOK()) { // Appui court
+                menu = MENU_OFFSET_EDIT; // Passe en édition de l'offset
+                pParamSave = *pParam; // Sauvegarde temporaire
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise
             }
-            if (S9IsOK()) {                         // Appui sur S9
-                menu = MENU_SAUVEGARDE;            // Passe au menu de sauvegarde
-                RefreshMenu = 1;                   // Besoin de rafraîchir
-                S9ClearOK();                       // Réinitialise
+            if (S9IsOK()) { // Appui sur S9
+                menu = MENU_SAUVEGARDE; // Passe au menu de sauvegarde
+                RefreshMenu = 1; // Besoin de rafraîchir
+                S9ClearOK(); // Réinitialise
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_OFFSET_EDIT: // État d'édition de l'offset
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                    // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_OFFSET_EDIT); // Redessine l'écran
             }
-            if (Pec12IsPlus()) {                    // Rotation incrément
-                pParam->Offset += 100;              // Incrémente de 100 mV
+            if (Pec12IsPlus()) { // Rotation incrément
+                pParam->Offset += 100; // Incrémente de 100 mV
                 if (pParam->Offset > 5000) pParam->Offset = -5000; // Bascule du max au min
-                RefreshMenu = 1;                    // Besoin de rafraîchir
-                Pec12ClearPlus();                   // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearPlus(); // Réinitialise
             }
-            if (Pec12IsMinus()) {                   // Rotation décrément
-                pParam->Offset -= 100;              // Décrémente de 100 mV
+            if (Pec12IsMinus()) { // Rotation décrément
+                pParam->Offset -= 100; // Décrémente de 100 mV
                 if (pParam->Offset < -5000) pParam->Offset = 5000; // Bascule du min au max
-                RefreshMenu = 1;                    // Besoin de rafraîchir
-                Pec12ClearMinus();                  // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearMinus(); // Réinitialise
             }
-            if (Pec12IsOK()) {                      // Appui court (validation)
-                menu = MENU_OFFSET_SEL;             // Retour à la sélection
-                RefreshMenu = 1;                    // Besoin de rafraîchir
-                Pec12ClearOK();                     // Réinitialise
+            if (Pec12IsOK()) { // Appui court (validation)
+                menu = MENU_OFFSET_SEL; // Retour à la sélection
+                GENSIG_UpdateSignal(pParam);
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise
             }
-            if (Pec12IsESC()) {                     // Appui long (annulation)
-                menu = MENU_OFFSET_SEL;             // Retour à la sélection
+            if (Pec12IsESC()) { // Appui long (annulation)
+                menu = MENU_OFFSET_SEL; // Retour à la sélection
                 pParam->Offset = pParamSave.Offset; // Restaure la valeur précédente
-                RefreshMenu = 1;                    // Besoin de rafraîchir
-                Pec12ClearESC();                    // Réinitialise
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearESC(); // Réinitialise
             }
             break;
 
