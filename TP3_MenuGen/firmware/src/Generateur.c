@@ -73,30 +73,25 @@ void GENSIG_Initialize(S_ParamGen *pParam)
 //               déterminent le débit d'envoi au DAC, et donc la fréquence de sortie.
 // Paramètres :  pParam->Frequence : la fréquence du signal en Hz
 // Retour     :  aucun
-#define FREQU_SYS 800000//fréquence du timer 3
-#define PRESC_TIM3 64
-#define ECHANTILLONS_MAX 100 //nombre max d'échantillons
+#define F_SYS       80000000UL  // Fréquence du CPU ou du Timer (ex: 80 MHz)
+#define PRESCALER   32          // Prescaler sélectionné pour TMR3
+#define MAX_ECH     100         // Nombre d'échantillons utilisé
 void GENSIG_UpdatePeriode(S_ParamGen *pParam)
 {
-    static uint16_t Periode;       // La nouvelle période (en ticks) du Timer3
-    uint32_t nbr_ech;       // Nombre d'échantillons dans une période de signal
-    uint32_t frequ_presc;   // Fréquence du Timer3 après division par PRESC_TIM3
-
-    // On dispose de MAX_ECH échantillons dans une période
-    nbr_ech = MAX_ECH;
-
-    // Calcule la fréquence effective du Timer3
-    // FREQU_SYS : fréquence CPU
-    // PRESC_TIM3 : prescaler (exemple, si PRESC_TIM3=64 => Timer3 = FREQU_SYS/64)
-    frequ_presc = FREQU_SYS / PRESC_TIM3;
-
-    // Periode (en ticks Timer3) = (Fréquence Timer3) / (nbr_ech * FrequenceSignal)
-    // De manière à ce que Timer3 génère une interruption à la bonne cadence
-    //Periode = frequ_presc / (MAX_ECH * pParam->Frequence);
-    Periode = (FREQU_SYS/(pParam->Frequence));
+    // Calcul de la fréquence effective du Timer3 (après prescaler)
+    uint32_t timerFreq = F_SYS / PRESCALER;
+    
+    // Fréquence d'échantillonnage nécessaire (nombre d'interruptions par seconde)
+    uint32_t sampleRate = (uint32_t)pParam->Frequence * MAX_ECH;
+    
+    // Calcul de la période en ticks du Timer3 avec arrondi
+    // On ajoute la moitié du sampleRate pour obtenir un arrondi classique
+    uint16_t periode = (uint16_t)((timerFreq + (sampleRate / 2)) / sampleRate) - 1;
+    
     // Mise à jour du registre de période du Timer3 via la PLIB
-    PLIB_TMR_Period16BitSet(TMR_ID_3, Periode);
+    PLIB_TMR_Period16BitSet(TMR_ID_3, periode);
 }
+
 
 // -------------------------------------------------------------------------------------
 // void GENSIG_UpdateSignal(S_ParamGen *pParam)
