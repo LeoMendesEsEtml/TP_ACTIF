@@ -20,6 +20,7 @@
 #include "Mc32DriverLcd.h" // Gestion de l'affichage LCD
 #include "GesPec12.h"      // Gestion du codeur rotatif PEC12
 #include "Mc32NVMUtil.h"   // Gestion de la mémoire non volatile (NVM)
+#include "Generateur.h"      // Gestion du générateur de signal
 
 // ================================
 // Variables globales
@@ -133,6 +134,8 @@ void MENU_Execute(S_ParamGen *pParam) {
                 pParam->Magic = MAGIC;
                 pParam->Offset = 0;
             }
+            GENSIG_UpdateSignal(pParam);
+            GENSIG_UpdatePeriode(pParam);
             MENU_Display(pParam, MENU_FORME_SEL); // Affiche le menu initial (forme sélectionnée)
             menu = MENU_FORME_SEL;                // Passe à l'état MENU_FORME_SEL
             break;
@@ -182,10 +185,11 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1;             // Besoin de rafraîchir
                 Pec12ClearMinus();           // Réinitialise l'événement
             }
-            if (Pec12IsOK()) {               // Si appui court (validation)
-                menu = MENU_FORME_SEL;       // Retourne à la sélection
-                RefreshMenu = 1;             // Besoin de rafraîchir
-                Pec12ClearOK();              // Réinitialise l'événement
+            if (Pec12IsOK()) { // Si appui court (validation)
+                menu = MENU_FORME_SEL; // Retourne à la sélection
+                GENSIG_UpdateSignal(pParam);
+                RefreshMenu = 1; // Besoin de rafraîchir
+                Pec12ClearOK(); // Réinitialise l'événement
             }
             if (Pec12IsESC()) {              // Si appui long (annulation)
                 menu = MENU_FORME_SEL;       // Retourne à la sélection
@@ -248,6 +252,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (Pec12IsOK()) {                    // Appui court (validation)
                 menu = MENU_FREQ_SEL;             // Retourne à la sélection
+                GENSIG_UpdatePeriode(pParam);
                 RefreshMenu = 1;                  // Besoin de rafraîchir
                 Pec12ClearOK();                   // Réinitialise
             }

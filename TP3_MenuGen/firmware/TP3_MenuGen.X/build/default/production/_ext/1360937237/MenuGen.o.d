@@ -144,7 +144,7 @@ build/default/production/_ext/1360937237/MenuGen.o: ../src/MenuGen.c \
  ../../../../../framework/system/ports/sys_ports_definitions.h \
  ../src/app.h ../src/DefMenuGen.h ../src/MenuGen.h \
  ../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h ../src/GesPec12.h \
- ../src/Mc32NVMUtil.h
+ ../src/Mc32NVMUtil.h ../src/Generateur.h
 
 ../src/app.h:
 
@@ -445,3 +445,5 @@ build/default/production/_ext/1360937237/MenuGen.o: ../src/MenuGen.c \
 ../src/GesPec12.h:
 
 ../src/Mc32NVMUtil.h:
+
+../src/Generateur.h:

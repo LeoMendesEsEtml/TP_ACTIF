@@ -272,10 +272,6 @@ void APP_Tasks(void) {
             // Exécute le menu (lecture du codeur, mise à jour de l'affichage, etc.)
             MENU_Execute(&LocalParamGen);
 
-            // Met à jour la période et le signal du générateur selon les nouveaux paramètres
-            GENSIG_UpdatePeriode(&LocalParamGen);
-            GENSIG_UpdateSignal(&LocalParamGen);
-
             // Une fois fait, repasse en mode attente
             appData.state = APP_STATE_WAIT;
             break;
