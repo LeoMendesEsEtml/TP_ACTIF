@@ -73,9 +73,12 @@ void GENSIG_Initialize(S_ParamGen *pParam)
 //               déterminent le débit d'envoi au DAC, et donc la fréquence de sortie.
 // Paramètres :  pParam->Frequence : la fréquence du signal en Hz
 // Retour     :  aucun
+#define FREQU_SYS 80000000 //fréquence du timer 3
+#define PRESC_TIM3 64
+#define ECHANTILLONS_MAX 100 //nombre max d'échantillons
 void GENSIG_UpdatePeriode(S_ParamGen *pParam)
 {
-    uint16_t Periode;       // La nouvelle période (en ticks) du Timer3
+    static uint16_t Periode;       // La nouvelle période (en ticks) du Timer3
     uint32_t nbr_ech;       // Nombre d'échantillons dans une période de signal
     uint32_t frequ_presc;   // Fréquence du Timer3 après division par PRESC_TIM3
 
@@ -84,13 +87,13 @@ void GENSIG_UpdatePeriode(S_ParamGen *pParam)
 
     // Calcule la fréquence effective du Timer3
     // FREQU_SYS : fréquence CPU
-    // PRESC_TIM3 : prescaler (exemple, si PRESC_TIM3=8 => Timer3 = FREQU_SYS/8)
+    // PRESC_TIM3 : prescaler (exemple, si PRESC_TIM3=64 => Timer3 = FREQU_SYS/64)
     frequ_presc = FREQU_SYS / PRESC_TIM3;
 
     // Periode (en ticks Timer3) = (Fréquence Timer3) / (nbr_ech * FrequenceSignal)
     // De manière à ce que Timer3 génère une interruption à la bonne cadence
-    Periode = frequ_presc / (nbr_ech * pParam->Frequence);
-
+    //Periode = frequ_presc / (MAX_ECH * pParam->Frequence);
+    Periode = FREQU_SYS/(pParam->Frequence*MAX_ECH*PRESC_TIM3)-1;
     // Mise à jour du registre de période du Timer3 via la PLIB
     PLIB_TMR_Period16BitSet(TMR_ID_3, Periode);
 }
@@ -268,7 +271,6 @@ void GENSIG_Execute(void)
 
     // Envoie la valeur tb_tabValSig2[EchNb] sur le DAC (canal 0)
     SPI_WriteToDac(0, (uint16_t)tb_tabValSig2[EchNb]);
-
-    // Passe à l'échantillon suivant en mode circulaire
-    EchNb = (EchNb + 1) % MAX_ECH;
+    EchNb++; // Passe à l'échantillon suivant
+    EchNb = EchNb % MAX_ECH; // Gére les débordements du nombre d'échantillon
 }
