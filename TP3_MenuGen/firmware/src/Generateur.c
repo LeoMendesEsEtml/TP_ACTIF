@@ -73,7 +73,7 @@ void GENSIG_Initialize(S_ParamGen *pParam)
 //               déterminent le débit d'envoi au DAC, et donc la fréquence de sortie.
 // Paramètres :  pParam->Frequence : la fréquence du signal en Hz
 // Retour     :  aucun
-#define FREQU_SYS 80000000 //fréquence du timer 3
+#define FREQU_SYS 800000//fréquence du timer 3
 #define PRESC_TIM3 64
 #define ECHANTILLONS_MAX 100 //nombre max d'échantillons
 void GENSIG_UpdatePeriode(S_ParamGen *pParam)
@@ -93,7 +93,7 @@ void GENSIG_UpdatePeriode(S_ParamGen *pParam)
     // Periode (en ticks Timer3) = (Fréquence Timer3) / (nbr_ech * FrequenceSignal)
     // De manière à ce que Timer3 génère une interruption à la bonne cadence
     //Periode = frequ_presc / (MAX_ECH * pParam->Frequence);
-    Periode = FREQU_SYS/(pParam->Frequence*MAX_ECH*PRESC_TIM3)-1;
+    Periode = (FREQU_SYS/(pParam->Frequence));
     // Mise à jour du registre de période du Timer3 via la PLIB
     PLIB_TMR_Period16BitSet(TMR_ID_3, Periode);
 }
