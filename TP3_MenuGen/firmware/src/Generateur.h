@@ -21,22 +21,26 @@
 #define F_SYS       80000000  // Fréquence du CPU ou du Timer (ex: 80 MHz)
 #define PRESCALER   32          // Prescaler sélectionné pour TMR3
 #define MAX_ECH     100         // Nombre d'échantillons utilisé
+#define MAX_ECH 100  // Nombre d'échantillons par période
 
+// Borne la tension en mV dans l'intervalle [-10000, +10000] avant conversion DAC
+#define DAC_MIN  0
+#define DAC_MAX  65535
 
 
 // Initialisation du  générateur
-void  GENSIG_Initialize(S_ParamGen *pParam);
+void GENSIG_Initialize(S_ParamGen *pParam);
 
 
 // Mise à jour de la periode d'échantillonage
-void  GENSIG_UpdatePeriode(S_ParamGen *pParam);
+void GENSIG_UpdatePeriode(S_ParamGen *pParam);
 
 
 // Mise à jour du signal (forme, amplitude, offset)
-void  GENSIG_UpdateSignal(S_ParamGen *pParam);
+void GENSIG_UpdateSignal(S_ParamGen *pParam);
 
 // A appeler dans int Timer3
-void  GENSIG_Execute(void);
+void GENSIG_Execute(void);
 
 
 #endif

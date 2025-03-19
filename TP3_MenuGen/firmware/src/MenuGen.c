@@ -40,8 +40,7 @@ S_ParamGen pParamSave; // Stores saved parameters (paramètres sauvegardés)
  * Remarque : Cette fonction est prévue pour initialiser les paramètres du menu.
  *            Actuellement, elle est vide et peut être complétée selon les besoins.
  */
-void MENU_Initialize(S_ParamGen *pParam) 
-{
+void MENU_Initialize(S_ParamGen *pParam) {
     // (Ligne vide, aucune logique pour le moment)
 }
 
@@ -61,41 +60,41 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
 
     // Vérifie que l'indice du menu est inférieur à 9 (sinon, autre affichage)
     if (menu < 9) {
-        lcd_gotoxy(2, 1);         // Positionne le curseur LCD à la colonne 2, ligne 1
-        printf_lcd("Forme =");    // Affiche le libellé "Forme ="
-        lcd_gotoxy(11, 1);        // Positionne le curseur LCD à la colonne 11, ligne 1
+        lcd_gotoxy(2, 1); // Positionne le curseur LCD à la colonne 2, ligne 1
+        printf_lcd("Forme ="); // Affiche le libellé "Forme ="
+        lcd_gotoxy(11, 1); // Positionne le curseur LCD à la colonne 11, ligne 1
         printf_lcd("%s", MenuFormes[pParam->Forme]); // Affiche la forme actuelle depuis le tableau
 
-        lcd_gotoxy(2, 2);         // Positionne le curseur en colonne 2, ligne 2
-        printf_lcd("Freq [Hz]");  // Affiche le libellé de la fréquence
-        lcd_gotoxy(13, 2);        // Se positionne en colonne 13, ligne 2
+        lcd_gotoxy(2, 2); // Positionne le curseur en colonne 2, ligne 2
+        printf_lcd("Freq [Hz]"); // Affiche le libellé de la fréquence
+        lcd_gotoxy(13, 2); // Se positionne en colonne 13, ligne 2
         printf_lcd("%d", pParam->Frequence); // Affiche la fréquence actuelle
 
-        lcd_gotoxy(2, 3);         // Positionne le curseur en colonne 2, ligne 3
-        printf_lcd("Ampl [mV]");  // Affiche le libellé de l'amplitude
-        lcd_gotoxy(13, 3);        // Se positionne en colonne 13, ligne 3
+        lcd_gotoxy(2, 3); // Positionne le curseur en colonne 2, ligne 3
+        printf_lcd("Ampl [mV]"); // Affiche le libellé de l'amplitude
+        lcd_gotoxy(13, 3); // Se positionne en colonne 13, ligne 3
         printf_lcd("%d", pParam->Amplitude); // Affiche l'amplitude actuelle
 
-        lcd_gotoxy(2, 4);         // Positionne le curseur en colonne 2, ligne 4
-        printf_lcd("Offest [mV]");// Affiche le libellé de l'offset (note : coquille "Offest")
-        lcd_gotoxy(13, 4);        // Se positionne en colonne 13, ligne 4
+        lcd_gotoxy(2, 4); // Positionne le curseur en colonne 2, ligne 4
+        printf_lcd("Offest [mV]"); // Affiche le libellé de l'offset (note : coquille "Offest")
+        lcd_gotoxy(13, 4); // Se positionne en colonne 13, ligne 4
         printf_lcd("%d", (int) pParam->Offset); // Affiche la valeur d'offset
 
         // Affiche un caractère spécial (* ou ?) selon l'élément de menu sélectionné
         if (menu <= 4) {
-            lcd_gotoxy(1, menu);  // Place le curseur sur la ligne du menu sélectionné
-            printf_lcd("*");      // Affiche un astérisque pour indiquer la sélection
+            lcd_gotoxy(1, menu); // Place le curseur sur la ligne du menu sélectionné
+            printf_lcd("*"); // Affiche un astérisque pour indiquer la sélection
         } else {
-            menu = menu - 4;      // Ajuste l'indice de menu (pour un second niveau, par ex.)
-            lcd_gotoxy(1, menu);  // Place le curseur
-            printf_lcd("?");      // Affiche un point d'interrogation pour marquer la sélection
+            menu = menu - 4; // Ajuste l'indice de menu (pour un second niveau, par ex.)
+            lcd_gotoxy(1, menu); // Place le curseur
+            printf_lcd("?"); // Affiche un point d'interrogation pour marquer la sélection
         }
     } else {
         // Si menu >= 9, on propose la sauvegarde
-        lcd_gotoxy(2, 2);                // Positionne le curseur en colonne 2, ligne 2
-        printf_lcd("Sauvegarde ?");      // Affiche le message de sauvegarde
-        lcd_gotoxy(2, 3);                // Positionne le curseur en colonne 2, ligne 3
-        printf_lcd("(appui long)");      // Indique la méthode d'activation
+        lcd_gotoxy(2, 2); // Positionne le curseur en colonne 2, ligne 2
+        printf_lcd("Sauvegarde ?"); // Affiche le message de sauvegarde
+        lcd_gotoxy(2, 3); // Positionne le curseur en colonne 2, ligne 3
+        printf_lcd("(appui long)"); // Indique la méthode d'activation
     }
 }
 
@@ -113,10 +112,10 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
  * - Sauvegarde ou annulation
  */
 void MENU_Execute(S_ParamGen *pParam) {
-    static MenuState_t menu = MENU_INIT;    // État courant du menu, initialisé à MENU_INIT
-    static uint8_t saveOk = 0;             // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
-    static uint8_t RefreshMenu = 0;        // Flag pour redessiner le menu
-    static uint8_t wait2s = 0;             // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
+    static MenuState_t menu = MENU_INIT; // État courant du menu, initialisé à MENU_INIT
+    static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
+    static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
+    static uint8_t wait2s = 0; // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
 
     // Machine à états du menu
     switch (menu) {
@@ -367,8 +366,7 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (Pec12IsPlus()) { // Rotation incrément
                 pParam->Offset += 100; // Incrémente de 100 mV
-                if (pParam->Offset > 5000)
-                {
+                if (pParam->Offset > 5000) {
                     pParam->Offset = 5000; // Bascule du max au min
                 }
                 RefreshMenu = 1; // Besoin de rafraîchir
@@ -376,9 +374,8 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (Pec12IsMinus()) { // Rotation décrément
                 pParam->Offset -= 100; // Décrémente de 100 mV
-                if (pParam->Offset < -5000) 
-                {
-                  pParam->Offset = -5000; // Bascule du min au max  
+                if (pParam->Offset < -5000) {
+                    pParam->Offset = -5000; // Bascule du min au max  
                 }
                 RefreshMenu = 1; // Besoin de rafraîchir
                 Pec12ClearMinus(); // Réinitialise
@@ -397,25 +394,24 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_SAUVEGARDE: // État proposant la sauvegarde
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                 // Réinitialise le flag
+                RefreshMenu = 0; // Réinitialise le flag
                 MENU_Display(pParam, MENU_SAUVEGARDE); // Affiche l'écran de sauvegarde
             }
             // Si appui long sur S9 (ESC), on valide la sauvegarde
             if (S9IsESC()) {
-                menu = MENU_SAVEINFO;           // Va afficher le résultat
-                saveOk = 1;                     // Indique la sauvegarde validée
-                RefreshMenu = 1;                // Besoin de rafraîchir
-                S9ClearESC();                   // Réinitialise l'événement
-                S9ClearOK();                    // Au cas où un OK reste actif
-            }
-            // Sinon, toute autre action (Plus, Minus, OK) annule la sauvegarde
+                menu = MENU_SAVEINFO; // Va afficher le résultat
+                saveOk = 1; // Indique la sauvegarde validée
+                RefreshMenu = 1; // Besoin de rafraîchir
+                S9ClearESC(); // Réinitialise l'événement
+                S9ClearOK(); // Au cas où un OK reste actif
+            }                // Sinon, toute autre action (Plus, Minus, OK) annule la sauvegarde
             else if ((Pec12IsPlus()) || (Pec12IsESC()) || (Pec12IsMinus()) || (Pec12IsOK())) {
-                menu = MENU_SAVEINFO;           // Va afficher le résultat
-                saveOk = 0;                     // Indique la sauvegarde annulée
-                RefreshMenu = 1;                // Besoin de rafraîchir
+                menu = MENU_SAVEINFO; // Va afficher le résultat
+                saveOk = 0; // Indique la sauvegarde annulée
+                RefreshMenu = 1; // Besoin de rafraîchir
                 Pec12ClearOK();
                 Pec12ClearESC();
                 Pec12ClearMinus();
@@ -423,17 +419,17 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             break;
 
-        // -------------------------------------------------------------------
+            // -------------------------------------------------------------------
         case MENU_SAVEINFO: // État d'affichage du résultat de la sauvegarde
             if (RefreshMenu == 1) {
-                RefreshMenu = 0;                // Réinitialise le flag
-                ClearLcd();                     // Efface l'écran
+                RefreshMenu = 0; // Réinitialise le flag
+                ClearLcd(); // Efface l'écran
                 if (saveOk == 1) {
-                    lcd_gotoxy(2, 3);           // Positionne le curseur
+                    lcd_gotoxy(2, 3); // Positionne le curseur
                     NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
                     printf_lcd("Sauvegarde OK"); // Indique la réussite de la sauvegarde
                 } else {
-                    lcd_gotoxy(2, 3);           // Positionne le curseur
+                    lcd_gotoxy(2, 3); // Positionne le curseur
                     printf_lcd("Sauvegarde ANNULEE!"); // Indique l'annulation
                 }
             }
@@ -441,13 +437,13 @@ void MENU_Execute(S_ParamGen *pParam) {
             wait2s++;
             // Après 2 secondes (200 x 10 ms), on retourne au menu forme
             if (wait2s == 200) {
-                menu = MENU_FORME_SEL;          // Retourne à la sélection de la forme
-                RefreshMenu = 1;                // Besoin de rafraîchir
+                menu = MENU_FORME_SEL; // Retourne à la sélection de la forme
+                RefreshMenu = 1; // Besoin de rafraîchir
             }
             break;
-        default : 
+        default:
             // Formes non prise en compte
-            break; 
-        
+            break;
+
     }
 }

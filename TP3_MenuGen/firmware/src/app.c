@@ -67,8 +67,8 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 // *****************************************************************************
 
-APP_DATA appData;            // Structure globale contenant l'état de l'application
-S_ParamGen LocalParamGen;    // Structure locale pour les paramètres du générateur
+APP_DATA appData; // Structure globale contenant l'état de l'application
+S_ParamGen LocalParamGen; // Structure locale pour les paramètres du générateur
 
 // *****************************************************************************
 // *****************************************************************************
@@ -82,6 +82,7 @@ S_ParamGen LocalParamGen;    // Structure locale pour les paramètres du générate
 #define WAIT_INIT 2999  // Nombre d'itérations approximatives pour 3 secondes
 
 // -----------------------------------------------------------------------------
+
 /**
  * @brief Callback Timer1 (1 ms). Gère des actions périodiques, notamment ScanBtn.
  * 
@@ -93,33 +94,34 @@ void App_Timer1Callback() {
 
     // Compteur pour les 3 premières secondes
     static uint16_t WaitIteration = 0; // Variable statique qui conserve sa valeur entre appels
-    static uint8_t InitDone = 0;       // Flag pour indiquer si l'init est terminée
+    static uint8_t InitDone = 0; // Flag pour indiquer si l'init est terminée
 
     // Lecture des signaux du codeur PEC12 et du bouton S9 (S_OK)
     ScanBtn(PEC12_A, PEC12_B, PEC12_PB, S_OK);
 
     // Pendant les 3 premières secondes, on incrémente WaitIteration
     if ((WaitIteration < WAIT_INIT) && (InitDone == 0)) {
-        WaitIteration++;            // Incrémente le compteur d'attente
+        WaitIteration++; // Incrémente le compteur d'attente
     } else {
         // Si on est toujours dans l'état d'attente d'init (APP_STATE_INIT_WAIT)
         if (appData.state == APP_STATE_INIT_WAIT) {
             APP_UpdateState(APP_STATE_INIT_CLEAR); // Change l'état de l'application
-            WaitIteration = 0;                     // Réinitialise le compteur
-            InitDone = 1;                          // Note que l'init est terminée
+            WaitIteration = 0; // Réinitialise le compteur
+            InitDone = 1; // Note que l'init est terminée
         } else {
             // Une fois l'init terminée, on exécute périodiquement le SERVICE_TASKS
             if (WaitIteration >= 10) {
-                WaitIteration = 0;                 // Reset du compteur
+                WaitIteration = 0; // Reset du compteur
                 APP_UpdateState(APP_STATE_SERVICE_TASKS); // Demande exécution des tâches
             } else {
-                WaitIteration++;                   // Incrémente jusqu'à 10 pour la prochaine exécution
+                WaitIteration++; // Incrémente jusqu'à 10 pour la prochaine exécution
             }
         }
     }
 }
 
 // -----------------------------------------------------------------------------
+
 /**
  * @brief Callback Timer3. Gère l'exécution du générateur de signal.
  * 
@@ -127,9 +129,9 @@ void App_Timer1Callback() {
  * puis éteint LED0.
  */
 void App_Timer3Callback() {
-    LED0_W = 1;          // Force LED0 à l'état bas (active)
-    GENSIG_Execute();    // Génère le signal selon les paramètres en cours
-    LED0_W = 0;          // Rétablit LED0 à l'état haut (désactive)
+    LED0_W = 1; // Force LED0 à l'état bas (active)
+    GENSIG_Execute(); // Génère le signal selon les paramètres en cours
+    LED0_W = 0; // Rétablit LED0 à l'état haut (désactive)
 }
 
 // *****************************************************************************
@@ -161,11 +163,11 @@ void ClearLcd() {
 void TurnOnAllLEDs(void) {
     // Lit l'état courant de PORTA, applique un AND avec l'inversion du masque
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A,
-                     PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) & ~LEDS_PORTA_MASK);
+            PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) & ~LEDS_PORTA_MASK);
 
     // Idem pour PORTB
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B,
-                     PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) & ~LEDS_PORTB_MASK);
+            PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) & ~LEDS_PORTB_MASK);
 }
 
 /**
@@ -177,11 +179,11 @@ void TurnOnAllLEDs(void) {
 void TurnOffAllLEDs(void) {
     // Lit l'état courant de PORTA, applique un OR avec le masque
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_A,
-                     PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) | LEDS_PORTA_MASK);
+            PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_A) | LEDS_PORTA_MASK);
 
     // Idem pour PORTB
     PLIB_PORTS_Write(PORTS_ID_0, PORT_CHANNEL_B,
-                     PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) | LEDS_PORTB_MASK);
+            PLIB_PORTS_Read(PORTS_ID_0, PORT_CHANNEL_B) | LEDS_PORTB_MASK);
 }
 
 // *****************************************************************************
@@ -233,13 +235,13 @@ void APP_Tasks(void) {
 
             // Affichage initial sur l'écran LCD
             lcd_gotoxy(1, 1);
-            printf_lcd("TP2 USART 2024-25"); 
+            printf_lcd("TP2 USART 2024-25");
 
             lcd_gotoxy(1, 2);
-            printf_lcd("Leo Mendes");       
+            printf_lcd("Leo Mendes");
 
             lcd_gotoxy(1, 3);
-            printf_lcd("Tassilo Choulat"); 
+            printf_lcd("Tassilo Choulat");
 
             // Démarre les timers TMR0 et TMR1
             DRV_TMR0_Start();
