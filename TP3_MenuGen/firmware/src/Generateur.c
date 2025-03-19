@@ -73,9 +73,7 @@ void GENSIG_Initialize(S_ParamGen *pParam)
 //               déterminent le débit d'envoi au DAC, et donc la fréquence de sortie.
 // Paramètres :  pParam->Frequence : la fréquence du signal en Hz
 // Retour     :  aucun
-#define F_SYS       80000000UL  // Fréquence du CPU ou du Timer (ex: 80 MHz)
-#define PRESCALER   32          // Prescaler sélectionné pour TMR3
-#define MAX_ECH     100         // Nombre d'échantillons utilisé
+
 void GENSIG_UpdatePeriode(S_ParamGen *pParam)
 {
     // Calcul de la fréquence effective du Timer3 (après prescaler)

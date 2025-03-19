@@ -367,13 +367,19 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             if (Pec12IsPlus()) { // Rotation incrément
                 pParam->Offset += 100; // Incrémente de 100 mV
-                if (pParam->Offset > 5000) pParam->Offset = -5000; // Bascule du max au min
+                if (pParam->Offset > 5000)
+                {
+                    pParam->Offset = 5000; // Bascule du max au min
+                }
                 RefreshMenu = 1; // Besoin de rafraîchir
                 Pec12ClearPlus(); // Réinitialise
             }
             if (Pec12IsMinus()) { // Rotation décrément
                 pParam->Offset -= 100; // Décrémente de 100 mV
-                if (pParam->Offset < -5000) pParam->Offset = 5000; // Bascule du min au max
+                if (pParam->Offset < -5000) 
+                {
+                  pParam->Offset = -5000; // Bascule du min au max  
+                }
                 RefreshMenu = 1; // Besoin de rafraîchir
                 Pec12ClearMinus(); // Réinitialise
             }

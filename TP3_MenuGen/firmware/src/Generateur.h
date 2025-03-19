@@ -18,7 +18,9 @@
 #define AMPLITUDE_MIN -10000
 #define AMPLITUDE_SUR_2 5000
 #define PAS_MAXIMUM 65535
-
+#define F_SYS       80000000  // Fréquence du CPU ou du Timer (ex: 80 MHz)
+#define PRESCALER   32          // Prescaler sélectionné pour TMR3
+#define MAX_ECH     100         // Nombre d'échantillons utilisé
 
 
 
