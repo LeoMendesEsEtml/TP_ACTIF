@@ -153,7 +153,7 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1585079243/drv_usbfs.o: \
  ../../../../../../framework/osal/osal.h \
  ../../../../../../framework/osal/osal_definitions.h \
  ../../../../../../framework/osal/osal_impl_basic.h \
- ../src/system_config/pic32mx_usb_sk2_int_dyn/framework/system/devcon/sys_devcon.h \
+ ../../../../../../framework/system/devcon/sys_devcon.h \
  ../../../../../../framework/peripheral/osc/plib_osc.h \
  ../../../../../../framework/peripheral/osc/processor/osc_processor.h \
  ../../../../../../framework/peripheral/osc/processor/osc_p32xxxx.h \
@@ -515,7 +515,7 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1585079243/drv_usbfs.o: \
 
 ../../../../../../framework/osal/osal_impl_basic.h:
 
-../src/system_config/pic32mx_usb_sk2_int_dyn/framework/system/devcon/sys_devcon.h:
+../../../../../../framework/system/devcon/sys_devcon.h:
 
 ../../../../../../framework/peripheral/osc/plib_osc.h:
 

@@ -66,7 +66,14 @@ extern "C" {
 
 #endif
 // DOM-IGNORE-END 
-
+// *****************************************************************************
+// *****************************************************************************
+// Section: Type Definitions
+// *****************************************************************************
+#define WAIT_INIT 2999  // Nombre d'itérations approximatives pour 3 secondes
+// Masques pour les LEDs
+#define LEDS_PORTA_MASK  0b1000011111110011 // RA0-RA7 et RA15
+#define LEDS_PORTB_MASK  0b0000010000000000 // RB10
 // *****************************************************************************
 // *****************************************************************************
 // Section: Type Definitions
@@ -76,23 +83,22 @@ extern "C" {
 // *****************************************************************************
 /* Application states
 
-  Summary:
-    Application states enumeration
+          Summary:
+            Application states enumeration
 
-  Description:
-    This enumeration defines the valid application states.  These states
-    determine the behavior of the application at various times.
-*/
+          Description:
+            This enumeration defines the valid application states.  These states
+            determine the behavior of the application at various times.
+     */
 
-typedef enum
-{
-	/* Application's state machine's initial state. */
-	APP_GEN_STATE_INIT=0,
-	APP_GEN_STATE_SERVICE_TASKS,
-
-	/* TODO: Define states used by the application state machine. */
-
-} APP_GEN_STATES;
+    typedef enum {
+        /* Application's state machine's initial state. */
+        APP_GEN_STATE_INIT = 0,
+        APP_GEN_STATE_INIT_WAIT = 1,
+        APP_GEN_STATE_INIT_CLEAR = 2,
+        APP_GEN_STATE_SERVICE_TASKS = 3,
+        APP_GEN_STATE_WAIT = 4,
+    } APP_GEN_STATES;
 
 
 // *****************************************************************************
@@ -123,9 +129,21 @@ typedef struct
 // Section: Application Callback Routines
 // *****************************************************************************
 // *****************************************************************************
-/* These routines are called by drivers when certain events occur.
-*/
-	
+/**
+ * @brief Fonction callback pour le Timer 1.
+ *
+ * Appelée lors de chaque interruption du Timer 1. Gère un compteur pour les premières
+ * secondes et lance l'exécution de tâches après ce délai.
+ */
+void App_Timer1Callback();
+/**
+ * @brief Callback pour le Timer 3. 
+ * @author LMS - TCT
+ * @date 2025-01-30
+ *
+ * @details 
+ */
+void App_Timer3Callback();
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -198,6 +216,34 @@ void APP_GEN_Initialize ( void );
 
 void APP_GEN_Tasks( void );
 
+
+
+void APP_GEN_UpdateState ( APP_GEN_STATES NewState) ;
+// *****************************************************************************
+// *****************************************************************************
+// Section: Application specific functions
+// *****************************************************************************
+// *****************************************************************************
+/**
+ * @brief Allume toutes les LEDs actives bas.
+ *
+ * Met à l'état bas toutes les broches associées aux LEDs.
+ */
+void TurnOnAllLEDs(void);
+
+/**
+ * @brief Éteint toutes les LEDs actives bas.
+ *
+ * Met à l'état haut toutes les broches associées aux LEDs.
+ */
+void TurnOffAllLEDs(void);
+
+/**
+ * @brief Efface l'affichage de l'écran LCD.
+ *
+ * Cette fonction nettoie toutes les lignes de l'écran LCD.
+ */
+void ClearLcd(void);
 
 #endif /* _APP_GEN_H */
 

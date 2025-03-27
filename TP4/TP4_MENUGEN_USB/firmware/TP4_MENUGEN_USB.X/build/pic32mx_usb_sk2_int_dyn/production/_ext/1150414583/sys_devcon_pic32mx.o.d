@@ -54,7 +54,7 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1150414583/sys_devcon_pic32mx.o: \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_CounterAsyncWriteControl_Default.h \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_CounterAsyncWriteInProgress_Default.h \
  ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_TimerOperationMode_Default.h \
- ../src/system_config/pic32mx_usb_sk2_int_dyn/framework/system/devcon/sys_devcon.h \
+ ../../../../../../framework/system/devcon/sys_devcon.h \
  ../../../../../../framework/system/system.h \
  ../../../../../../framework/system/common/sys_common.h \
  ../../../../../../framework/system/common/sys_module.h \
@@ -288,7 +288,7 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1150414583/sys_devcon_pic32mx.o: \
 
 ../../../../../../framework/peripheral/tmr/processor/../templates/tmr_TimerOperationMode_Default.h:
 
-../src/system_config/pic32mx_usb_sk2_int_dyn/framework/system/devcon/sys_devcon.h:
+../../../../../../framework/system/devcon/sys_devcon.h:
 
 ../../../../../../framework/system/system.h:
 

@@ -15,7 +15,7 @@
 // Include project-specific headers
 // ================================
 
-#include "app.h"           // Gestion de l'état de l'application
+#include "app_gen.h"           // Gestion de l'état de l'application
 #include "MenuGen.h"       // Déclarations des fonctions du menu
 #include "Mc32DriverLcd.h" // Gestion de l'affichage LCD
 #include "GesPec12.h"      // Gestion du codeur rotatif PEC12

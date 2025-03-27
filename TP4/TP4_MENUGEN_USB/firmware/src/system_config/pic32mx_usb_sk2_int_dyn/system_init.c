@@ -453,7 +453,12 @@ void SYS_Initialize ( void* data )
     BSP_Initialize();        
 
     /* Initialize Drivers */
-    /* Initialize USB Driver */ 
+    /*Initialize TMR0 */
+    DRV_TMR0_Initialize();
+    /*Initialize TMR1 */
+    DRV_TMR1_Initialize();
+ 
+     /* Initialize USB Driver */ 
     sysObj.drvUSBObject = DRV_USBFS_Initialize(DRV_USBFS_INDEX_0, (SYS_MODULE_INIT *) &drvUSBFSInit);
     
     /* Set priority of USB interrupt source */

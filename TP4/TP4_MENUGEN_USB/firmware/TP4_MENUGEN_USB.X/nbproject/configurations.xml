@@ -12,6 +12,11 @@
                          displayName="pic32mx_usb_sk2_int_dyn"
                          projectFiles="true">
             <logicalFolder name="f1" displayName="framework" projectFiles="true">
+              <logicalFolder name="f2" displayName="driver" projectFiles="true">
+                <logicalFolder name="f1" displayName="tmr" projectFiles="true">
+                  <itemPath>../src/system_config/pic32mx_usb_sk2_int_dyn/framework/driver/tmr/drv_tmr_static.h</itemPath>
+                </logicalFolder>
+              </logicalFolder>
               <logicalFolder name="f1" displayName="system" projectFiles="true">
                 <logicalFolder name="f1" displayName="clk" projectFiles="true">
                   <logicalFolder name="f1" displayName="src" projectFiles="true">
@@ -33,6 +38,14 @@
         </logicalFolder>
         <itemPath>../src/app.h</itemPath>
         <itemPath>../src/app_gen.h</itemPath>
+        <itemPath>../src/DefMenuGen.h</itemPath>
+        <itemPath>../src/Generateur.h</itemPath>
+        <itemPath>../src/Mc32Debounce.h</itemPath>
+        <itemPath>../src/GesPec12.h</itemPath>
+        <itemPath>../src/Mc32gestSpiDac.h</itemPath>
+        <itemPath>../src/Mc32NVMUtil.h</itemPath>
+        <itemPath>../src/Mc32SpiUtil.h</itemPath>
+        <itemPath>../src/MenuGen.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="bsp" projectFiles="true">
         <logicalFolder name="f1" displayName="pic32mx_skes" projectFiles="true">
@@ -48,8 +61,8 @@
         <logicalFolder name="driver" displayName="driver" projectFiles="true">
           <logicalFolder name="f2" displayName="tmr" projectFiles="true">
             <logicalFolder name="f1" displayName="src" projectFiles="true">
-              <itemPath>../../../../../../framework/driver/tmr/src/drv_tmr_variant_mapping.h</itemPath>
               <itemPath>../../../../../../framework/driver/tmr/src/drv_tmr_local.h</itemPath>
+              <itemPath>../../../../../../framework/driver/tmr/src/drv_tmr_variant_mapping.h</itemPath>
             </logicalFolder>
             <itemPath>../../../../../../framework/driver/tmr/drv_tmr.h</itemPath>
             <itemPath>../../../../../../framework/driver/tmr/drv_tmr_mapping.h</itemPath>
@@ -153,7 +166,15 @@
                          displayName="pic32mx_usb_sk2_int_dyn"
                          projectFiles="true">
             <logicalFolder name="f1" displayName="framework" projectFiles="true">
-              <logicalFolder name="f1" displayName="system" projectFiles="true">
+              <logicalFolder name="f1" displayName="driver" projectFiles="true">
+                <logicalFolder name="f1" displayName="tmr" projectFiles="true">
+                  <logicalFolder name="f1" displayName="src" projectFiles="true">
+                    <itemPath>../src/system_config/pic32mx_usb_sk2_int_dyn/framework/driver/tmr/src/drv_tmr_static.c</itemPath>
+                    <itemPath>../src/system_config/pic32mx_usb_sk2_int_dyn/framework/driver/tmr/src/drv_tmr_mapping.c</itemPath>
+                  </logicalFolder>
+                </logicalFolder>
+              </logicalFolder>
+              <logicalFolder name="f2" displayName="system" projectFiles="true">
                 <logicalFolder name="f1" displayName="clk" projectFiles="true">
                   <logicalFolder name="f1" displayName="src" projectFiles="true">
                     <itemPath>../src/system_config/pic32mx_usb_sk2_int_dyn/framework/system/clk/src/sys_clk_pic32mx.c</itemPath>
@@ -181,21 +202,13 @@
         <itemPath>../src/app.c</itemPath>
         <itemPath>../src/main.c</itemPath>
         <itemPath>../src/app_gen.c</itemPath>
-        <itemPath>../src/DefMenuGen.h</itemPath>
         <itemPath>../src/Generateur.c</itemPath>
-        <itemPath>../src/Generateur.h</itemPath>
         <itemPath>../src/GesPec12.c</itemPath>
-        <itemPath>../src/GesPec12.h</itemPath>
         <itemPath>../src/Mc32Debounce.c</itemPath>
-        <itemPath>../src/Mc32Debounce.h</itemPath>
         <itemPath>../src/Mc32NVMUtil.c</itemPath>
-        <itemPath>../src/Mc32NVMUtil.h</itemPath>
         <itemPath>../src/Mc32SpiUtil.c</itemPath>
-        <itemPath>../src/Mc32SpiUtil.h</itemPath>
         <itemPath>../src/Mc32gestSPiDac.c</itemPath>
-        <itemPath>../src/Mc32gestSpiDac.h</itemPath>
         <itemPath>../src/MenuGen.c</itemPath>
-        <itemPath>../src/MenuGen.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="bsp" projectFiles="true">
         <logicalFolder name="f1" displayName="pic32mx_skes" projectFiles="true">
@@ -375,60 +388,6 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
-      <item path="../../../../../../framework/driver/tmr/drv_tmr.h"
-            ex="true"
-            overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
-      <item path="../../../../../../framework/driver/tmr/drv_tmr_compatibility.h"
-            ex="true"
-            overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
-      <item path="../../../../../../framework/driver/tmr/drv_tmr_mapping.h"
-            ex="true"
-            overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
       <item path="../../../../../../framework/driver/tmr/src/drv_tmr_local.h"
             ex="true"
             overriding="false">
@@ -447,43 +406,7 @@
         <C32Global>
         </C32Global>
       </item>
-      <item path="../../../../../../framework/driver/tmr/src/drv_tmr_variant_mapping.h"
-            ex="true"
-            overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
       <item path="../../../../../../framework/driver/tmr/src/dynamic/drv_tmr.c"
-            ex="true"
-            overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
-      <item path="../../../../../../framework/driver/tmr/tmr_definitions_pic32m.h"
             ex="true"
             overriding="false">
         <C32>
@@ -852,6 +775,11 @@
       <Tool>
         <property key="whatToProgram" value="all"/>
       </Tool>
+      <snap>
+        <property key="memories.programmemory.ranges" value="1d000000-1d07ffff"/>
+        <property key="programmerToGoFilePath"
+                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP4/TP4_MENUGEN_USB/firmware/TP4_MENUGEN_USB.X/debug/pic32mx_usb_sk2_int_dyn/TP4_MENUGEN_USB_ptg"/>
+      </snap>
     </conf>
   </confs>
 </configurationDescriptor>
