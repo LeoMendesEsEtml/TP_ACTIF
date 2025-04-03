@@ -69,6 +69,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 APP_GEN_DATA appGenData; // Structure globale contenant l'état de l'application
 S_ParamGen LocalParamGen; // Structure locale pour les paramètres du générateur
+S_ParamGen RemoteParamGen;
 // *****************************************************************************
 /* Application Data
 
@@ -227,7 +228,7 @@ void APP_GEN_Initialize ( void )
  */
 
 void APP_GEN_Tasks ( void ) {
-
+    bool UsbState;
     /* Check the application's current state. */
     switch (appGenData.state) {
         case APP_GEN_STATE_INIT:
@@ -256,7 +257,7 @@ void APP_GEN_Tasks ( void ) {
             printf_lcd("Leo Mendes");
 
             lcd_gotoxy(1, 3);
-            printf_lcd("Tassilo Choulat");
+            printf_lcd("CHAT GPT");
 
             // Démarre les timers TMR0 et TMR1
             DRV_TMR0_Start();
@@ -264,6 +265,7 @@ void APP_GEN_Tasks ( void ) {
             BSP_LEDInit();
             // Passe à l'état d'attente init
            APP_GEN_UpdateState(APP_GEN_STATE_INIT_WAIT);
+           RemoteParamGen = LocalParamGen;
             break;
         }
 
@@ -285,10 +287,19 @@ void APP_GEN_Tasks ( void ) {
         case APP_GEN_STATE_SERVICE_TASKS:
             // Bascule une LED (LED_2) pour indiquer un cycle de service
             BSP_LEDToggle(BSP_LED_2);
-
-            // Exécute le menu
-            MENU_Execute(&LocalParamGen);
-
+            
+            UsbState = GetUsbState(); 
+            
+            if(UsbState == true)
+            {
+                // Mode distant
+                MENU_Execute(&RemoteParamGen);
+                
+            } else {
+                // Exécute le menu avec les valeur local
+                MENU_Execute(&LocalParamGen);
+            }
+        
             // Une fois fait, repasse en mode attente
             APP_GEN_UpdateState(APP_GEN_STATE_WAIT);
             break;
@@ -313,7 +324,10 @@ void APP_GEN_UpdateState(APP_GEN_STATES NewState) {
     appGenData.state = NewState; // Affecte le nouvel état
 }
 
- 
+S_ParamGen* APP_GEN_GetRemoteParam(void)
+{
+    return &RemoteParamGen; // renvoie l?adresse
+}
 
 /*******************************************************************************
  End of File

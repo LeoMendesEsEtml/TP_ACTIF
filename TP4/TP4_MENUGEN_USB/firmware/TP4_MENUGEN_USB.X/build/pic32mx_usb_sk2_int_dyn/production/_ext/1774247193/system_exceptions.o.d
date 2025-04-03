@@ -218,7 +218,8 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1774247193/system_exceptions.o: \
  ../../../../../../framework/usb/src/usb_device_function_driver.h \
  ../../../../../../framework/usb/usb_cdc.h ../src/app.h \
  ../src/system_config/pic32mx_usb_sk2_int_dyn/system_definitions.h \
- ../src/app_gen.h ../../../../../../framework/system/debug/sys_debug.h
+ ../src/app_gen.h ../src/Generateur.h ../src/DefMenuGen.h \
+ ../../../../../../framework/system/debug/sys_debug.h
 
 ../src/system_config/pic32mx_usb_sk2_int_dyn/system_config.h:
 
@@ -659,5 +660,9 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1774247193/system_exceptions.o: \
 ../src/system_config/pic32mx_usb_sk2_int_dyn/system_definitions.h:
 
 ../src/app_gen.h:
+
+../src/Generateur.h:
+
+../src/DefMenuGen.h:
 
 ../../../../../../framework/system/debug/sys_debug.h:

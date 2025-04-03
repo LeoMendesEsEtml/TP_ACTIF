@@ -216,7 +216,8 @@ build/pic32mx_usb_sk2_int_dyn/debug/_ext/1360937237/Mc32gestSPiDac.o: \
  ../../../../../../framework/usb/usb_device_cdc.h \
  ../../../../../../framework/usb/src/usb_device_function_driver.h \
  ../../../../../../framework/usb/usb_cdc.h ../src/app.h ../src/app_gen.h \
- ../src/Mc32gestSpiDac.h ../src/Mc32SpiUtil.h \
+ ../src/Generateur.h ../src/DefMenuGen.h ../src/Mc32gestSpiDac.h \
+ ../src/Mc32SpiUtil.h \
  ../../../../../../framework/peripheral\SPI\plib_spi.h \
  ../../../../../../framework/peripheral/spi/processor/spi_processor.h \
  ../../../../../../framework/peripheral/spi/processor/spi_p32xxxx.h \
@@ -700,6 +701,10 @@ build/pic32mx_usb_sk2_int_dyn/debug/_ext/1360937237/Mc32gestSPiDac.o: \
 ../src/app.h:
 
 ../src/app_gen.h:
+
+../src/Generateur.h:
+
+../src/DefMenuGen.h:
 
 ../src/Mc32gestSpiDac.h:
 

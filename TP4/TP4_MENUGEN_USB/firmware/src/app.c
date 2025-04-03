@@ -54,6 +54,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 #include "app.h"
+#include "Mc32gest_SerComm.h"
 
 
 // *****************************************************************************
@@ -108,6 +109,8 @@ USB_DEVICE_CDC_EVENT_RESPONSE APP_USBDeviceCDCEventHandler
     appDataObject = (APP_DATA *)userData;
     USB_CDC_CONTROL_LINE_STATE * controlLineStateData;
     USB_DEVICE_CDC_EVENT_DATA_READ_COMPLETE * eventDataRead; 
+    
+
 
     switch ( event )
     {
@@ -222,7 +225,6 @@ void APP_USBDeviceEventHandler ( USB_DEVICE_EVENT event, void * eventData, uintp
             BSP_LEDOff ( APP_USB_LED_3 );
 
             appData.isConfigured = false;
-
             break;
 
         case USB_DEVICE_EVENT_CONFIGURED:
@@ -432,7 +434,6 @@ void APP_Tasks (void )
 {
     /* Update the application state machine based
      * on the current state */
-    int i; 
     switch(appData.state)
     {
         case APP_STATE_INIT:
@@ -516,43 +517,48 @@ void APP_Tasks (void )
 
 
         case APP_STATE_SCHEDULE_WRITE:
+        {
+            // On ne traite la trame reçue que si la lecture est vraiment terminée
+            if (appData.isReadComplete) {
+                // On a bien fini de lire ; on peut reconsidérer un nouveau write
+                appData.isReadComplete = false;
 
-            if(APP_StateReset())
-            {
-                break;
+                // Récupération du pointeur vers RemoteParamGen
+                // (par exemple via un getter si tu ne l'exposes pas en extern)
+                bool saveRequested = false;
+                S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
+
+                // 1) Décodage de la trame reçue
+                if (GetMessage((int8_t *) appData.readBuffer, RemoteParamGen, &saveRequested)) {
+                    // 2) Préparation de la réponse dans le même buffer
+                    SendMessage((int8_t *) appData.readBuffer, RemoteParamGen, saveRequested);
+
+                    // 3) Envoi de la réponse (ou ack) au PC
+                    USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                            &appData.writeTransferHandle,
+                            appData.readBuffer,
+                            strlen((char *) appData.readBuffer),
+                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                } else {
+                    // Trame reçue invalide ? on répond juste un message d'erreur
+                    const char *err = "!E=BAD#";
+                    USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
+                            &appData.writeTransferHandle,
+                            (uint8_t *) err,
+                            strlen(err),
+                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                }
             }
 
-            /* Setup the write */
-
+            // Indique qu'on commence un write asynchrone, on attendra le callback
             appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
             appData.isWriteComplete = false;
+
+            // La machine d'état passe en attente de fin d'écriture
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
-
-            if(appData.isSwitchPressed)
-            {
-                /* If the switch was pressed, then send the switch prompt*/
-                appData.isSwitchPressed = false;
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle, switchPromptUSB, 23,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-            }
-            else
-            {
-                /* Else echo each received character by adding 1 */
-                for(i=0; i<appData.numBytesRead; i++)
-                {
-                    if((appData.readBuffer[i] != 0x0A) && (appData.readBuffer[i] != 0x0D))
-                    {
-                        appData.readBuffer[i] = appData.readBuffer[i] + 1;
-                    }
-                }
-                USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                        &appData.writeTransferHandle,
-                        appData.readBuffer, appData.numBytesRead,
-                        USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
-            }
-
+        }
             break;
+
 
         case APP_STATE_WAIT_FOR_WRITE_COMPLETE:
 
@@ -577,7 +583,15 @@ void APP_Tasks (void )
             break;
     }
 }
+bool GetUsbState(void)
+{
+    return appData.isConfigured;
+}
 
+bool GetUSBReadBuffer(void)
+{
+    return appData.readBuffer; 
+}
 /*******************************************************************************
  End of File
  */

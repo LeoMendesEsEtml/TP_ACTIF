@@ -58,6 +58,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdlib.h>
 #include "system_config.h"
 #include "system_definitions.h"
+#include "Generateur.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -244,6 +245,9 @@ void TurnOffAllLEDs(void);
  * Cette fonction nettoie toutes les lignes de l'écran LCD.
  */
 void ClearLcd(void);
+
+S_ParamGen* APP_GEN_GetRemoteParam(void);
+
 
 #endif /* _APP_GEN_H */
 

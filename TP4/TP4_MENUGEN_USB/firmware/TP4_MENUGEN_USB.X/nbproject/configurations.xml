@@ -209,6 +209,8 @@
         <itemPath>../src/Mc32SpiUtil.c</itemPath>
         <itemPath>../src/Mc32gestSPiDac.c</itemPath>
         <itemPath>../src/MenuGen.c</itemPath>
+        <itemPath>../src/Mc32gest_SerComm.c</itemPath>
+        <itemPath>../src/Mc32gest_SerComm.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="bsp" projectFiles="true">
         <logicalFolder name="f1" displayName="pic32mx_skes" projectFiles="true">
@@ -773,6 +775,9 @@
         <property key="whatToProgram" value="all"/>
       </SKDEPIC32PlatformTool>
       <Tool>
+        <property key="memories.programmemory.ranges" value="1d000000-1d07ffff"/>
+        <property key="programmerToGoFilePath"
+                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/TP4/TP4_MENUGEN_USB/firmware/TP4_MENUGEN_USB.X/debug/pic32mx_usb_sk2_int_dyn/TP4_MENUGEN_USB_ptg"/>
         <property key="whatToProgram" value="all"/>
       </Tool>
       <snap>
