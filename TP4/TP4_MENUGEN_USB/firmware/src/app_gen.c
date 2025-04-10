@@ -243,12 +243,6 @@ void APP_GEN_Tasks ( void ) {
             // Initialisation du codeur PEC12
             Pec12Init();
 
-            // Initialisation du menu
-            MENU_Initialize(&LocalParamGen);
-
-            // Initialisation du générateur
-            GENSIG_Initialize(&LocalParamGen);
-
             // Affichage initial sur l'écran LCD
             lcd_gotoxy(1, 1);
             printf_lcd("TP2 USART 2024-25");
@@ -263,9 +257,13 @@ void APP_GEN_Tasks ( void ) {
             DRV_TMR0_Start();
             DRV_TMR1_Start();
             BSP_LEDInit();
+            // Initialisation du menu
+            MENU_Initialize(&LocalParamGen);
+
+            // Initialisation du générateur
+            GENSIG_Initialize(&LocalParamGen);
             // Passe à l'état d'attente init
-           APP_GEN_UpdateState(APP_GEN_STATE_INIT_WAIT);
-           RemoteParamGen = LocalParamGen;
+            APP_GEN_UpdateState(APP_GEN_STATE_INIT_WAIT);
             break;
         }
 
@@ -293,13 +291,15 @@ void APP_GEN_Tasks ( void ) {
             if(UsbState == true)
             {
                 // Mode distant
-                MENU_Execute(&RemoteParamGen);
+                MENU_Execute(&RemoteParamGen,UsbState);
+                LocalParamGen = RemoteParamGen;
                 
             } else {
                 // Exécute le menu avec les valeur local
-                MENU_Execute(&LocalParamGen);
+                MENU_Execute(&LocalParamGen,UsbState);
+                RemoteParamGen = LocalParamGen;
             }
-        
+            
             // Une fois fait, repasse en mode attente
             APP_GEN_UpdateState(APP_GEN_STATE_WAIT);
             break;

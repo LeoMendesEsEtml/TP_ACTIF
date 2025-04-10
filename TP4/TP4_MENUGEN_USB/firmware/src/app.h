@@ -172,6 +172,9 @@ typedef struct
 
     /* Number of bytes read from Host */ 
     uint32_t numBytesRead; 
+    
+    /* Status de l'USB*/
+    bool USBState;
 } APP_DATA;
 
 // *****************************************************************************

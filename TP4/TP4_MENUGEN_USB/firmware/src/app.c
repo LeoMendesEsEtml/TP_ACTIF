@@ -204,12 +204,10 @@ USB_DEVICE_CDC_EVENT_RESPONSE APP_USBDeviceCDCEventHandler
 /***********************************************
  * Application USB Device Layer Event Handler.
  ***********************************************/
-void APP_USBDeviceEventHandler ( USB_DEVICE_EVENT event, void * eventData, uintptr_t context )
-{
+void APP_USBDeviceEventHandler(USB_DEVICE_EVENT event, void * eventData, uintptr_t context) {
     USB_DEVICE_EVENT_DATA_CONFIGURED *configuredEventData;
 
-    switch ( event )
-    {
+    switch (event) {
         case USB_DEVICE_EVENT_SOF:
 
             /* This event is used for switch debounce. This flag is reset
@@ -220,54 +218,53 @@ void APP_USBDeviceEventHandler ( USB_DEVICE_EVENT event, void * eventData, uintp
         case USB_DEVICE_EVENT_RESET:
 
             /* Update LED to show reset state */
-            BSP_LEDOn ( APP_USB_LED_1 );
-            BSP_LEDOn ( APP_USB_LED_2 );
-            BSP_LEDOff ( APP_USB_LED_3 );
-
+            BSP_LEDOn(APP_USB_LED_1);
+            BSP_LEDOn(APP_USB_LED_2);
+            BSP_LEDOff(APP_USB_LED_3);
+            
             appData.isConfigured = false;
             break;
 
         case USB_DEVICE_EVENT_CONFIGURED:
 
             /* Check the configuratio. We only support configuration 1 */
-            configuredEventData = (USB_DEVICE_EVENT_DATA_CONFIGURED*)eventData;
-            if ( configuredEventData->configurationValue == 1)
-            {
+            configuredEventData = (USB_DEVICE_EVENT_DATA_CONFIGURED*) eventData;
+            if (configuredEventData->configurationValue == 1) {
                 /* Update LED to show configured state */
-                BSP_LEDOff ( APP_USB_LED_1 );
-                BSP_LEDOff ( APP_USB_LED_2 );
-                BSP_LEDOn ( APP_USB_LED_3 );
+                BSP_LEDOff(APP_USB_LED_1);
+                BSP_LEDOff(APP_USB_LED_2);
+                BSP_LEDOn(APP_USB_LED_3);
 
                 /* Register the CDC Device application event handler here.
                  * Note how the appData object pointer is passed as the
                  * user data */
 
-                USB_DEVICE_CDC_EventHandlerSet(USB_DEVICE_CDC_INDEX_0, APP_USBDeviceCDCEventHandler, (uintptr_t)&appData);
+                USB_DEVICE_CDC_EventHandlerSet(USB_DEVICE_CDC_INDEX_0, APP_USBDeviceCDCEventHandler, (uintptr_t) & appData);
 
                 /* Mark that the device is now configured */
                 appData.isConfigured = true;
-
             }
             break;
 
         case USB_DEVICE_EVENT_POWER_DETECTED:
-
             /* VBUS was detected. We can attach the device */
             USB_DEVICE_Attach(appData.deviceHandle);
+            appData.USBState = true;
             break;
 
         case USB_DEVICE_EVENT_POWER_REMOVED:
 
             /* VBUS is not available any more. Detach the device. */
             USB_DEVICE_Detach(appData.deviceHandle);
+            appData.USBState = false;
             break;
 
         case USB_DEVICE_EVENT_SUSPENDED:
 
             /* Switch LED to show suspended state */
-            BSP_LEDOff ( APP_USB_LED_1 );
-            BSP_LEDOn ( APP_USB_LED_2 );
-            BSP_LEDOn ( APP_USB_LED_3 );
+            BSP_LEDOff(APP_USB_LED_1);
+            BSP_LEDOn(APP_USB_LED_2);
+            BSP_LEDOn(APP_USB_LED_3);
             break;
 
         case USB_DEVICE_EVENT_RESUMED:
@@ -417,8 +414,7 @@ void APP_Initialize ( void )
 
     /* Set up the read buffer */
     appData.readBuffer = &readBuffer[0];
-
-       
+    appData.USBState = false;
 }
 
 
@@ -527,7 +523,9 @@ void APP_Tasks (void )
                 // (par exemple via un getter si tu ne l'exposes pas en extern)
                 bool saveRequested = false;
                 S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
-
+                // Indique qu'on commence un write asynchrone, on attendra le callback
+                appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
+                appData.isWriteComplete = false;
                 // 1) Décodage de la trame reçue
                 if (GetMessage((int8_t *) appData.readBuffer, RemoteParamGen, &saveRequested)) {
                     // 2) Préparation de la réponse dans le même buffer
@@ -549,11 +547,7 @@ void APP_Tasks (void )
                             USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
                 }
             }
-
-            // Indique qu'on commence un write asynchrone, on attendra le callback
-            appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
-            appData.isWriteComplete = false;
-
+            appData.isReadComplete = true;
             // La machine d'état passe en attente de fin d'écriture
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
         }
@@ -572,7 +566,7 @@ void APP_Tasks (void )
 
             if(appData.isWriteComplete == true)
             {
-                appData.state = APP_STATE_SCHEDULE_READ;
+                appData.state = APP_STATE_SCHEDULE_READ;             
             }
 
             break;
@@ -585,7 +579,7 @@ void APP_Tasks (void )
 }
 bool GetUsbState(void)
 {
-    return appData.isConfigured;
+    return appData.USBState;
 }
 
 bool GetUSBReadBuffer(void)

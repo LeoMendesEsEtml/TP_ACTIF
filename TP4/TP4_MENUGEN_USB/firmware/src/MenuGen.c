@@ -57,9 +57,8 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
     // Tableau de chaînes décrivant les formes d'onde possibles
     const char MenuFormes [4] [21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
     ClearLcd(); // Efface l'affichage LCD
-
     // Vérifie que l'indice du menu est inférieur à 9 (sinon, autre affichage)
-    if (menu < 9) {
+    if (menu < 10) {
         lcd_gotoxy(2, 1); // Positionne le curseur LCD à la colonne 2, ligne 1
         printf_lcd("Forme ="); // Affiche le libellé "Forme ="
         lcd_gotoxy(11, 1); // Positionne le curseur LCD à la colonne 11, ligne 1
@@ -84,7 +83,18 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
         if (menu <= 4) {
             lcd_gotoxy(1, menu); // Place le curseur sur la ligne du menu sélectionné
             printf_lcd("*"); // Affiche un astérisque pour indiquer la sélection
-        } else {
+        }
+        else if (menu == 9) {
+            lcd_gotoxy(1, 1); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 2); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 3); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 4); // Place le curseur 
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+        }
+        else {
             menu = menu - 4; // Ajuste l'indice de menu (pour un second niveau, par ex.)
             lcd_gotoxy(1, menu); // Place le curseur
             printf_lcd("?"); // Affiche un point d'interrogation pour marquer la sélection
@@ -111,12 +121,12 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
  * - Édition des valeurs (via rotation du codeur)
  * - Sauvegarde ou annulation
  */
-void MENU_Execute(S_ParamGen *pParam) {
+void MENU_Execute(S_ParamGen *pParam,bool USBState) {
     static MenuState_t menu = MENU_INIT; // État courant du menu, initialisé à MENU_INIT
     static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
     static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
     static uint8_t wait2s = 0; // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
-
+    
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
@@ -135,8 +145,13 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             GENSIG_UpdatePeriode(pParam);
             GENSIG_UpdateSignal(pParam);
-            MENU_Display(pParam, MENU_FORME_SEL); // Affiche le menu initial (forme sélectionnée)
-            menu = MENU_FORME_SEL; // Passe à l'état MENU_FORME_SEL
+            if (USBState == true) {
+                MENU_Display(pParam, MENU_USB); // Affiche le menu initial (forme sélectionnée)
+                menu = MENU_USB; // Passe à l'état MENU_USB
+            } else {
+                MENU_Display(pParam, MENU_FORME_SEL); // Affiche le menu initial (forme sélectionnée)
+                menu = MENU_FORME_SEL; // Passe à l'état MENU_FORME_SEL
+            }
             break;
 
             // -------------------------------------------------------------------
@@ -441,9 +456,23 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1; // Besoin de rafraîchir
             }
             break;
+
+        case MENU_USB:
+            if (memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0) {
+                pParamSave = *pParam;
+                MENU_Display(pParam, MENU_USB); 
+            }
+            if (USBState == false) {
+                menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
+                RefreshMenu = 1; // Besoin de rafraîchir
+            }
+            break;
         default:
             // Formes non prise en compte
             break;
-
+    }
+    if (USBState == true) {
+        menu = MENU_USB; // Passe à l'état MENU_USB
+        RefreshMenu = 1; // Besoin de rafraîchir
     }
 }

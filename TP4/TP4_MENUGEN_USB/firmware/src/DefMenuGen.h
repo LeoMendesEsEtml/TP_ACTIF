@@ -46,17 +46,18 @@ typedef struct {
  * @brief États possibles de la machine à états pour la gestion du menu du générateur
  */
 typedef enum {
-    MENU_INIT = 0,          // État d'initialisation du menu
-    MENU_FORME_SEL = 1,     // Sélection du type de forme du signal
-    MENU_FREQ_SEL = 2,      // Sélection de la fréquence
-    MENU_AMPL_SEL = 3,      // Sélection de l'amplitude
-    MENU_OFFSET_SEL = 4,    // Sélection de l'offset
-    MENU_FORME_EDIT = 5,    // Modification du type de forme
-    MENU_FREQ_EDIT = 6,     // Modification de la fréquence
-    MENU_AMPL_EDIT = 7,     // Modification de l'amplitude
-    MENU_OFFSET_EDIT = 8,   // Modification de l'offset
-    MENU_SAUVEGARDE = 9,    // Confirmation de sauvegarde en mémoire
-    MENU_SAVEINFO = 10      // Affichage résultat de la sauvegarde
+    MENU_INIT = 0, // État d'initialisation du menu
+    MENU_FORME_SEL = 1, // Sélection du type de forme du signal
+    MENU_FREQ_SEL = 2, // Sélection de la fréquence
+    MENU_AMPL_SEL = 3, // Sélection de l'amplitude
+    MENU_OFFSET_SEL = 4, // Sélection de l'offset
+    MENU_FORME_EDIT = 5, // Modification du type de forme
+    MENU_FREQ_EDIT = 6, // Modification de la fréquence
+    MENU_AMPL_EDIT = 7, // Modification de l'amplitude
+    MENU_OFFSET_EDIT = 8, // Modification de l'offset
+    MENU_USB = 9,
+    MENU_SAUVEGARDE = 10, // Confirmation de sauvegarde en mémoire
+    MENU_SAVEINFO = 11 // Affichage résultat de la sauvegarde
 } MenuState_t;
 
 #endif

@@ -34,8 +34,7 @@ void MENU_Initialize(S_ParamGen *pParam);
  *
  * @param pParam Pointeur vers la structure de paramètres courants du générateur.
  */
-void MENU_Execute(S_ParamGen *pParam);
-
+void MENU_Execute(S_ParamGen *pParam,bool USBState);
 /**
  * @name MENU_Display
  * @brief Gère l'affichage des paramètres sur l'écran LCD selon l'état actuel du menu.

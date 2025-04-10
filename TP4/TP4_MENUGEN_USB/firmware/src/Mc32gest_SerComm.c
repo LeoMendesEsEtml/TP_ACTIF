@@ -47,7 +47,8 @@ bool GetMessage(int8_t *USBReadBuffer, S_ParamGen *pParam, bool *SaveTodo)
     pt_Frequence  = strstr((char*)USBReadBuffer, "F=");
     pt_Amplitude  = strstr((char*)USBReadBuffer, "A=");
     pt_Offset     = strstr((char*)USBReadBuffer, "O=");
-    pt_Sauvegarde = strstr((char*)USBReadBuffer, "W=");
+    pt_Sauvegarde = strstr((char*)USBReadBuffer, "WP=");
+
 
     // Contrôle que tout a été trouvé
     if (!pt_Forme || !pt_Frequence || !pt_Amplitude || !pt_Offset || !pt_Sauvegarde)
