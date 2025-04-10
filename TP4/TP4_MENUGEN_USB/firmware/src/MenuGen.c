@@ -458,13 +458,10 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
             break;
 
         case MENU_USB:
-            if (memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0) {
+            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0)&&(RefreshMenu == 1)){
+                RefreshMenu = 0;
                 pParamSave = *pParam;
                 MENU_Display(pParam, MENU_USB); 
-            }
-            if (USBState == false) {
-                menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
-                RefreshMenu = 1; // Besoin de rafraîchir
             }
             break;
         default:
@@ -474,5 +471,8 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
     if (USBState == true) {
         menu = MENU_USB; // Passe à l'état MENU_USB
         RefreshMenu = 1; // Besoin de rafraîchir
+    } else {
+        menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
+        RefreshMenu = 1; // Besoin de rafraîchir  
     }
 }
