@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <project>                                  
-  <executable name="dist/pic32mx_usb_sk2_int_dyn/debug/TP4_MENUGEN_USB.X.debug.elf">                 
+  <executable name="dist/default/debug/TP3_MenuGen.X.debug.elf">                 
     <memory name="program">                 
       <units>bytes</units>                 
       <length>531968</length>                 
-      <used>84032</used>                     
-      <free>447936</free>                     
+      <used>43624</used>                     
+      <free>488344</free>                     
     </memory>                              
     <memory name="data">              
       <units>bytes</units>                 
       <length>131584</length>                 
-      <used>4024</used>                     
-      <free>127560</free>                     
+      <used>2560</used>                     
+      <free>129024</free>                     
     </memory>                              
   </executable>                            
 </project>                                 

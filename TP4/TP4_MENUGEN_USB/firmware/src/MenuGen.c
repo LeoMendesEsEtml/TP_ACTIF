@@ -126,7 +126,7 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
     static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
     static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
     static uint8_t wait2s = 0; // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
-    
+    static uint8_t OldUSBState = 0;
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
@@ -458,7 +458,7 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
             break;
 
         case MENU_USB:
-            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0)&&(RefreshMenu == 1)){
+            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0)||(RefreshMenu == 1)){
                 RefreshMenu = 0;
                 pParamSave = *pParam;
                 MENU_Display(pParam, MENU_USB); 
@@ -468,11 +468,15 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
             // Formes non prise en compte
             break;
     }
-    if (USBState == true) {
-        menu = MENU_USB; // Passe à l'état MENU_USB
-        RefreshMenu = 1; // Besoin de rafraîchir
-    } else {
-        menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
-        RefreshMenu = 1; // Besoin de rafraîchir  
+    if (OldUSBState != USBState) {
+        if (USBState == true) {
+            OldUSBState = USBState;
+            menu = MENU_USB; // Passe à l'état MENU_USB
+            RefreshMenu = 1; // Besoin de rafraîchir
+        } else {
+            OldUSBState = USBState;
+            menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
+            RefreshMenu = 1; // Besoin de rafraîchir  
+        }
     }
 }
