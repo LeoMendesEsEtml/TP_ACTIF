@@ -47,7 +47,7 @@ bool GetMessage(int8_t *USBReadBuffer, S_ParamGen *pParam, bool *SaveTodo)
     pt_Frequence  = strstr((char*)USBReadBuffer, "F=");
     pt_Amplitude  = strstr((char*)USBReadBuffer, "A=");
     pt_Offset     = strstr((char*)USBReadBuffer, "O=");
-    pt_Sauvegarde = strstr((char*)USBReadBuffer, "WP=");
+    pt_Sauvegarde = strstr((char*)USBReadBuffer, "W=");
 
 
     // Contrôle que tout a été trouvé
@@ -140,7 +140,7 @@ void SendMessage(int8_t *USBSendBuffer, S_ParamGen *pParam, bool Saved )
     // Format exemple: "!S=TF=2000A=10000O=-1500WP=1#"
     // On gère l'offset signé : %d convient
     sprintf((char*)USBSendBuffer,
-            "!S=%cF=%dA=%dO=%dWP=%d#",
+            "!S=%cF=%dA=%dO=%dW=%d#",
             formeChar,
             pParam->Frequence,
             pParam->Amplitude,
