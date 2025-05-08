@@ -61,6 +61,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "GesPec12.h"        // Gestion du codeur rotatif PEC12
 #include "Generateur.h"      // Gestion du générateur de signal
 #include "bsp.h"
+#include "Mc32gest_I2c_Eeprom.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -70,6 +71,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 APP_GEN_DATA appGenData; // Structure globale contenant l'état de l'application
 S_ParamGen LocalParamGen; // Structure locale pour les paramètres du générateur
 S_ParamGen RemoteParamGen;
+bool saveRequested = false;
 // *****************************************************************************
 /* Application Data
 
@@ -238,8 +240,8 @@ void APP_GEN_Tasks ( void ) {
             lcd_bl_on();
 
             // Initialisation du SPI pour le DAC
-            SPI_InitLTC2604();
-
+           SPI_InitLTC2604();
+           I2C_InitMCP79411();
             // Initialisation du codeur PEC12
             Pec12Init();
 
@@ -249,9 +251,6 @@ void APP_GEN_Tasks ( void ) {
 
             lcd_gotoxy(1, 2);
             printf_lcd("Leo Mendes");
-
-            lcd_gotoxy(1, 3);
-            printf_lcd("CHAT GPT");
 
             // Démarre les timers TMR0 et TMR1
             DRV_TMR0_Start();
@@ -291,12 +290,12 @@ void APP_GEN_Tasks ( void ) {
             if(UsbState == true)
             {
                 // Mode distant
-                MENU_Execute(&RemoteParamGen,UsbState);
+                MENU_Execute(&RemoteParamGen,UsbState,saveRequested);
                 LocalParamGen = RemoteParamGen;
                 
             } else {
                 // Exécute le menu avec les valeur local
-                MENU_Execute(&LocalParamGen,UsbState);
+                MENU_Execute(&LocalParamGen,UsbState,saveRequested);
                 RemoteParamGen = LocalParamGen;
             }
             
@@ -327,6 +326,21 @@ void APP_GEN_UpdateState(APP_GEN_STATES NewState) {
 S_ParamGen* APP_GEN_GetRemoteParam(void)
 {
     return &RemoteParamGen; // renvoie l?adresse
+}
+
+bool APP_GEN_saveRequested(void)
+{
+    return saveRequested;
+}
+
+void APP_GEN_clearSaveRequested(void)
+{
+    saveRequested = false;
+}
+
+void APP_GEN_setSaveRequested(bool value)
+{
+    saveRequested = value;
 }
 
 /*******************************************************************************

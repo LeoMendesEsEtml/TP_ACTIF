@@ -15,9 +15,6 @@
 #include "system_config.h"  // Configuration système (FREQU_SYS, PRESC_TIM3, etc.)
 #include "Mc32DriverLcd.h"  // Pour l'affichage (facultatif)
 
-// -------------------------------------------------------------------------------------
-// T.P. 2016 : On a 100 échantillons par période (au lieu de 40)
-// -------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------
 // int32_t SaturateMv(int32_t valMv)
@@ -28,8 +25,8 @@
 // Retour     :  la valeur saturée dans [-10000, +10000]
 
 int32_t SaturateMv(int32_t valMv) {
-    if (valMv < -AMPLITUDE_MIN) {
-        return -AMPLITUDE_MIN; // Valeur trop basse : on force à -10000 mV
+    if (valMv < AMPLITUDE_MIN) {
+        return AMPLITUDE_MIN; // Valeur trop basse : on force à -10000 mV
     }
     if (valMv > AMPLITUDE_MAX) {
         return AMPLITUDE_MAX; // Valeur trop haute : on force à +10000 mV

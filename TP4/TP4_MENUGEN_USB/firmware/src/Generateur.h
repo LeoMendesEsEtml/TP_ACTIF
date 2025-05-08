@@ -15,7 +15,7 @@
 //définition des constantes
 #define ECHANTILLONS_MAX 100 //nombre max d'échantillons
 #define AMPLITUDE_MAX 10000
-#define AMPLITUDE_MIN 10000
+#define AMPLITUDE_MIN -10000
 #define AMPLITUDE_SUR_2 5000
 #define PAS_MAXIMUM 65535
 #define F_SYS       80000000  // Fréquence du CPU ou du Timer (ex: 80 MHz)

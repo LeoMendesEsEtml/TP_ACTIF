@@ -28,8 +28,8 @@
 // Retour     :  la valeur saturée dans [-10000, +10000]
 
 int32_t SaturateMv(int32_t valMv) {
-    if (valMv < -AMPLITUDE_MIN) {
-        return -AMPLITUDE_MIN; // Valeur trop basse : on force à -10000 mV
+    if (valMv < AMPLITUDE_MIN) {
+        return AMPLITUDE_MIN; // Valeur trop basse : on force à -10000 mV
     }
     if (valMv > AMPLITUDE_MAX) {
         return AMPLITUDE_MAX; // Valeur trop haute : on force à +10000 mV

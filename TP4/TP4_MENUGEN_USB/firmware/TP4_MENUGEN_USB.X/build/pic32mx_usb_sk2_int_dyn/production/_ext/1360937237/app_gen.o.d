@@ -218,7 +218,8 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1360937237/app_gen.o: \
  ../../../../../../framework/usb/usb_cdc.h ../src/app.h ../src/app_gen.h \
  ../src/Generateur.h ../src/DefMenuGen.h ../src/app.h \
  ../../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h \
- ../src/Mc32gestSpiDac.h ../src/MenuGen.h ../src/GesPec12.h
+ ../src/Mc32gestSpiDac.h ../src/MenuGen.h ../src/GesPec12.h \
+ ../src/Mc32gest_I2c_Eeprom.h
 
 ../src/app_gen.h:
 
@@ -671,3 +672,5 @@ build/pic32mx_usb_sk2_int_dyn/production/_ext/1360937237/app_gen.o: \
 ../src/MenuGen.h:
 
 ../src/GesPec12.h:
+
+../src/Mc32gest_I2c_Eeprom.h:

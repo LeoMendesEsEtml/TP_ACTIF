@@ -21,6 +21,7 @@
 #include "GesPec12.h"      // Gestion du codeur rotatif PEC12
 #include "Mc32NVMUtil.h"   // Gestion de la mémoire non volatile (NVM)
 #include "Generateur.h"      // Gestion du générateur de signal
+#include "Mc32gest_I2c_Eeprom.h" //Gestion de la sauvegarde sur Eeprom externe
 
 // ================================
 // Variables globales
@@ -121,7 +122,7 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
  * - Édition des valeurs (via rotation du codeur)
  * - Sauvegarde ou annulation
  */
-void MENU_Execute(S_ParamGen *pParam,bool USBState) {
+void MENU_Execute(S_ParamGen *pParam,bool USBState,bool saveRequested) {
     static MenuState_t menu = MENU_INIT; // État courant du menu, initialisé à MENU_INIT
     static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
     static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
@@ -130,7 +131,8 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
-            NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
+            I2C_ReadSEEPROM(&pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen) );
+            //NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
             // Test si la valeur Magic est correcte (vérifie l'intégrité)
             if (pParamSave.Magic == MAGIC) {
                 // Si valide, on récupère les valeurs sauvegardées
@@ -441,7 +443,8 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
                 ClearLcd(); // Efface l'écran
                 if (saveOk == 1) {
                     lcd_gotoxy(2, 3); // Positionne le curseur
-                    NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
+                    I2C_WriteSEEPROM(& pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen));
+                    //NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
                     printf_lcd("Sauvegarde OK"); // Indique la réussite de la sauvegarde
                 } else {
                     lcd_gotoxy(2, 3); // Positionne le curseur
@@ -458,10 +461,16 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState) {
             break;
 
         case MENU_USB:
-            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0)||(RefreshMenu == 1)){
+            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0) || (RefreshMenu == 1)) {
                 RefreshMenu = 0;
                 pParamSave = *pParam;
-                MENU_Display(pParam, MENU_USB); 
+                MENU_Display(pParam, MENU_USB);
+                GENSIG_UpdateSignal(pParam);
+                GENSIG_UpdatePeriode(pParam);
+                if (APP_GEN_saveRequested()) {
+                    APP_GEN_clearSaveRequested();
+                    I2C_WriteSEEPROM(&pParamSave, MCP79411_EEPROM_BEG, sizeof (S_ParamGen));
+                }
             }
             break;
         default:

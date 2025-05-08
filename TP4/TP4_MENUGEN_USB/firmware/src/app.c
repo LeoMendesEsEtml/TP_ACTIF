@@ -520,14 +520,14 @@ void APP_Tasks (void )
                 appData.isReadComplete = false;
 
                 // Récupération du pointeur vers RemoteParamGen
-                // (par exemple via un getter si tu ne l'exposes pas en extern)
-                bool saveRequested = false;
+                bool saveRequested = APP_GEN_saveRequested();
                 S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
                 // Indique qu'on commence un write asynchrone, on attendra le callback
                 appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
                 appData.isWriteComplete = false;
                 // 1) Décodage de la trame reçue
                 if (GetMessage((int8_t *) appData.readBuffer, RemoteParamGen, &saveRequested)) {
+                    APP_GEN_setSaveRequested(saveRequested); // Synchronise vers la variable globale
                     // 2) Préparation de la réponse dans le même buffer
                     SendMessage((int8_t *) appData.readBuffer, RemoteParamGen, saveRequested);
 
