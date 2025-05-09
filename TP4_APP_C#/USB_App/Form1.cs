@@ -18,6 +18,11 @@ namespace USB_App
         private bool isCyclicSending = false;
         /* -------------------------------------- */
 
+        /* -------- User-adjust logic -------- */
+        private bool userAdjusting = false;   // vrai pendant que la souris est enfoncée
+        private string lastSentCore = "";     // trame sans W
+        /* ----------------------------------- */
+
         public Form1()
         {
             cyclicTimer.Tick += CyclicTimer_Tick;        // handler avant Init
@@ -97,6 +102,22 @@ namespace USB_App
             {
                 MessageBox.Show("Erreur connexion : " + ex.Message);
             }
+        }
+
+        private void Slider_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (isCyclicSending) userAdjusting = true;   // on gèle l’envoi
+        }
+
+        private void Slider_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!isCyclicSending) return;
+
+            userAdjusting = false;       // on libère l’envoi
+
+            /* Forcer UNE sauvegarde au prochain tick */
+            chbSauvegarde.Checked = true;
+            lastSentCore = "";           // pour être sûr de détecter le changement
         }
 
         private void bClose_Click(object sender, EventArgs e)
@@ -188,15 +209,35 @@ namespace USB_App
         {
             if (!serialPort.IsOpen)
             {
-                StopCyclic();
-                ResetUI();
-                LoadAvailableComPorts();
+                StopCyclic(); ResetUI(); LoadAvailableComPorts();
                 return;
             }
 
-            try { serialPort.WriteLine(GenerateTrame()); }
-            catch (Exception ex) { HandleSerialError("Envoi cyclique : " + ex.Message); }
+            if (userAdjusting) return;       // gel complet tant que la souris est enfoncée
+
+            string trame = GenerateTrame();
+            string core = trame.Substring(0, trame.IndexOf("W="));   // sans W, sans #
+
+            /* ------ ENVOI SEULEMENT SI : ------ 
+               1) l’utilisateur n’est plus en train d’ajuster
+               2) ET (la valeur a changé  OU  W=1 demandé)        */
+            bool needSend = chbSauvegarde.Checked || core != lastSentCore;
+            if (!needSend) return;
+
+            try
+            {
+                serialPort.WriteLine(trame);
+                lastSentCore = core;
+
+                if (chbSauvegarde.Checked)
+                    chbSauvegarde.Checked = false;     // W=1 envoyé une fois puis décoché
+            }
+            catch (Exception ex)
+            {
+                HandleSerialError("Envoi cyclique : " + ex.Message);
+            }
         }
+
 
         /* ================= Refresh COM =================== */
         private void brefresh_Click(object sender, EventArgs e) => LoadAvailableComPorts();
@@ -303,9 +344,9 @@ namespace USB_App
             }
 
             string signeOffset = trBOffset.Value >= 0 ? "+" : "";
-            string sauvegarde = chbSauvegarde.Checked ? "1" : "0";
+            //  string sauvegarde = chbSauvegarde.Checked ? "1" : "0";
 
-            return $"!S={forme}F={trBFreq.Value}A={trBAmp.Value}O={signeOffset}{trBOffset.Value}W={sauvegarde}#";
+            return $"!S={forme}F={trBFreq.Value}A={trBAmp.Value}O={signeOffset}{trBOffset.Value}W={(chbSauvegarde.Checked ? "1" : "0")}#";
         }
 
         /* =============== Classes Signal ================= */

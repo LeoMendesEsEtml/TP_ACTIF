@@ -131,7 +131,7 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState,bool saveRequested) {
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
-            I2C_ReadSEEPROM(&pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen) );
+            //I2C_ReadSEEPROM(&pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen) );
             //NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
             // Test si la valeur Magic est correcte (vérifie l'intégrité)
             if (pParamSave.Magic == MAGIC) {
