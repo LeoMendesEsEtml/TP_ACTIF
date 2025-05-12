@@ -232,81 +232,112 @@ void APP_GEN_Initialize ( void )
 void APP_GEN_Tasks ( void ) {
     bool UsbState;
     /* Check the application's current state. */
+     // Machine à états principale du générateur de signal
     switch (appGenData.state) {
+
         case APP_GEN_STATE_INIT:
         {
-            // Initialisation du LCD
+            // État d'initialisation générale du système
+
+            // Initialise l'écran LCD
             lcd_init();
+
+            // Allume le rétroéclairage du LCD
             lcd_bl_on();
 
-            // Initialisation du SPI pour le DAC
-           SPI_InitLTC2604();
-           I2C_InitMCP79411();
-            // Initialisation du codeur PEC12
+            // Initialise le bus SPI pour le DAC LTC2604
+            SPI_InitLTC2604();
+
+            // Initialise le bus I2C pour le RTC MCP79411
+            I2C_InitMCP79411();
+
+            // Initialise le codeur rotatif PEC12
             Pec12Init();
 
-            // Affichage initial sur l'écran LCD
+            // Positionne le curseur à la ligne 1, colonne 1
             lcd_gotoxy(1, 1);
-            printf_lcd("TP2 USART 2024-25");
 
+            // Affiche le titre du TP
+            printf_lcd("TP4 UsbGen 2024-25");
+
+            // Positionne le curseur à la ligne 2, colonne 1
             lcd_gotoxy(1, 2);
+
+            // Affiche le nom de l'auteur
             printf_lcd("Leo Mendes");
 
-            // Démarre les timers TMR0 et TMR1
+            // Démarre le timer 0 (intervalles longs ou généraux)
             DRV_TMR0_Start();
+
+            // Démarre le timer 1 (intervalles courts pour les états)
             DRV_TMR1_Start();
+
+            // Initialise les LEDs de la carte
             BSP_LEDInit();
-            // Initialisation du menu
+
+            // Initialise le menu avec les paramètres locaux
             MENU_Initialize(&LocalParamGen);
 
-            // Initialisation du générateur
+            // Initialise le générateur de signal avec les paramètres locaux
             GENSIG_Initialize(&LocalParamGen);
-            // Passe à l'état d'attente init
+
+            // Passe à l'état suivant : attente post-initialisation
             APP_GEN_UpdateState(APP_GEN_STATE_INIT_WAIT);
+
             break;
         }
 
         case APP_GEN_STATE_INIT_WAIT:
-            // Rien à faire de particulier ici, tout est géré par le callback Timer1
+            // État d'attente après initialisation, géré uniquement par Timer1
             break;
 
         case APP_GEN_STATE_INIT_CLEAR:
-            // Efface l'écran LCD une fois l'init terminée (après 3s)
+            // Efface l'écran LCD après le délai d'initialisation
             ClearLcd();
-            // Puis passe à l'état d'attente
+
+            // Passe à l'état d'attente normale
             APP_GEN_UpdateState(APP_GEN_STATE_WAIT);
+
             break;
 
         case APP_GEN_STATE_WAIT:
-            // Etat d'attente : on ne fait rien tant qu'on n'a pas été relancé par Timer1
+            // État d'attente passive entre deux actions ou cycles
             break;
 
         case APP_GEN_STATE_SERVICE_TASKS:
-            // Bascule une LED (LED_2) pour indiquer un cycle de service
+            // État de traitement périodique des tâches
+
+            // Bascule l'état de la LED_2 pour indiquer une activité
             BSP_LEDToggle(BSP_LED_2);
-            
-            UsbState = GetUsbState(); 
-            
-            if(UsbState == true)
+
+            // Lit l'état courant de la connexion USB
+            UsbState = GetUsbState();
+
+            // Vérifie si le système est en mode USB distant
+            if (UsbState == true)
             {
-                // Mode distant
-                MENU_Execute(&RemoteParamGen,UsbState,saveRequested);
+                // Exécute le menu avec les paramètres reçus par USB
+                MENU_Execute(&RemoteParamGen, UsbState, saveRequested);
+
+                // Copie les paramètres distants vers les paramètres locaux
                 LocalParamGen = RemoteParamGen;
-                
+
             } else {
-                // Exécute le menu avec les valeur local
-                MENU_Execute(&LocalParamGen,UsbState,saveRequested);
+                // Exécute le menu avec les paramètres locaux
+                MENU_Execute(&LocalParamGen, UsbState, saveRequested);
+
+                // Copie les paramètres locaux vers les paramètres distants
                 RemoteParamGen = LocalParamGen;
             }
-            
-            // Une fois fait, repasse en mode attente
+
+            // Revient à l'état d'attente après traitement
             APP_GEN_UpdateState(APP_GEN_STATE_WAIT);
+
             break;
 
         default:
         {
-            // Etat par défaut (devrait ne jamais arriver).
-            // On peut éventuellement y gérer une erreur système.
+            // État non reconnu ou erreur de machine à états
             break;
         }
     }

@@ -131,7 +131,7 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState,bool saveRequested) {
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
-            //I2C_ReadSEEPROM(&pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen) );
+            I2C_ReadSEEPROM(&pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen) );
             //NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
             // Test si la valeur Magic est correcte (vérifie l'intégrité)
             if (pParamSave.Magic == MAGIC) {
@@ -437,55 +437,157 @@ void MENU_Execute(S_ParamGen *pParam,bool USBState,bool saveRequested) {
             break;
 
             // -------------------------------------------------------------------
-        case MENU_SAVEINFO: // État d'affichage du résultat de la sauvegarde
+        case MENU_SAVEINFO: 
+            // État du menu affichant le résultat de la sauvegarde
+
+            // Vérifie si un rafraîchissement de l'affichage est requis
             if (RefreshMenu == 1) {
-                RefreshMenu = 0; // Réinitialise le flag
-                ClearLcd(); // Efface l'écran
+
+                // Réinitialise le drapeau de rafraîchissement
+                RefreshMenu = 0;
+
+                // Efface l'écran LCD
+                ClearLcd();
+
+                // Vérifie si la sauvegarde a été validée
                 if (saveOk == 1) {
-                    lcd_gotoxy(2, 3); // Positionne le curseur
-                    I2C_WriteSEEPROM(& pParamSave,MCP79411_EEPROM_BEG,sizeof(S_ParamGen));
-                    //NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
-                    printf_lcd("Sauvegarde OK"); // Indique la réussite de la sauvegarde
+
+                    // Positionne le curseur à la colonne 2, ligne 3
+                    lcd_gotoxy(2, 3);
+                    pParamSave = *pParam;
+
+                    // Écrit les paramètres dans l'EEPROM via I2C
+                    I2C_WriteSEEPROM(&pParamSave, MCP79411_EEPROM_BEG, sizeof(S_ParamGen));
+
+                    // Affiche un message de réussite de la sauvegarde
+                    printf_lcd("Sauvegarde OK");
+
                 } else {
-                    lcd_gotoxy(2, 3); // Positionne le curseur
-                    printf_lcd("Sauvegarde ANNULEE!"); // Indique l'annulation
+
+                    // Positionne le curseur à la colonne 2, ligne 3
+                    lcd_gotoxy(2, 3);
+
+                    // Affiche un message indiquant que la sauvegarde a été annulée
+                    printf_lcd("Sauvegarde ANNULEE!");
                 }
             }
+
             // Incrémente le compteur de temporisation
             wait2s++;
-            // Après 2 secondes (200 x 10 ms), on retourne au menu forme
+
+            // Si 200 cycles (soit environ 2 secondes) sont atteints, on change de menu
             if (wait2s == 200) {
-                menu = MENU_FORME_SEL; // Retourne à la sélection de la forme
-                RefreshMenu = 1; // Besoin de rafraîchir
+
+                // Revient au menu de sélection de la forme
+                menu = MENU_FORME_SEL;
+
+                // Demande un rafraîchissement de l'affichage
+                RefreshMenu = 1;
             }
             break;
 
         case MENU_USB:
-            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0) || (RefreshMenu == 1)) {
+            // État du menu permettant l'interaction USB via terminal
+
+            // Teste si les paramètres ont changé ou si un rafraîchissement est demandé
+            if ((memcmp(pParam, &pParamSave, sizeof(S_ParamGen)) != 0) || (RefreshMenu == 1)) {
+
+                // Réinitialise le drapeau de rafraîchissement
                 RefreshMenu = 0;
+
+                // Sauvegarde temporairement les nouveaux paramètres
                 pParamSave = *pParam;
+
+                // Affiche les paramètres USB à l'écran
                 MENU_Display(pParam, MENU_USB);
+
+                // Met à jour la forme du signal
                 GENSIG_UpdateSignal(pParam);
+
+                // Met à jour la période du signal
                 GENSIG_UpdatePeriode(pParam);
+
+                // Vérifie si une sauvegarde est demandée
                 if (APP_GEN_saveRequested()) {
+
+                    // Efface le drapeau de demande de sauvegarde
                     APP_GEN_clearSaveRequested();
-                    I2C_WriteSEEPROM(&pParamSave, MCP79411_EEPROM_BEG, sizeof (S_ParamGen));
+
+                    // Demande un rafraîchissement de l'affichage
+                    RefreshMenu = 1;
+
+                    // Passe à l'état de confirmation de sauvegarde
+                    menu = MENU_USB_SAVE;
                 }
             }
             break;
+
+        case MENU_USB_SAVE:
+            // État affichant le résultat de la sauvegarde USB
+
+            // Vérifie si un rafraîchissement est nécessaire
+            if (RefreshMenu == 1) {
+
+                // Réinitialise le drapeau de rafraîchissement
+                RefreshMenu = 0;
+
+                // Efface le contenu de l'écran LCD
+                ClearLcd();
+
+                // Positionne le curseur à la colonne 2, ligne 3
+                lcd_gotoxy(2, 3);
+
+                // Écrit les paramètres dans l'EEPROM via I2C
+                I2C_WriteSEEPROM(&pParamSave, MCP79411_EEPROM_BEG, sizeof(S_ParamGen));
+
+                // Affiche un message de confirmation
+                printf_lcd("Sauvegarde OK");
+            }
+
+            // Incrémente le compteur de temporisation
+            wait2s++;
+
+            // Après 2 secondes (200 cycles), revient au menu USB
+            if (wait2s == 200) {
+
+                // Retourne à l'état USB
+                menu = MENU_USB;
+
+                // Demande un rafraîchissement de l'affichage
+                RefreshMenu = 1;
+            }
+            break;
+
         default:
-            // Formes non prise en compte
+            // Cas non pris en charge, aucune action
             break;
     }
+
+    // Détecte un changement de l'état USB
     if (OldUSBState != USBState) {
+
+        // Si l'USB vient d'être connecté
         if (USBState == true) {
+
+            // Met à jour l'ancien état USB
             OldUSBState = USBState;
-            menu = MENU_USB; // Passe à l'état MENU_USB
-            RefreshMenu = 1; // Besoin de rafraîchir
+
+            // Passe au menu USB
+            menu = MENU_USB;
+
+            // Demande un rafraîchissement de l'affichage
+            RefreshMenu = 1;
+
         } else {
+
+            // Met à jour l'ancien état USB
             OldUSBState = USBState;
-            menu = MENU_FORME_SEL; // Passe à l'état MENU_USB
-            RefreshMenu = 1; // Besoin de rafraîchir  
+
+            // Passe au menu de sélection de forme
+            menu = MENU_FORME_SEL;
+
+            // Demande un rafraîchissement de l'affichage
+            RefreshMenu = 1;
         }
     }
 }

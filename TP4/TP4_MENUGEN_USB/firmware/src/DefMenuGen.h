@@ -57,7 +57,8 @@ typedef enum {
     MENU_OFFSET_EDIT = 8, // Modification de l'offset
     MENU_USB = 9,
     MENU_SAUVEGARDE = 10, // Confirmation de sauvegarde en mémoire
-    MENU_SAVEINFO = 11 // Affichage résultat de la sauvegarde
+    MENU_SAVEINFO = 11, // Affichage résultat de la sauvegarde
+    MENU_USB_SAVE = 12        
 } MenuState_t;
 
 #endif

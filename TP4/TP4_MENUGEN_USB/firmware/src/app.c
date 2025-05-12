@@ -511,47 +511,64 @@ void APP_Tasks (void )
 
             break;
 
-
         case APP_STATE_SCHEDULE_WRITE:
         {
-            // On ne traite la trame reçue que si la lecture est vraiment terminée
+            // État de la machine déclenché pour préparer et envoyer une réponse USB
+
+            // Vérifie que la lecture précédente est bien terminée
             if (appData.isReadComplete) {
-                // On a bien fini de lire ; on peut reconsidérer un nouveau write
+
+                // Réinitialise le drapeau de lecture pour permettre une nouvelle réception
                 appData.isReadComplete = false;
 
-                // Récupération du pointeur vers RemoteParamGen
+                // Lit l'état de demande de sauvegarde en attente
                 bool saveRequested = APP_GEN_saveRequested();
+
+                // Récupère le pointeur vers la structure contenant les paramètres distants
                 S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
-                // Indique qu'on commence un write asynchrone, on attendra le callback
+
+                // Initialise le handle d'écriture USB en le marquant comme invalide
                 appData.writeTransferHandle = USB_DEVICE_CDC_TRANSFER_HANDLE_INVALID;
+
+                // Marque que l'écriture n'est pas encore complétée
                 appData.isWriteComplete = false;
-                // 1) Décodage de la trame reçue
+
+                // Tente de décoder la trame reçue via USB
                 if (GetMessage((int8_t *) appData.readBuffer, RemoteParamGen, &saveRequested)) {
-                    APP_GEN_setSaveRequested(saveRequested); // Synchronise vers la variable globale
-                    // 2) Préparation de la réponse dans le même buffer
+
+                    // Met à jour la variable globale de sauvegarde si nécessaire
+                    APP_GEN_setSaveRequested(saveRequested);
+
+                    // Prépare la réponse à envoyer dans le même tampon
                     SendMessage((int8_t *) appData.readBuffer, RemoteParamGen, saveRequested);
 
-                    // 3) Envoi de la réponse (ou ack) au PC
+                    // Envoie la réponse formatée au PC via USB CDC
                     USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                            &appData.writeTransferHandle,
-                            appData.readBuffer,
-                            strlen((char *) appData.readBuffer),
-                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                                         &appData.writeTransferHandle,
+                                         appData.readBuffer,
+                                         strlen((char *) appData.readBuffer),
+                                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
                 } else {
-                    // Trame reçue invalide ? on répond juste un message d'erreur
+
+                    // Si la trame est invalide, prépare un message d'erreur
                     const char *err = "!E=BAD#";
+
+                    // Envoie le message d'erreur au PC via USB CDC
                     USB_DEVICE_CDC_Write(USB_DEVICE_CDC_INDEX_0,
-                            &appData.writeTransferHandle,
-                            (uint8_t *) err,
-                            strlen(err),
-                            USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
+                                         &appData.writeTransferHandle,
+                                         (uint8_t *) err,
+                                         strlen(err),
+                                         USB_DEVICE_CDC_TRANSFER_FLAGS_DATA_COMPLETE);
                 }
             }
+
+            // Réactive le drapeau de lecture pour permettre une nouvelle réception
             appData.isReadComplete = true;
-            // La machine d'état passe en attente de fin d'écriture
+
+            // Passe à l?état d?attente de fin d?écriture
             appData.state = APP_STATE_WAIT_FOR_WRITE_COMPLETE;
         }
-            break;
+        break;
 
 
         case APP_STATE_WAIT_FOR_WRITE_COMPLETE:
