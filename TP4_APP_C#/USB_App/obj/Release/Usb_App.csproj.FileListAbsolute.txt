@@ -1,0 +1,11 @@
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\Usb_App.csproj.AssemblyReference.cache
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\Usb_App.csproj.SuggestedBindingRedirects.cache
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\USB_App.Form1.resources
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\Usb_App.csproj.GenerateResource.cache
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\Usb_App.csproj.CoreCompileInputs.cache
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\bin\Release\USB_Generateur.exe.config
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\bin\Release\USB_Generateur.exe
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\bin\Release\USB_Generateur.pdb
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\USB_Generateur.Properties.Resources.resources
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\USB_Generateur.exe
+C:\microchip\harmony\v2_06\apps\TP_ACTIF\TP4_APP_C#\USB_App\obj\Release\USB_Generateur.pdb

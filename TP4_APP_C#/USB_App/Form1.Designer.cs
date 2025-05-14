@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.gbParameter = new System.Windows.Forms.GroupBox();
             this.brefresh = new System.Windows.Forms.Button();
             this.bclose = new System.Windows.Forms.Button();
@@ -327,6 +328,7 @@
             this.Controls.Add(this.gbSendParameter);
             this.Controls.Add(this.gbRealParameter);
             this.Controls.Add(this.gbParameter);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "USB GENERATEUR";
             this.gbParameter.ResumeLayout(false);

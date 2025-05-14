@@ -16,6 +16,7 @@ namespace USB_App
         private bool isCyclicSending = false; // Booléen pour indiquer si l’envoi cyclique est actif
         private bool userAdjusting = false;   // vrai quand la souris est tenue sur un TrackBar
         private string lastSentCore = string.Empty; // trame sans W
+        private bool savedCheckedAtStart = false; // Mémorise l’état initial de la case sauvegarde pour l’envoi cyclique
 
         public Form1() // Constructeur de la classe Form1
         {
@@ -62,7 +63,6 @@ namespace USB_App
             UpdateTramePreview(null, null); // Met à jour la prévisualisation initiale de la trame
             bCyclicSending.Enabled = false; // Désactive le bouton d’envoi cyclique au lancement
         }
-
         /* ================= Connexion ================= */
         private void bOpen_Click(object sender, EventArgs e) // Gestion du clic sur le bouton d'ouverture de connexion
         {
@@ -100,22 +100,6 @@ namespace USB_App
             }
         }
 
-        private void Slider_MouseDown(object sender, MouseEventArgs e) // Détection de l’appui souris sur un TrackBar
-        {
-            if (isCyclicSending) userAdjusting = true;   // on gèle l’envoi si le mode cyclique est actif
-        }
-
-        private void Slider_MouseUp(object sender, MouseEventArgs e) // Détection du relâchement souris sur un TrackBar
-        {
-            if (!isCyclicSending) return; // si l’envoi cyclique est inactif, on quitte la fonction
-
-            userAdjusting = false;       // on libère l’envoi (reprise du timer)
-
-            /* Forcer UNE sauvegarde au prochain tick */
-            chbSauvegarde.Checked = true; // coche la case pour forcer une trame avec W=1
-            lastSentCore = "";           // vide la dernière trame envoyée pour forcer une mise à jour
-        }
-
         private void bClose_Click(object sender, EventArgs e) // Gestion du clic sur le bouton de fermeture
         {
             try { if (serialPort.IsOpen) serialPort.Close(); } // Tente de fermer le port série s’il est ouvert
@@ -126,6 +110,78 @@ namespace USB_App
             LoadAvailableComPorts(); // Recharge la liste des ports disponibles
         }
 
+        private void bSending_Click(object sender, EventArgs e) // Gestion du clic sur le bouton d’envoi manuel
+        {
+            if (!serialPort.IsOpen) return; // Ne fait rien si le port série n’est pas ouvert
+            try { serialPort.WriteLine(GenerateTrame()); } // Tente d’envoyer la trame générée via le port série
+            catch (Exception ex) { HandleSerialError("Erreur d'envoi : " + ex.Message); } // En cas d’erreur, gère proprement via HandleSerialError
+        }
+
+        /* ================ Bouton cyclique ================= */
+        private void bCyclicSending_Click(object sender, EventArgs e) // Gestion du clic sur le bouton d’envoi cyclique
+        {
+            if (!serialPort.IsOpen) // Si le port série n’est pas ouvert
+            {
+                MessageBox.Show("Le port série n'est pas ouvert."); // Avertit l’utilisateur
+                return; // Quitte la fonction
+            }
+
+            if (isCyclicSending) StopCyclic(); // Si l’envoi est actif, on l’arrête
+            else StartCyclic(); // Sinon, on le démarre
+        }
+
+        private void StartCyclic() // Active l’envoi cyclique
+        {
+            if (isCyclicSending) return; // Ne rien faire si déjà actif
+            serialPort.DiscardOutBuffer(); // Vide le tampon de sortie série
+            isCyclicSending = true; // Indique que l’envoi est actif
+            savedCheckedAtStart = chbSauvegarde.Checked; // Mémorise l’état initial de la case sauvegarde
+            chbSauvegarde.Enabled = false; // Grise la case pendant le mode cyclique
+            lastSentCore = ""; // Forcer l’envoi immédiat
+            cyclicTimer.Start(); // Démarre le timer cyclique
+            bCyclicSending.Text = "Stop"; // Modifie le texte du bouton
+        }
+
+        private void StopCyclic() // Arrête l’envoi cyclique
+        {
+            cyclicTimer.Stop(); // Stoppe le timer cyclique
+            isCyclicSending = false; // Indique que l’envoi est inactif
+            chbSauvegarde.Enabled = true; // Réactive la case
+            bCyclicSending.Text = "Envois cyclique"; // Remet le texte initial du bouton
+        }
+
+        private void CyclicTimer_Tick(object sender, EventArgs e) // Fonction appelée à chaque tick du timer cyclique
+        {
+            if (!serialPort.IsOpen) // Si le port n’est plus ouvert
+            {
+                StopCyclic(); ResetUI(); LoadAvailableComPorts(); // Réinitialise l’UI
+                return; // Quitte
+            }
+
+            if (userAdjusting) return;   // Toujours aucun envoi pendant déplacement
+
+            string trame = GenerateTrame(); // Génère la trame actuelle
+            int idx = trame.IndexOf("W="); // Cherche la position du champ W=
+            string core = idx > -1 ? trame.Substring(0, idx) : trame; // Extrait la trame sans W
+
+            bool needSave = false;
+            if (core != lastSentCore) // Si la trame a changé
+            {
+                needSave = savedCheckedAtStart; // Seulement si la case était cochée au départ
+                lastSentCore = core; // Mémorise la nouvelle trame
+            }
+
+            string trameToSend = core + (needSave ? "W=1#" : "W=0#"); // Ajoute W=1 ou W=0
+
+            try
+            {
+                serialPort.WriteLine(trameToSend); // Envoie la trame par le port série
+            }
+            catch (Exception ex)
+            {
+                HandleSerialError("Envoi cyclique : " + ex.Message); // Gère les erreurs
+            }
+        }
         /* ================= Reset complet (UI + états) ================= */
         private void ResetUI() // Réinitialise l’interface utilisateur et les états internes
         {
@@ -164,121 +220,6 @@ namespace USB_App
             LoadAvailableComPorts(); // Recharge la liste des ports disponibles
         }
 
-        /* ================= Envoi manuel =================== */
-        private void bSending_Click(object sender, EventArgs e) // Gestion du clic sur le bouton d’envoi manuel
-        {
-            if (!serialPort.IsOpen) return; // Ne fait rien si le port série n’est pas ouvert
-            try { serialPort.WriteLine(GenerateTrame()); } // Tente d’envoyer la trame générée via le port série
-            catch (Exception ex) { HandleSerialError("Erreur d'envoi : " + ex.Message); } // En cas d’erreur, gère proprement via HandleSerialError
-        }
-
-        /* ================ Bouton cyclique ================= */
-        private void bCyclicSending_Click(object sender, EventArgs e) // Gestion du clic sur le bouton d’envoi cyclique
-        {
-            if (!serialPort.IsOpen) // Si le port série n’est pas ouvert
-            {
-                MessageBox.Show("Le port série n'est pas ouvert."); // Avertit l’utilisateur
-                return; // Quitte la fonction
-            }
-
-            if (isCyclicSending) StopCyclic(); // Si l’envoi est actif, on l’arrête
-            else StartCyclic(); // Sinon, on le démarre
-        }
-
-        private void StartCyclic() // Active l’envoi cyclique
-        {
-            if (isCyclicSending) return; // Ne rien faire si déjà actif
-            serialPort.DiscardOutBuffer(); // Vide le tampon de sortie série
-            cyclicTimer.Start(); // Démarre le timer cyclique
-            isCyclicSending = true; // Indique que l’envoi est actif
-            bCyclicSending.Text = "Stop"; // Modifie le texte du bouton
-        }
-
-        private void StopCyclic() // Arrête l’envoi cyclique
-        {
-            cyclicTimer.Stop(); // Stoppe le timer cyclique
-            isCyclicSending = false; // Indique que l’envoi est inactif
-            bCyclicSending.Text = "Envois cyclique"; // Remet le texte initial du bouton
-        }
-
-        private void CyclicTimer_Tick(object sender, EventArgs e) // Fonction appelée à chaque tick du timer cyclique
-        {
-            if (!serialPort.IsOpen) // Si le port n’est plus ouvert
-            {
-                StopCyclic(); ResetUI(); LoadAvailableComPorts(); // Réinitialise l’UI
-                return; // Quitte
-            }
-
-            if (userAdjusting) return;   // Toujours aucun envoi pendant déplacement
-
-            string trame = GenerateTrame(); // Génère la trame actuelle
-            int idx = trame.IndexOf("W="); // Cherche la position du champ W=
-            string core = idx > -1 ? trame.Substring(0, idx) : trame; // Extrait la trame sans W
-
-            /* ---- NOUVEAUTÉ : si la valeur stabilisée a changé, on force W=1 ---- */
-            if (core != lastSentCore) // Si la trame a changé
-                chbSauvegarde.Checked = true;   // autorise UNE sauvegarde la prochaine fois
-            /* -------------------------------------------------------------------- */
-
-            bool needSend = chbSauvegarde.Checked || core != lastSentCore; // Envoi requis si W=1 ou si changement
-            if (!needSend) return;        // rien à envoyer
-
-            try
-            {
-                serialPort.WriteLine(trame); // Envoie la trame par le port série
-                lastSentCore = core;      // mémorise la dernière trame sans W
-
-                if (chbSauvegarde.Checked)
-                    chbSauvegarde.Checked = false; // W=1 envoyé → on décoche
-            }
-            catch (Exception ex) { HandleSerialError("Envoi cyclique : " + ex.Message); } // Gère toute erreur série
-        }
-
-        /* ================= Refresh COM =================== */
-        private void brefresh_Click(object sender, EventArgs e) => LoadAvailableComPorts(); // Recharge la liste des ports COM disponibles
-
-        private void LoadAvailableComPorts() // Recharge et filtre les ports COM disponibles et valides
-        {
-            string[] allPorts = SerialPort.GetPortNames();     // tous les noms de ports détectés sur le système
-            List<string> validPorts = new List<string>(); // Liste des ports réellement accessibles
-
-            foreach (string port in allPorts) // Parcourt chaque port détecté
-            {
-                // Teste rapidement si le port répond : s’il n’existe plus ou qu’il est
-                // déjà ouvert par un driver zombie, Open() lèvera une exception.
-                try
-                {
-                    using (SerialPort test = new SerialPort(port)) // Crée une instance temporaire du port
-                    {
-                        test.Open(); // Tente de l’ouvrir
-                        test.Close(); // Et de le refermer immédiatement
-                        validPorts.Add(port);                 // port réellement présent et utilisable
-                    }
-                }
-                catch
-                {
-                    /* fantôme => ignoré */ // Ports inaccessibles ignorés silencieusement
-                }
-            }
-
-            // Nettoie et recharge la ComboBox sans doublons
-            string selected = cbComPort.SelectedItem as string; // Sauvegarde l'élément sélectionné, si présent
-
-            cbComPort.BeginUpdate(); // Suspension du rafraîchissement visuel de la ComboBox
-            cbComPort.Items.Clear(); // Vide les éléments existants
-            foreach (string p in validPorts.Distinct(StringComparer.OrdinalIgnoreCase)) // Ajoute chaque port valide sans doublon
-                cbComPort.Items.Add(p);
-            cbComPort.EndUpdate(); // Reprise du rafraîchissement visuel
-
-            // Restaure la sélection si possible
-            if (selected != null && cbComPort.Items.Contains(selected)) // Si l’élément précédemment sélectionné est toujours présent
-                cbComPort.SelectedItem = selected; // Le réapplique
-            else if (cbComPort.Items.Count > 0) // Sinon, sélectionne le premier port disponible
-                cbComPort.SelectedIndex = 0;
-            else
-                cbComPort.Text = "Aucun port valide"; // Aucun port détecté : message par défaut
-        }
-
         /* ================== Réception ==================== */
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e) // Événement déclenché à la réception de données série
         {
@@ -304,6 +245,26 @@ namespace USB_App
         }
 
         /* =============== Sliders / Preview =============== */
+        private void Slider_MouseDown(object sender, MouseEventArgs e) // Détection de l’appui souris sur un TrackBar
+        {
+            if (isCyclicSending) userAdjusting = true;   // on gèle l’envoi si le mode cyclique est actif
+        }
+
+        private void Slider_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!isCyclicSending) return;
+
+            userAdjusting = false;
+
+            /* Forcer UNE sauvegarde au prochain tick uniquement si la case était active au départ */
+            if (chbSauvegarde.Enabled) // n'autorise pas la modification si la case est grisée
+            {
+                chbSauvegarde.Checked = true;
+            }
+
+            lastSentCore = ""; // force l'envoi sur prochain Tick
+        }
+
         private void UpdateFreqText(object sender, EventArgs e) // Met à jour l’affichage de la fréquence envoyée
         {
             trBFreq.Value = (trBFreq.Value / 10) * 10; // Arrondi à la dizaine inférieure
@@ -326,7 +287,6 @@ namespace USB_App
         {
             txtTrameToSend.Text = GenerateTrame(); // Affiche la trame actuelle calculée à partir des sliders
         }
-
         /* ============== Génération trame ================ */
         private string GenerateTrame() // Construit la trame à envoyer en fonction des valeurs UI
         {
@@ -342,10 +302,53 @@ namespace USB_App
 
             string signeOffset = trBOffset.Value >= 0 ? "+" : ""; // Ajoute un + explicite si l’offset est positif
 
-            //  string sauvegarde = chbSauvegarde.Checked ? "1" : "0"; // Ligne commentée inutile ici (non utilisée)
-
             return $"!S={forme}F={trBFreq.Value}A={trBAmp.Value}O={signeOffset}{trBOffset.Value}W={(chbSauvegarde.Checked ? "1" : "0")}#";
             // Retourne la trame complète au format requis, avec tous les champs concaténés
+        }
+
+        /* ================= Refresh COM =================== */
+        private void brefresh_Click(object sender, EventArgs e) => LoadAvailableComPorts(); // Recharge la liste des ports COM disponibles
+
+        private void LoadAvailableComPorts() // Recharge et filtre les ports COM disponibles et valides
+        {
+            string[] allPorts = SerialPort.GetPortNames();     // tous les noms de ports détectés sur le système
+            List<string> validPorts = new List<string>(); // Liste des ports réellement accessibles
+
+            foreach (string port in allPorts) // Parcourt chaque port détecté
+            {
+                // Teste rapidement si le port répond : s’il n’existe plus ou qu’il est
+                // déjà ouvert par un driver zombie, Open() lèvera une exception.
+                try
+                {
+                    using (SerialPort test = new SerialPort(port)) // Crée une instance temporaire du port
+                    {
+                        test.Open(); // Tente de l’ouvrir
+                        test.Close(); // Et de le refermer immédiatement
+                        validPorts.Add(port); // port réellement présent et utilisable
+                    }
+                }
+                catch
+                {
+                    /* fantôme => ignoré */ // Ports inaccessibles ignorés silencieusement
+                }
+            }
+
+            // Nettoie et recharge la ComboBox sans doublons
+            string selected = cbComPort.SelectedItem as string; // Sauvegarde l'élément sélectionné, si présent
+
+            cbComPort.BeginUpdate(); // Suspension du rafraîchissement visuel de la ComboBox
+            cbComPort.Items.Clear(); // Vide les éléments existants
+            foreach (string p in validPorts.Distinct(StringComparer.OrdinalIgnoreCase)) // Ajoute chaque port valide sans doublon
+                cbComPort.Items.Add(p);
+            cbComPort.EndUpdate(); // Reprise du rafraîchissement visuel
+
+            // Restaure la sélection si possible
+            if (selected != null && cbComPort.Items.Contains(selected)) // Si l’élément précédemment sélectionné est toujours présent
+                cbComPort.SelectedItem = selected; // Le réapplique
+            else if (cbComPort.Items.Count > 0) // Sinon, sélectionne le premier port disponible
+                cbComPort.SelectedIndex = 0;
+            else
+                cbComPort.Text = "Aucun port valide"; // Aucun port détecté : message par défaut
         }
 
         /* =============== Classes Signal ================= */
@@ -396,7 +399,6 @@ namespace USB_App
                 if (short.TryParse(offset, out short o)) m_offset = o; // Conversion offset
                 return 1; // Indique que la trame a été traitée correctement
             }
-
             private static string Extract(string src, string tag) // Extrait la valeur associée à un tag dans la trame
             {
                 int start = src.IndexOf(tag); // Recherche du début du tag
@@ -410,6 +412,6 @@ namespace USB_App
                 if (end == -1) end = src.Length; // Si aucun autre champ trouvé, prendre jusqu’à la fin
                 return src.Substring(start, end - start); // Retourne la sous-chaîne extraite
             }
-        }
-    }
-}
+        } // Fin de la classe Receive_Signal
+    } // Fin de la classe Form1
+} // Fin du namespace
