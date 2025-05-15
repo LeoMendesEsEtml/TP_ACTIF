@@ -18,30 +18,10 @@
 
 #include <stdint.h>
 
-/*--------------------------------------------------------*/
-// Prototypes des fonctions pour MenuGen.c
-/*--------------------------------------------------------*/
-
-/**
- * @brief Initialise les paramètres du menu à partir de la mémoire sauvegardée ou en valeurs par défaut.
- * @param pParam Pointeur vers la structure contenant les paramètres du générateur.
- */
-void MENU_Initialize(S_ParamGen *pParam);
-
-/**
- * @brief Affiche les paramètres actuels du générateur sur l'écran LCD selon l'état du menu.
- * @param pParam Pointeur vers la structure de paramètres du générateur.
- * @param menu Numéro d'état courant du menu (MenuState_t).
- */
-void MENU_Display(S_ParamGen *pParam, uint8_t menu);
-
-/**
- * @brief Machine à états du menu principal, gère l'affichage, la modification et la sauvegarde des paramètres.
- * @param pParam Pointeur vers la structure contenant les paramètres en cours.
- * @param USBState Indique si le système est en mode remote (USB actif).
- * @param saveRequested Indique si une demande de sauvegarde est en attente.
- */
-void MENU_Execute(S_ParamGen *pParam, bool USBState, bool saveRequested);
+// Prototypes des fonctions
+void SPI_InitLTC2604(void);
+void SPI_WriteToDac(uint8_t Noch, uint16_t DacVal);
+void SPI_CfgWriteToDac(uint8_t NoCh, uint16_t DacVal);
 
 
 
