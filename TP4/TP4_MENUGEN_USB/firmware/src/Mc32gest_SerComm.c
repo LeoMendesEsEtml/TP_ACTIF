@@ -14,8 +14,8 @@
 // Fonction de réception d'un message
 // Permet de mettre à jour les paramètres du générateur à partir d'une trame reçue
 // Format attendu de la trame :
-// Exemple : !S=TF=2000A=10000O=+5000W=0#
-// Exemple : !S=PF=2000A=10000O=-5000W=1#
+// Exemple : !S=TF=0200A=01000O=+5000W=1#
+// Exemple : !S=PF=0200A=10000O=-5000W=0#
 
 bool GetMessage(int8_t *USBReadBuffer, S_ParamGen *pParam, bool *SaveTodo)
 {
