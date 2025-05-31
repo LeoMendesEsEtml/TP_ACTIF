@@ -328,6 +328,7 @@ build/pic32mx_eth_sk2/production/_ext/374686574/system_interrupt.o: \
  ../../../../../framework/tcpip/tftps.h \
  ../../../../../framework/driver/ethmac/drv_ethmac.h \
  ../../../../../framework/driver/miim/drv_miim.h ../src/appgen.h \
+ ../src/DefMenuGen.h \
  ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h \
  ../src/system_config/pic32mx_eth_sk2/system_definitions.h
 
@@ -990,6 +991,8 @@ build/pic32mx_eth_sk2/production/_ext/374686574/system_interrupt.o: \
 ../../../../../framework/driver/miim/drv_miim.h:
 
 ../src/appgen.h:
+
+../src/DefMenuGen.h:
 
 ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h:
 

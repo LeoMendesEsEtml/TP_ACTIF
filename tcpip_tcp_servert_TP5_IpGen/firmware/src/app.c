@@ -55,8 +55,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 #include "app.h"
 #include "Mc32DriverLcd.h"
+#include "Mc32gest_SerComm.h"
+#include "DefMenuGen.h"
 #define SERVER_PORT 9760
-
+IPV4_ADDR           ipAddr;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -97,10 +99,19 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
-/* TODO:  Add any necessary local functions.
-*/
+bool GetTcpState(void)
+{
+    return appData.tcpState;
+}
 
-
+const char* APP_GetIPStringFormatted(void)
+{
+    IPV4_ADDR           ipAddr;
+    static char ipStr[20];  // buffer local mais static (pour retour par pointeur)
+    ipAddr.Val = TCPIP_STACK_NetAddress(TCPIP_STACK_IndexToNet(0));
+    sprintf(ipStr, "%d.%d.%d.%d", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
+    return ipStr;
+}
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -139,7 +150,7 @@ void APP_Tasks ( void )
     SYS_STATUS          tcpipStat;
     const char          *netName, *netBiosName;
     static IPV4_ADDR    dwLastIP[2] = { {-1}, {-1} };
-    IPV4_ADDR           ipAddr;
+
     int                 i, nNets;
     TCPIP_NET_HANDLE    netH;
 
@@ -229,6 +240,7 @@ void APP_Tasks ( void )
             {
                 // We got a connection
                 appData.state = APP_TCPIP_SERVING_CONNECTION;
+                appData.tcpState = false;
                 SYS_CONSOLE_MESSAGE("Received a connection\r\n");
             }
         }
@@ -236,64 +248,57 @@ void APP_Tasks ( void )
 
         case APP_TCPIP_SERVING_CONNECTION:
         {
-            if (!TCPIP_TCP_IsConnected(appData.socket))
-            {
+            // Lit l'état de demande de sauvegarde en attente
+            bool saveRequested = APP_GEN_saveRequested();
+            // Tampons
+            static uint8_t TCPRxBuffer[64]; // tampon réception (non signé pour API TCP)
+            static uint8_t TCPTxBuffer[64]; // tampon émission
+            
+            // Récupère le pointeur vers la structure contenant les paramètres distants
+            S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
+
+            if (!TCPIP_TCP_IsConnected(appData.socket)) {
                 appData.state = APP_TCPIP_CLOSING_CONNECTION;
-                SYS_CONSOLE_MESSAGE("Connection was closed\r\n");
+                SYS_CONSOLE_MESSAGE("Connection closed\r\n");
                 break;
             }
-            int16_t wMaxGet, wMaxPut, wCurrentChunk;
-            uint16_t w, w2;
-            uint8_t AppBuffer[32];
-            // Figure out how many bytes have been received and how many we can transmit.
-            wMaxGet = TCPIP_TCP_GetIsReady(appData.socket);	// Get TCP RX FIFO byte count
-            wMaxPut = TCPIP_TCP_PutIsReady(appData.socket);	// Get TCP TX FIFO free space
 
-            // Make sure we don't take more bytes out of the RX FIFO than we can put into the TX FIFO
-            if(wMaxPut < wMaxGet)
-                    wMaxGet = wMaxPut;
-
-            // Process all bytes that we can
-            // This is implemented as a loop, processing up to sizeof(AppBuffer) bytes at a time.
-            // This limits memory usage while maximizing performance.  Single byte Gets and Puts are a lot slower than multibyte GetArrays and PutArrays.
-            wCurrentChunk = sizeof(AppBuffer);
-            for(w = 0; w < wMaxGet; w += sizeof(AppBuffer))
-            {
-                // Make sure the last chunk, which will likely be smaller than sizeof(AppBuffer), is treated correctly.
-                if(w + sizeof(AppBuffer) > wMaxGet)
-                    wCurrentChunk = wMaxGet - w;
-
-                // Transfer the data out of the TCP RX FIFO and into our local processing buffer.
-                TCPIP_TCP_ArrayGet(appData.socket, AppBuffer, wCurrentChunk);
-
-                // Perform the "ToUpper" operation on each data byte
-                for(w2 = 0; w2 < wCurrentChunk; w2++)
-                {
-                    i = AppBuffer[w2];
-                    if(i >= 'a' && i <= 'z')
-                    {
-                            i -= ('a' - 'A');
-                            AppBuffer[w2] = i;
-                    }
-                    else if(i == '\e')   //escape
-                    {
-                        appData.state = APP_TCPIP_CLOSING_CONNECTION;
-                        SYS_CONSOLE_MESSAGE("Connection was closed\r\n");
-                    }
-                }
-
-                // Transfer the data out of our local processing buffer and into the TCP TX FIFO.
-                SYS_CONSOLE_PRINT("Server Sending %s\r\n", AppBuffer);
-                TCPIP_TCP_ArrayPut(appData.socket, AppBuffer, wCurrentChunk);
-
-                // No need to perform any flush.  TCP data in TX FIFO will automatically transmit itself after it accumulates for a while.  If you want to decrease latency (at the expense of wasting network bandwidth on TCP overhead), perform and explicit flush via the TCPFlush() API.
+            // Vérifie qu'il y a des données à lire
+            int16_t rxCount = TCPIP_TCP_GetIsReady(appData.socket);
+            if (rxCount <= 0) {
+                break;
             }
+
+
+
+            // Sécurise la taille lue
+            if (rxCount > sizeof (TCPRxBuffer) - 1) {
+                rxCount = sizeof (TCPRxBuffer) - 1;
+            }
+
+            // Lire la trame TCP dans le tampon de réception
+            TCPIP_TCP_ArrayGet(appData.socket, TCPRxBuffer, rxCount);
+            TCPRxBuffer[rxCount] = '\0'; // Terminaison
+            // Traitement de la trame via GetMessage
+            if (GetMessage((int8_t *) TCPRxBuffer, RemoteParamGen, &saveRequested)) {
+                SendMessage((int8_t *) TCPTxBuffer, RemoteParamGen, saveRequested);
+                TCPIP_TCP_ArrayPut(appData.socket, TCPTxBuffer, strlen((char *) TCPTxBuffer));
+            } else {
+                // Trame invalide ? renvoyer erreur
+                const char *err = "!E=BAD#";
+                TCPIP_TCP_ArrayPut(appData.socket, (const uint8_t *) err, strlen(err));
+            }
+
+            break;
         }
+
+
         break;
         case APP_TCPIP_CLOSING_CONNECTION:
         {
             // Close the socket connection.
             TCPIP_TCP_Close(appData.socket);
+            appData.tcpState = false;
             appData.socket = INVALID_SOCKET;
             appData.state = APP_TCPIP_WAIT_FOR_IP;
 

@@ -328,7 +328,7 @@ build/pic32mx_eth_sk2/production/_ext/270127451/sys_clk_pic32mx.o: \
  ../../../../../framework/tcpip/tftps.h \
  ../../../../../framework/driver/ethmac/drv_ethmac.h \
  ../../../../../framework/driver/miim/drv_miim.h ../src/app.h \
- ../src/appgen.h \
+ ../src/appgen.h ../src/DefMenuGen.h \
  ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h
 
 ../src/system_config/pic32mx_eth_sk2/system_config.h:
@@ -990,5 +990,7 @@ build/pic32mx_eth_sk2/production/_ext/270127451/sys_clk_pic32mx.o: \
 ../src/app.h:
 
 ../src/appgen.h:
+
+../src/DefMenuGen.h:
 
 ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h:

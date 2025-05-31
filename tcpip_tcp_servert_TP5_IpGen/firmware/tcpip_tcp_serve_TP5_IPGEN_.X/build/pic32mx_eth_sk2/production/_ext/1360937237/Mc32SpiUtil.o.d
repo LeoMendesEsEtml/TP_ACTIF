@@ -328,7 +328,7 @@ build/pic32mx_eth_sk2/production/_ext/1360937237/Mc32SpiUtil.o: \
  ../../../../../framework/tcpip/tftps.h \
  ../../../../../framework/driver/ethmac/drv_ethmac.h \
  ../../../../../framework/driver/miim/drv_miim.h ../src/app.h \
- ../src/appgen.h \
+ ../src/appgen.h ../src/DefMenuGen.h \
  ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h \
  ../src/Mc32SpiUtil.h ../../../../../framework/peripheral\SPI\plib_spi.h \
  ../../../../../framework/peripheral/spi/processor/spi_processor.h \
@@ -1036,6 +1036,8 @@ build/pic32mx_eth_sk2/production/_ext/1360937237/Mc32SpiUtil.o: \
 ../src/app.h:
 
 ../src/appgen.h:
+
+../src/DefMenuGen.h:
 
 ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h:
 

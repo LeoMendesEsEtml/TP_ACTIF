@@ -72,12 +72,32 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 
 APPGEN_DATA appgenData; // Structure globale contenant l'état de l'application
 S_ParamGen LocalParamGen; // Structure locale pour les paramètres du générateur
-
+S_ParamGen RemoteParamGen;
+bool saveRequested = false;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Callback Functions
 // *****************************************************************************
 // *****************************************************************************
+S_ParamGen* APP_GEN_GetRemoteParam(void)
+{
+    return &RemoteParamGen; // renvoie l?adresse
+}
+bool APP_GEN_saveRequested(void)
+{
+    return saveRequested;
+}
+
+void APP_GEN_clearSaveRequested(void)
+{
+    saveRequested = false;
+}
+
+void APP_GEN_setSaveRequested(bool value)
+{
+    saveRequested = value;
+}
+
 /**
  * @brief Callback Timer1 (1 ms). Gère des actions périodiques, notamment ScanBtn.
  * 
@@ -235,6 +255,8 @@ void APPGEN_Tasks(void) {
 
         case APPGEN_STATE_INIT_WAIT:
             // Rien à faire de particulier ici, tout est géré par le callback Timer1
+            lcd_gotoxy(1, 4);
+            printf_lcd("%s", APP_GetIPStringFormatted());
             break;
 
         case APPGEN_STATE_INIT_CLEAR:
@@ -251,9 +273,14 @@ void APPGEN_Tasks(void) {
         case APPGEN_STATE_SERVICE_TASKS:
             // Bascule une LED (LED_2) pour indiquer un cycle de service
             BSP_LEDToggle(BSP_LED_2);
+            
+            if (GetTcpState()) {
 
-            // Exécute le menu
-            MENU_Execute(&LocalParamGen);
+                MENU_Execute(&RemoteParamGen);
+            } else {
+
+                MENU_Execute(&LocalParamGen);
+            }
 
             // Une fois fait, repasse en mode attente
             appgenData.state = APPGEN_STATE_WAIT;

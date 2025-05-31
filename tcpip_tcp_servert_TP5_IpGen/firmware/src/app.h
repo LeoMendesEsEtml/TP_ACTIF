@@ -118,7 +118,7 @@ typedef struct
     APP_STATES state;
 
     TCP_SOCKET              socket;
-
+    bool tcpState;
 } APP_DATA;
 
 
@@ -202,8 +202,10 @@ void APP_Initialize ( void );
  */
 
 void APP_Tasks ( void );
+bool GetTcpState(void);
+const char* APP_GetIPStringFormatted(void);
 
-
+ 
 #endif /* _APP_H */
 /*******************************************************************************
  End of File

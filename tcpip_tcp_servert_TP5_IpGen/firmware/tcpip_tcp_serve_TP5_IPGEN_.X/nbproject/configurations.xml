@@ -34,6 +34,7 @@
         <itemPath>../src/Mc32SpiUtil.h</itemPath>
         <itemPath>../src/Mc32gestSpiDac.h</itemPath>
         <itemPath>../src/MenuGen.h</itemPath>
+        <itemPath>../src/Mc32gest_SerComm.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="bsp" projectFiles="true">
         <logicalFolder name="f1" displayName="pic32mx_skes" projectFiles="true">
@@ -480,6 +481,7 @@
         <itemPath>../src/Mc32SpiUtil.c</itemPath>
         <itemPath>../src/Mc32gestSPiDac.c</itemPath>
         <itemPath>../src/MenuGen.c</itemPath>
+        <itemPath>../src/Mc32gest_SerComm.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="bsp" projectFiles="true">
         <logicalFolder name="f1" displayName="pic32mx_skes" projectFiles="true">
@@ -1066,8 +1068,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="1d000000-1d07ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/microchip/harmony/v2_06/apps/TP_ACTIF/tcpip_tcp_servert_TP5_IpGen/firmware/tcpip_tcp_serve_TP5_IPGEN_.X/debug/pic32mx_eth_sk2/tcpip_tcp_serve_TP5_IPGEN__ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.ledbrightness" value="5"/>

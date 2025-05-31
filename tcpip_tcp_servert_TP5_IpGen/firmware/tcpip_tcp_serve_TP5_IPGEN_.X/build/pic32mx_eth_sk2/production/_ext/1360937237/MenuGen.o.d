@@ -330,7 +330,7 @@ build/pic32mx_eth_sk2/production/_ext/1360937237/MenuGen.o: \
  ../../../../../framework/driver/miim/drv_miim.h ../src/app.h \
  ../src/appgen.h \
  ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h \
- ../src/MenuGen.h ../src/DefMenuGen.h \
+ ../src/DefMenuGen.h ../src/MenuGen.h \
  ../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h ../src/GesPec12.h \
  ../src/Mc32NVMUtil.h ../src/Generateur.h
 
@@ -998,9 +998,9 @@ build/pic32mx_eth_sk2/production/_ext/1360937237/MenuGen.o: \
 
 ../src/system_config/pic32mx_eth_sk2/framework/driver/tmr/drv_tmr_static.h:
 
-../src/MenuGen.h:
-
 ../src/DefMenuGen.h:
+
+../src/MenuGen.h:
 
 ../../../../../bsp/pic32mx_skes/Mc32DriverLcd.h:
 

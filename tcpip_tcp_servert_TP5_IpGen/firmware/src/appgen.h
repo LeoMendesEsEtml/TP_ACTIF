@@ -58,6 +58,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include <stdlib.h>
 #include "system_config.h"
 #include "system_definitions.h"
+#include "DefMenuGen.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -231,6 +232,12 @@ void APPGEN_Tasks( void );
 void APPGEN_UpdateState(APPGEN_STATES NewState);
 
 void ClearLcd();
+
+S_ParamGen* APP_GEN_GetRemoteParam(void);
+bool APP_GEN_saveRequested(void);
+void APP_GEN_clearSaveRequested(void);
+void APP_GEN_setSaveRequested(bool value);
+
 #endif /* _APPGEN_H */
 
 //DOM-IGNORE-BEGIN

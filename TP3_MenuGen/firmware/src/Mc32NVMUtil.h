@@ -18,36 +18,34 @@
 //
 /*--------------------------------------------------------*/
 
-#ifndef Mc32NVMUtil_H
-#define Mc32NVMUtil_H
+#ifndef FLASH_UTIL_H
+#define FLASH_UTIL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-/* Row size for pic32mx795 device is 512 bytes */
-#define DEVICE_ROW_SIZE_DIVIDED_BY_4           128
-/* Page size for pic32mx795 device is 4 Kbytes */
-#define DEVICE_PAGE_SIZE_DIVIDED_BY_4           1024
+// Taille d'une page Flash (1 KB pour effacement)
+#define FLASH_PAGE_SIZE_BYTES   1024
 
-extern  const uint32_t  eedata_addr[DEVICE_ROW_SIZE_DIVIDED_BY_4 ] __attribute__((aligned(4096), space(prog)));
+// Taille d'une row (écriture ligne) : 32 mots = 128 octets
+#define FLASH_ROW_SIZE_BYTES    128
+#define FLASH_ROW_WORDS         32
 
-#define NVM_PROGRAM_PAGE ((uint32_t)&eedata_addr[0])
-// prototypes des fonctions
+// Adresse Flash utilisée pour stocker les données utilisateur
+// Assure-toi que cette page est libre dans ton .ld (ex: dernière page)
+#define FLASH_USER_PAGE_ADDR    0x1FC000
 
-// Zone ram source
-extern uint32_t databuff[DEVICE_ROW_SIZE_DIVIDED_BY_4] __attribute__((coherent));
+// Écrit une row complète (32 mots) à baseAddress
+bool Flash_WriteRow(uint32_t baseAddress, const uint32_t* data);
 
-#define DATA_BUFFER_START ((uint32_t)&databuff[0])
+// Lit wordCount mots depuis baseAddress et les place dans outData
+void Flash_Read(uint32_t baseAddress, uint32_t* outData, uint32_t wordCount);
 
+// Sauvegarde un numéro de série 32 bits en Flash
+void Flash_StoreSerial(uint32_t serial);
 
-void Init_DataBuff(void);  // pour test
-uint32_t NVM_ArrayRead(uint32_t index);  // pour test
+// Charge le numéro de série depuis la Flash
+uint32_t Flash_LoadSerial(void);
 
-// Fonction de base
-void NVMpageErase(uint32_t address);
-void NVMwriteRow(uint32_t destAddr, uint32_t srcAddr);
+#endif // FLASH_UTIL_H
 
-// pour stockage et lecture d'une  structure
-void NVM_ReadBlock(uint32_t *pData, uint32_t DataSize);
-void NVM_WriteBlock(uint32_t *pData, uint32_t DataSize);
-
-#endif
