@@ -234,7 +234,7 @@ void APPGEN_Tasks(void) {
 
             // Affichage initial sur l'écran LCD
             lcd_gotoxy(1, 1);
-            printf_lcd("TP2 USART 2024-25");
+            printf_lcd("TP5 IPGEN");
 
             lcd_gotoxy(1, 2);
             printf_lcd("Leo Mendes");
