@@ -45,7 +45,16 @@ bool GetMessage(int8_t *USBReadBuffer, S_ParamGen *pParam, bool *SaveTodo) {
     pt_Amplitude = strstr((char*) USBReadBuffer, "A="); // Amplitude (A=)
     pt_Offset = strstr((char*) USBReadBuffer, "O="); // Offset (O=)
     pt_Sauvegarde = strstr((char*) USBReadBuffer, "W="); // Sauvegarde (W=)
+    if (pt_Sauvegarde[2] != '0' && pt_Sauvegarde[2] != '1') {
+        *SaveTodo = false;
+        return false; // Trame invalide, valeur de W non reconnue
+    }
 
+    if (pt_Sauvegarde[2] == '1') {
+        *SaveTodo = true;
+    } else {
+        *SaveTodo = false;
+    }
     // Vérifie que tous les champs ont bien été trouvés
     if (!pt_Forme || !pt_Frequence || !pt_Amplitude || !pt_Offset || !pt_Sauvegarde) {
         return false; // Un ou plusieurs champs obligatoires sont absents
@@ -77,13 +86,6 @@ bool GetMessage(int8_t *USBReadBuffer, S_ParamGen *pParam, bool *SaveTodo) {
     pParam->Amplitude = atoi(pt_Amplitude + 2); // Amplitude en [mV]
     pParam->Offset = atoi(pt_Offset + 2); // Offset en [mV]
 
-    // Étape 5 : Analyse du champ W= pour savoir si une sauvegarde est demandée
-    int wVal = (atoi(pt_Sauvegarde + 2) == 1); // Récupère la valeur 0 ou 1 après W=
-    if (wVal == 1) {
-        *SaveTodo = true; // Indique qu'une sauvegarde doit être effectuée
-    } else {
-        *SaveTodo = false; // Aucune demande de sauvegarde
-    }
     lcd_bl_on();
     // Étape 6 : Tous les champs sont valides et correctement traités
     return true; // Trame décodée avec succès
