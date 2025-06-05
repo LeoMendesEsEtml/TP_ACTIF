@@ -14,7 +14,7 @@
 // ================================
 // Include project-specific headers
 // ================================
-
+#include "app.h"
 #include "appgen.h"           // Gestion de l'état de l'application
 #include "MenuGen.h"       // Déclarations des fonctions du menu
 #include "Mc32DriverLcd.h" // Gestion de l'affichage LCD
@@ -41,7 +41,19 @@ S_ParamGen pParamSave; // Stores saved parameters (paramètres sauvegardés)
  *            Actuellement, elle est vide et peut être complétée selon les besoins.
  */
 void MENU_Initialize(S_ParamGen *pParam) {
-    // (Ligne vide, aucune logique pour le moment)
+    NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
+    // Test si la valeur Magic est correcte (vérifie l'intégrité)
+    if (pParamSave.Magic == MAGIC) {
+        // Si valide, on récupère les valeurs sauvegardées
+        *pParam = pParamSave;
+    } else {
+        // Sinon, on initialise les paramètres par défaut
+        pParam->Amplitude = 0;
+        pParam->Forme = SignalSinus;
+        pParam->Frequence = 20;
+        pParam->Magic = MAGIC;
+        pParam->Offset = 0;
+    }
 }
 
 // -------------------------------------------------------------------
@@ -57,9 +69,8 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
     // Tableau de chaînes décrivant les formes d'onde possibles
     const char MenuFormes [4] [21] = {"Sinus", "Triangle", "DentDeScie", "Carre"};
     ClearLcd(); // Efface l'affichage LCD
-
     // Vérifie que l'indice du menu est inférieur à 9 (sinon, autre affichage)
-    if (menu < 9) {
+    if (menu < 10) {
         lcd_gotoxy(2, 1); // Positionne le curseur LCD à la colonne 2, ligne 1
         printf_lcd("Forme ="); // Affiche le libellé "Forme ="
         lcd_gotoxy(11, 1); // Positionne le curseur LCD à la colonne 11, ligne 1
@@ -84,6 +95,15 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
         if (menu <= 4) {
             lcd_gotoxy(1, menu); // Place le curseur sur la ligne du menu sélectionné
             printf_lcd("*"); // Affiche un astérisque pour indiquer la sélection
+        } else if (menu == 9) {
+            lcd_gotoxy(1, 1); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 2); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 3); // Place le curseur
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
+            lcd_gotoxy(1, 4); // Place le curseur 
+            printf_lcd("#"); // Affiche un # pour indiquer la sélection
         } else {
             menu = menu - 4; // Ajuste l'indice de menu (pour un second niveau, par ex.)
             lcd_gotoxy(1, menu); // Place le curseur
@@ -97,7 +117,6 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
         printf_lcd("(appui long)"); // Indique la méthode d'activation
     }
 }
-
 // -------------------------------------------------------------------
 
 /**
@@ -116,23 +135,12 @@ void MENU_Execute(S_ParamGen *pParam) {
     static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
     static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
     static uint8_t wait2s = 0; // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
+    static uint8_t TcpState = 0;
+    static uint8_t OldTcpState = 0;
 
     // Machine à états du menu
     switch (menu) {
         case MENU_INIT: // État d'initialisation
-            NVM_ReadBlock((uint32_t*) & pParamSave, sizeof (S_ParamGen)); // Lecture des paramètres en NVM
-            // Test si la valeur Magic est correcte (vérifie l'intégrité)
-            if (pParamSave.Magic == MAGIC) {
-                // Si valide, on récupère les valeurs sauvegardées
-                *pParam = pParamSave;
-            } else {
-                // Sinon, on initialise les paramètres par défaut
-                pParam->Amplitude = 0;
-                pParam->Forme = SignalSinus;
-                pParam->Frequence = 20;
-                pParam->Magic = MAGIC;
-                pParam->Offset = 0;
-            }
             GENSIG_UpdatePeriode(pParam);
             GENSIG_UpdateSignal(pParam);
             MENU_Display(pParam, MENU_FORME_SEL); // Affiche le menu initial (forme sélectionnée)
@@ -407,7 +415,7 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1; // Besoin de rafraîchir
                 S9ClearESC(); // Réinitialise l'événement
                 S9ClearOK(); // Au cas où un OK reste actif
-            }                // Sinon, toute autre action (Plus, Minus, OK) annule la sauvegarde
+            }// Sinon, toute autre action (Plus, Minus, OK) annule la sauvegarde
             else if ((Pec12IsPlus()) || (Pec12IsESC()) || (Pec12IsMinus()) || (Pec12IsOK())) {
                 menu = MENU_SAVEINFO; // Va afficher le résultat
                 saveOk = 0; // Indique la sauvegarde annulée
@@ -441,9 +449,112 @@ void MENU_Execute(S_ParamGen *pParam) {
                 RefreshMenu = 1; // Besoin de rafraîchir
             }
             break;
-        default:
-            // Formes non prise en compte
+        case MENU_TCP:
+            // État du menu permettant l'interaction USB via terminal
+
+            // Teste si les paramètres ont changé ou si un rafraîchissement est demandé
+            if ((memcmp(pParam, &pParamSave, sizeof (S_ParamGen)) != 0) || (RefreshMenu == 1)) {
+
+                // Réinitialise le drapeau de rafraîchissement
+                RefreshMenu = 0;
+
+                // Sauvegarde temporairement les nouveaux paramètres
+                pParamSave = *pParam;
+
+                // Affiche les paramètres USB à l'écran
+                MENU_Display(pParam, MENU_TCP);
+
+                // Met à jour la forme du signal
+                GENSIG_UpdateSignal(pParam);
+
+                // Met à jour la période du signal
+                GENSIG_UpdatePeriode(pParam);
+
+                // Vérifie si une sauvegarde est demandée
+                if (APP_GEN_saveRequested()) {
+
+                    // Efface le drapeau de demande de sauvegarde
+                    APP_GEN_clearSaveRequested();
+
+                    // Demande un rafraîchissement de l'affichage
+                    RefreshMenu = 1;
+
+                    // Passe à l'état de confirmation de sauvegarde
+                    menu = MENU_SAVE_TCP;
+                }
+            }
             break;
 
+        case MENU_SAVE_TCP:
+            // État affichant le résultat de la sauvegarde USB
+
+            // Vérifie si un rafraîchissement est nécessaire
+            if (RefreshMenu == 1) {
+
+                // Réinitialise le drapeau de rafraîchissement
+                RefreshMenu = 0;
+
+                // Efface le contenu de l'écran LCD
+                ClearLcd();
+
+                // Positionne le curseur à la colonne 2, ligne 3
+                lcd_gotoxy(2, 3);
+
+                // Écrit les paramètres dans l'EEPROM via I2C
+                NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
+                
+                // Affiche un message de confirmation
+                printf_lcd("Sauvegarde OK");
+            }
+
+            // Incrémente le compteur de temporisation
+            wait2s++;
+
+            // Après 2 secondes (200 cycles), revient au menu TCP
+            if (wait2s == 200) {
+
+                // Retourne à l'état USB
+                menu = MENU_TCP;
+
+                // Demande un rafraîchissement de l'affichage
+                RefreshMenu = 1;
+            }
+            break;
+        case MENU_SHOW_IP:
+            break;
+
+        default:
+            // Cas non pris en charge, aucune action
+            break;
+    }
+
+    TcpState = GetTcpState();
+
+    // Détecte un changement de l'état USB
+    if (OldTcpState != TcpState) {
+
+        // Si l'USB vient d'être connecté
+        if (TcpState == true) {
+
+            // Met à jour l'ancien état USB
+            OldTcpState = TcpState;
+
+            // Passe au menu USB
+            menu = MENU_TCP;
+
+            // Demande un rafraîchissement de l'affichage
+            RefreshMenu = 1;
+
+        } else {
+
+            // Met à jour l'ancien état USB
+            OldTcpState = TcpState;
+
+            // Passe au menu de sélection de forme
+            menu = MENU_FORME_SEL;
+
+            // Demande un rafraîchissement de l'affichage
+            RefreshMenu = 1;
+        }
     }
 }

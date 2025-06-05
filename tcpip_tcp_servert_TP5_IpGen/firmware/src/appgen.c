@@ -247,6 +247,8 @@ void APPGEN_Tasks(void) {
             DRV_TMR1_Initialize();
             DRV_TMR0_Start();
             DRV_TMR1_Start();
+            
+           RemoteParamGen = LocalParamGen;
 
             // Passe à l'état d'attente init
             appgenData.state = APPGEN_STATE_INIT_WAIT;
@@ -275,7 +277,6 @@ void APPGEN_Tasks(void) {
             BSP_LEDToggle(BSP_LED_2);
             
             if (GetTcpState()) {
-
                 MENU_Execute(&RemoteParamGen);
             } else {
 

@@ -16,7 +16,7 @@
     "APP_Initialize" and "APP_Tasks" prototypes) and some of them are only used
     internally by the application (such as the "APP_STATES" definition).  Both
     are defined here for convenience.
-*******************************************************************************/
+ *******************************************************************************/
 
 //DOM-IGNORE-BEGIN
 /*******************************************************************************
@@ -68,6 +68,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 // *****************************************************************************
 
 // *****************************************************************************
+
 /* Application States
 
   Summary:
@@ -76,10 +77,9 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
   Description:
     This enumeration defines the valid application states.  These states
     determine the behavior of the application at various times.
-*/
+ */
 
-typedef enum
-{
+typedef enum {
     /* In this state, the application waits for the initialization of the TCP/IP stack
      * to complete. */
     APP_TCPIP_WAIT_INIT,
@@ -98,8 +98,8 @@ typedef enum
     APP_TCPIP_ERROR,
 } APP_STATES;
 
-
 // *****************************************************************************
+
 /* Application Data
 
   Summary:
@@ -112,12 +112,11 @@ typedef enum
     Application strings and buffers are be defined outside this structure.
  */
 
-typedef struct
-{
+typedef struct {
     /* The application's current state */
     APP_STATES state;
-
-    TCP_SOCKET              socket;
+    TCP_OPTION_KEEP_ALIVE_DATA keepAlive;
+    TCP_SOCKET socket;
     bool tcpState;
 } APP_DATA;
 
@@ -128,9 +127,9 @@ typedef struct
 // *****************************************************************************
 // *****************************************************************************
 /* These routines are called by drivers when certain events occur.
-*/
+ */
 
-	
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Application Initialization and State Machine Functions
@@ -166,9 +165,9 @@ typedef struct
 
   Remarks:
     This routine must be called from the SYS_Initialize function.
-*/
+ */
 
-void APP_Initialize ( void );
+void APP_Initialize(void);
 
 
 /*******************************************************************************
@@ -201,11 +200,11 @@ void APP_Initialize ( void );
     This routine must be called from SYS_Tasks() routine.
  */
 
-void APP_Tasks ( void );
+void APP_Tasks(void);
 bool GetTcpState(void);
 const char* APP_GetIPStringFormatted(void);
 
- 
+
 #endif /* _APP_H */
 /*******************************************************************************
  End of File

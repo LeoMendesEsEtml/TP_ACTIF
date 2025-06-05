@@ -58,7 +58,7 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "Mc32gest_SerComm.h"
 #include "DefMenuGen.h"
 #define SERVER_PORT 9760
-IPV4_ADDR           ipAddr;
+IPV4_ADDR ipAddr;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -78,7 +78,7 @@ IPV4_ADDR           ipAddr;
     This structure should be initialized by the APP_Initialize function.
     
     Application strings and buffers are be defined outside this structure.
-*/
+ */
 
 APP_DATA appData;
 
@@ -90,7 +90,7 @@ APP_DATA appData;
 // *****************************************************************************
 
 /* TODO:  Add any necessary callback functions.
-*/
+ */
 
 
 // *****************************************************************************
@@ -99,15 +99,13 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
-bool GetTcpState(void)
-{
+bool GetTcpState(void) {
     return appData.tcpState;
 }
 
-const char* APP_GetIPStringFormatted(void)
-{
-    IPV4_ADDR           ipAddr;
-    static char ipStr[20];  // buffer local mais static (pour retour par pointeur)
+const char* APP_GetIPStringFormatted(void) {
+    IPV4_ADDR ipAddr;
+    static char ipStr[20]; // buffer local mais static (pour retour par pointeur)
     ipAddr.Val = TCPIP_STACK_NetAddress(TCPIP_STACK_IndexToNet(0));
     sprintf(ipStr, "%d.%d.%d.%d", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
     return ipStr;
@@ -126,16 +124,14 @@ const char* APP_GetIPStringFormatted(void)
     See prototype in app.h.
  */
 
-void APP_Initialize ( void )
-{
+void APP_Initialize(void) {
     /* Place the App state machine in its initial state. */
     appData.state = APP_TCPIP_WAIT_INIT;
-    
+
     /* TODO: Initialize your application's state machine and other
      * parameters.
      */
 }
-
 
 /******************************************************************************
   Function:
@@ -145,32 +141,29 @@ void APP_Initialize ( void )
     See prototype in app.h.
  */
 
-void APP_Tasks ( void )
-{
-    SYS_STATUS          tcpipStat;
-    const char          *netName, *netBiosName;
-    static IPV4_ADDR    dwLastIP[2] = { {-1}, {-1} };
+void APP_Tasks(void) {
+    SYS_STATUS tcpipStat;
+    const char *netName, *netBiosName;
+    static IPV4_ADDR dwLastIP[2] = {
+        {-1},
+        {-1}
+    };
 
-    int                 i, nNets;
-    TCPIP_NET_HANDLE    netH;
+    int i, nNets;
+    TCPIP_NET_HANDLE netH;
 
     SYS_CMD_READY_TO_READ();
-    switch(appData.state)
-    {
+    switch (appData.state) {
         case APP_TCPIP_WAIT_INIT:
             tcpipStat = TCPIP_STACK_Status(sysObj.tcpip);
-            if(tcpipStat < 0)
-            {   // some error occurred
+            if (tcpipStat < 0) { // some error occurred
                 SYS_CONSOLE_MESSAGE(" APP: TCP/IP stack initialization failed!\r\n");
                 appData.state = APP_TCPIP_ERROR;
-            }
-            else if(tcpipStat == SYS_STATUS_READY)
-            {
+            } else if (tcpipStat == SYS_STATUS_READY) {
                 // now that the stack is ready we can check the
                 // available interfaces
                 nNets = TCPIP_STACK_NumberOfNetworksGet();
-                for(i = 0; i < nNets; i++)
-                {
+                for (i = 0; i < nNets; i++) {
 
                     netH = TCPIP_STACK_IndexToNet(i);
                     netName = TCPIP_STACK_NetNameGet(netH);
@@ -194,25 +187,22 @@ void APP_Tasks ( void )
             // display the new value on the system console
             nNets = TCPIP_STACK_NumberOfNetworksGet();
 
-            for (i = 0; i < nNets; i++)
-            {
+            for (i = 0; i < nNets; i++) {
                 netH = TCPIP_STACK_IndexToNet(i);
-                if(!TCPIP_STACK_NetIsReady(netH))
-                {
-                    return;    // interface not ready yet!
+                if (!TCPIP_STACK_NetIsReady(netH)) {
+                    return; // interface not ready yet!
                 }
                 ipAddr.Val = TCPIP_STACK_NetAddress(netH);
-                if(dwLastIP[i].Val != ipAddr.Val)
-                {
+                if (dwLastIP[i].Val != ipAddr.Val) {
                     dwLastIP[i].Val = ipAddr.Val;
 
                     SYS_CONSOLE_MESSAGE(TCPIP_STACK_NetNameGet(netH));
                     SYS_CONSOLE_MESSAGE(" IP Address: ");
                     SYS_CONSOLE_PRINT("%d.%d.%d.%d \r\n", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
-                    
+
                     //affichage IP 
                     lcd_gotoxy(1, 3);
-                    printf_lcd("%d.%d.%d.%d \r\n", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);        
+                    printf_lcd("%d.%d.%d.%d \r\n", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
                 }
                 appData.state = APP_TCPIP_OPENING_SERVER;
             }
@@ -221,30 +211,34 @@ void APP_Tasks ( void )
         {
             SYS_CONSOLE_PRINT("Waiting for Client Connection on port: %d\r\n", SERVER_PORT);
             appData.socket = TCPIP_TCP_ServerOpen(IP_ADDRESS_TYPE_IPV4, SERVER_PORT, 0);
-            if (appData.socket == INVALID_SOCKET)
-            {
+            if (appData.socket == INVALID_SOCKET) {
                 SYS_CONSOLE_MESSAGE("Couldn't open server socket\r\n");
                 break;
             }
+            //SCA set keepalive
+            // Nécessaire si on veut que TCPIP_TCP_IsConnected() détecte déconnexion du câble
+            appData.keepAlive.keepAliveEnable = true;
+            appData.keepAlive.keepAliveTmo = 1000;
+            //[ms] / 0 => valeur par défaut
+            appData.keepAlive.keepAliveUnackLim = 2;
+            //[nb de tentatives] / 0 => valeur par défaut
+            TCPIP_TCP_OptionsSet(appData.socket, TCP_OPTION_KEEP_ALIVE, &(appData.keepAlive));
             appData.state = APP_TCPIP_WAIT_FOR_CONNECTION;
         }
-        break;
+            break;
 
         case APP_TCPIP_WAIT_FOR_CONNECTION:
         {
-            if (!TCPIP_TCP_IsConnected(appData.socket))
-            {
+            if (!TCPIP_TCP_IsConnected(appData.socket)) {
                 return;
-            }
-            else
-            {
+            } else {
                 // We got a connection
                 appData.state = APP_TCPIP_SERVING_CONNECTION;
-                appData.tcpState = false;
+                appData.tcpState = true;
                 SYS_CONSOLE_MESSAGE("Received a connection\r\n");
             }
         }
-        break;
+            break;
 
         case APP_TCPIP_SERVING_CONNECTION:
         {
@@ -253,7 +247,7 @@ void APP_Tasks ( void )
             // Tampons
             static uint8_t TCPRxBuffer[64]; // tampon réception (non signé pour API TCP)
             static uint8_t TCPTxBuffer[64]; // tampon émission
-            
+
             // Récupère le pointeur vers la structure contenant les paramètres distants
             S_ParamGen* RemoteParamGen = APP_GEN_GetRemoteParam();
 
@@ -268,8 +262,6 @@ void APP_Tasks ( void )
             if (rxCount <= 0) {
                 break;
             }
-
-
 
             // Sécurise la taille lue
             if (rxCount > sizeof (TCPRxBuffer) - 1) {
@@ -293,7 +285,7 @@ void APP_Tasks ( void )
         }
 
 
-        break;
+            break;
         case APP_TCPIP_CLOSING_CONNECTION:
         {
             // Close the socket connection.
@@ -303,13 +295,13 @@ void APP_Tasks ( void )
             appData.state = APP_TCPIP_WAIT_FOR_IP;
 
         }
-        break;
+            break;
         default:
             break;
     }
 }
 
- 
+
 
 /*******************************************************************************
  End of File
