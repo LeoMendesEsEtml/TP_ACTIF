@@ -27,10 +27,18 @@
 // ================================
 
 S_ParamGen pParamSave; // Stores saved parameters (paramètres sauvegardés)
-
+static char StoredIpStr[20] = "";
+static uint16_t IpDisplayCountdown = 0;
+static MenuState_t menu = MENU_INIT; // État courant du menu, initialisé à MENU_INIT
 // ================================
 // Fonctions
 // ================================
+
+void MENU_RequestIpDisplay(const char* ipStr) {
+    strncpy(StoredIpStr, ipStr, sizeof (StoredIpStr));
+    IpDisplayCountdown = 500; // 500 * 10ms = 5s
+    menu = MENU_SHOW_IP;
+}
 
 /**
  * @brief Initialise le menu et les paramètres du générateur.
@@ -131,7 +139,6 @@ void MENU_Display(S_ParamGen *pParam, uint8_t menu) {
  * - Sauvegarde ou annulation
  */
 void MENU_Execute(S_ParamGen *pParam) {
-    static MenuState_t menu = MENU_INIT; // État courant du menu, initialisé à MENU_INIT
     static uint8_t saveOk = 0; // Flag indiquant si la sauvegarde est validée (1) ou annulée (0)
     static uint8_t RefreshMenu = 0; // Flag pour redessiner le menu
     static uint8_t wait2s = 0; // Compteur pour gérer l'affichage temporaire (ex: 2 secondes)
@@ -440,11 +447,13 @@ void MENU_Execute(S_ParamGen *pParam) {
                     lcd_gotoxy(2, 3); // Positionne le curseur
                     printf_lcd("Sauvegarde ANNULEE!"); // Indique l'annulation
                 }
+                wait2s = 0;
             }
             // Incrémente le compteur de temporisation
             wait2s++;
             // Après 2 secondes (200 x 10 ms), on retourne au menu forme
             if (wait2s == 200) {
+                wait2s = 0;
                 menu = MENU_FORME_SEL; // Retourne à la sélection de la forme
                 RefreshMenu = 1; // Besoin de rafraîchir
             }
@@ -471,10 +480,10 @@ void MENU_Execute(S_ParamGen *pParam) {
                 GENSIG_UpdatePeriode(pParam);
 
                 // Vérifie si une sauvegarde est demandée
-                if (APP_GEN_saveRequested()) {
+                if (APP_GetSaveRequested()) {
 
                     // Efface le drapeau de demande de sauvegarde
-                    APP_GEN_clearSaveRequested();
+                    APP_clearSaveRequested();
 
                     // Demande un rafraîchissement de l'affichage
                     RefreshMenu = 1;
@@ -490,7 +499,7 @@ void MENU_Execute(S_ParamGen *pParam) {
 
             // Vérifie si un rafraîchissement est nécessaire
             if (RefreshMenu == 1) {
-
+                wait2s = 0;
                 // Réinitialise le drapeau de rafraîchissement
                 RefreshMenu = 0;
 
@@ -502,7 +511,7 @@ void MENU_Execute(S_ParamGen *pParam) {
 
                 // Écrit les paramètres dans l'EEPROM via I2C
                 NVM_WriteBlock((uint32_t*) pParam, sizeof (S_ParamGen)); // Écriture en NVM
-                
+
                 // Affiche un message de confirmation
                 printf_lcd("Sauvegarde OK");
             }
@@ -512,8 +521,9 @@ void MENU_Execute(S_ParamGen *pParam) {
 
             // Après 2 secondes (200 cycles), revient au menu TCP
             if (wait2s == 200) {
+                wait2s = 0;
 
-                // Retourne à l'état USB
+                //
                 menu = MENU_TCP;
 
                 // Demande un rafraîchissement de l'affichage
@@ -521,7 +531,20 @@ void MENU_Execute(S_ParamGen *pParam) {
             }
             break;
         case MENU_SHOW_IP:
+            ClearLcd();
+            lcd_gotoxy(2, 2);
+            printf_lcd("Adresse IP:");
+            lcd_gotoxy(2, 3);
+            printf_lcd("%s", StoredIpStr);
+
+            if (IpDisplayCountdown > 0) {
+                IpDisplayCountdown = IpDisplayCountdown - 1;
+            } else {
+                menu = MENU_FORME_SEL;
+                MENU_Display(pParam, MENU_FORME_SEL);
+            }
             break;
+
 
         default:
             // Cas non pris en charge, aucune action

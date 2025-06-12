@@ -203,8 +203,8 @@ void APP_Initialize(void);
 void APP_Tasks(void);
 bool GetTcpState(void);
 const char* APP_GetIPStringFormatted(void);
-
-
+void APP_clearSaveRequested(void);
+bool APP_GetSaveRequested(void);
 #endif /* _APP_H */
 /*******************************************************************************
  End of File

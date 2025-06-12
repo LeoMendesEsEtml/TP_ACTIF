@@ -234,9 +234,6 @@ void APPGEN_UpdateState(APPGEN_STATES NewState);
 void ClearLcd();
 
 S_ParamGen* APP_GEN_GetRemoteParam(void);
-bool APP_GEN_saveRequested(void);
-void APP_GEN_clearSaveRequested(void);
-void APP_GEN_setSaveRequested(bool value);
 
 #endif /* _APPGEN_H */
 

@@ -48,5 +48,10 @@ void MENU_Execute(S_ParamGen *pParam);
  * @param menu Valeur correspondant à l'état courant de la machine d'état (voir enum MenuState_t).
  */
 void MENU_Display(S_ParamGen *pParam, uint8_t menu);
+/**
+ * @brief Demande l'affichage temporaire de l'adresse IP.
+ * @param ipStr Chaîne IP à afficher (ex: "192.168.0.100").
+ */
+void MENU_RequestIpDisplay(const char* ipStr);
 
 #endif

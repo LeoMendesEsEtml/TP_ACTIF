@@ -57,8 +57,10 @@ SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
 #include "Mc32DriverLcd.h"
 #include "Mc32gest_SerComm.h"
 #include "DefMenuGen.h"
+#include "MenuGen.h"
 #define SERVER_PORT 9760
 IPV4_ADDR ipAddr;
+bool saveRequested = false;
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Data Definitions
@@ -89,9 +91,13 @@ APP_DATA appData;
 // *****************************************************************************
 // *****************************************************************************
 
-/* TODO:  Add any necessary callback functions.
- */
+void APP_clearSaveRequested(void) {
+    saveRequested = false;
+}
 
+bool APP_GetSaveRequested() {
+    return saveRequested;
+}
 
 // *****************************************************************************
 // *****************************************************************************
@@ -127,7 +133,8 @@ const char* APP_GetIPStringFormatted(void) {
 void APP_Initialize(void) {
     /* Place the App state machine in its initial state. */
     appData.state = APP_TCPIP_WAIT_INIT;
-
+    DRV_TMR0_Start();
+    DRV_TMR1_Start();
     /* TODO: Initialize your application's state machine and other
      * parameters.
      */
@@ -183,8 +190,6 @@ void APP_Tasks(void) {
 
         case APP_TCPIP_WAIT_FOR_IP:
 
-            // if the IP address of an interface has changed
-            // display the new value on the system console
             nNets = TCPIP_STACK_NumberOfNetworksGet();
 
             for (i = 0; i < nNets; i++) {
@@ -192,21 +197,26 @@ void APP_Tasks(void) {
                 if (!TCPIP_STACK_NetIsReady(netH)) {
                     return; // interface not ready yet!
                 }
+
                 ipAddr.Val = TCPIP_STACK_NetAddress(netH);
                 if (dwLastIP[i].Val != ipAddr.Val) {
                     dwLastIP[i].Val = ipAddr.Val;
 
                     SYS_CONSOLE_MESSAGE(TCPIP_STACK_NetNameGet(netH));
                     SYS_CONSOLE_MESSAGE(" IP Address: ");
-                    SYS_CONSOLE_PRINT("%d.%d.%d.%d \r\n", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
+                    SYS_CONSOLE_PRINT("%d.%d.%d.%d \r\n",
+                            ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
 
-                    //affichage IP 
-                    lcd_gotoxy(1, 3);
-                    printf_lcd("%d.%d.%d.%d \r\n", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
+                    // Envoie à MenuGen pour affichage temporaire pendant 5 s
+                    char ipBuf[20];
+                    sprintf(ipBuf, "%d.%d.%d.%d", ipAddr.v[0], ipAddr.v[1], ipAddr.v[2], ipAddr.v[3]);
+                    MENU_RequestIpDisplay(ipBuf);
                 }
+
                 appData.state = APP_TCPIP_OPENING_SERVER;
             }
             break;
+
         case APP_TCPIP_OPENING_SERVER:
         {
             SYS_CONSOLE_PRINT("Waiting for Client Connection on port: %d\r\n", SERVER_PORT);
@@ -242,8 +252,6 @@ void APP_Tasks(void) {
 
         case APP_TCPIP_SERVING_CONNECTION:
         {
-            // Lit l'état de demande de sauvegarde en attente
-            bool saveRequested = APP_GEN_saveRequested();
             // Tampons
             static uint8_t TCPRxBuffer[64]; // tampon réception (non signé pour API TCP)
             static uint8_t TCPTxBuffer[64]; // tampon émission
